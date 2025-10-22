@@ -2,75 +2,153 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, FileText, Trash2, Search, XCircle } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Trash2, Search } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-
-// Mock data for Code4Bharat certificates
-const mockCertificates = [
-  { id: 'C4B-001', name: 'Alex Turner', course: 'Web Development', date: '2025-10-15', status: 'downloaded' },
-  { id: 'C4B-002', name: 'Priya Sharma', course: 'Python Programming', date: '2025-10-14', status: 'pending' },
-  { id: 'C4B-003', name: 'Rahul Kumar', course: 'Data Science', date: '2025-10-13', status: 'downloaded' },
-  { id: 'C4B-004', name: 'Sneha Patel', course: 'Machine Learning', date: '2025-10-12', status: 'downloaded' },
-  { id: 'C4B-005', name: 'Amit Singh', course: 'React Development', date: '2025-10-11', status: 'pending' },
-  { id: 'C4B-006', name: 'Neha Gupta', course: 'Java Programming', date: '2025-10-10', status: 'downloaded' },
-  { id: 'C4B-007', name: 'Rohan Mehta', course: 'Android Development', date: '2025-10-09', status: 'pending' },
-  { id: 'C4B-008', name: 'Anjali Reddy', course: 'Cloud Computing', date: '2025-10-08', status: 'downloaded' },
-  { id: 'C4B-009', name: 'Vikram Joshi', course: 'Cybersecurity', date: '2025-10-07', status: 'downloaded' },
-  { id: 'C4B-010', name: 'Pooja Desai', course: 'UI/UX Design', date: '2025-10-06', status: 'pending' },
-];
 
 export default function Code4BharatPage() {
   const router = useRouter();
-  const [certificates, setCertificates] = useState(mockCertificates);
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // ✅ Fetch certificates from backend
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isAuthenticated = sessionStorage.getItem('isAuthenticated');
-      if (!isAuthenticated) {
-        router.push('/login');
+    const fetchCertificates = async () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const token = sessionStorage.getItem('authToken');
+          if (!token) {
+            router.push('/login');
+            return;
+          }
+
+          const res = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/certificates`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              params: { category: 'code4bharat' },
+            }
+          );
+
+          if (res.data.success) {
+            setCertificates(res.data.data);
+          } else {
+            toast.error('Failed to fetch certificates');
+          }
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        toast.error('Error fetching certificates');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchCertificates();
   }, [router]);
 
-  const filteredCertificates = certificates.filter(cert => {
-    const matchesSearch = cert.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.course.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
-    
+  // ✅ Filter logic (search + status)
+  const filteredCertificates = certificates.filter((cert) => {
+    const matchesSearch =
+      cert.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.certificateId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.course?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === 'all' || cert.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
-  const handleDownloadPDF = (cert) => {
-    toast.success(`Downloading ${cert.name}.pdf`);
-    console.log(`Downloading PDF for ${cert.name}`);
+  // ✅ Download PDF
+  const handleDownloadPDF = async (cert) => {
+    try {
+      toast.success(`Downloading ${cert.name}.pdf`);
+      const token = sessionStorage.getItem('authToken');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/pdf`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${cert.name}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download PDF');
+    }
   };
 
-  const handleDownloadJPG = (cert) => {
-    toast.success(`Downloading ${cert.name}.jpg`);
-    console.log(`Downloading JPG for ${cert.name}`);
+  // ✅ Download JPG
+  const handleDownloadJPG = async (cert) => {
+    try {
+      toast.success(`Downloading ${cert.name}.jpg`);
+      const token = sessionStorage.getItem('authToken');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/jpg`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'image/jpeg' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${cert.name}.jpg`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download JPG');
+    }
   };
 
-  const handleDelete = (id) => {
-    setCertificates(certificates.filter(cert => cert.id !== id));
-    toast.success('Certificate deleted successfully');
+  // ✅ Delete certificate
+  const handleDelete = async (id) => {
+    try {
+      const token = sessionStorage.getItem('authToken');
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCertificates(certificates.filter((cert) => cert._id !== id));
+      toast.success('Certificate deleted successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete certificate');
+    }
     setDeleteConfirm(null);
   };
 
   const getStatusCount = (status) => {
     if (status === 'all') return certificates.length;
-    return certificates.filter(cert => cert.status === status).length;
+    return certificates.filter((cert) => cert.status === status).length;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600 text-lg">
+        Loading certificates...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Toaster position="top-right" />
-      
+
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -86,7 +164,7 @@ export default function Code4BharatPage() {
               </motion.button>
               <div>
                 <h1 className="text-3xl font-bold">Code4Bharat</h1>
-                <p className="text-indigo-100 text-sm">Manage all C4B certificates</p>
+                <p className="text-indigo-100 text-sm">Manage all Code4Bharat certificates</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
@@ -97,33 +175,22 @@ export default function Code4BharatPage() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search by name, ID, or course..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 text-black border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white shadow-sm"
-            />
-          </div>
-        </motion.div>
+        {/* Search */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by name, ID, or course..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 text-black border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white shadow-sm"
+          />
+        </div>
 
-        {/* Filter Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 flex gap-3 flex-wrap"
-        >
+        {/* Filters */}
+        <div className="mb-6 flex gap-3 flex-wrap">
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-6 py-2.5 rounded-xl font-semibold transition ${
@@ -154,13 +221,13 @@ export default function Code4BharatPage() {
           >
             Pending ({getStatusCount('pending')})
           </button>
-        </motion.div>
+        </div>
 
         {/* Certificates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCertificates.map((cert, index) => (
             <motion.div
-              key={cert.id}
+              key={cert._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -171,23 +238,27 @@ export default function Code4BharatPage() {
                   <h3 className="text-lg font-bold text-gray-800 mb-1">{cert.name}</h3>
                   <p className="text-sm text-gray-600">{cert.course}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  cert.status === 'downloaded' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    cert.status === 'downloaded'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
                   {cert.status}
                 </span>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2 mb-4 text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Certificate ID:</span>
-                  <span className="font-semibold text-gray-800">{cert.id}</span>
+                  <span className="font-semibold text-gray-800">{cert.certificateId}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Issue Date:</span>
-                  <span className="font-semibold text-gray-800">{cert.date}</span>
+                  <span className="font-semibold text-gray-800">
+                    {new Date(cert.issueDate).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
 
@@ -213,7 +284,7 @@ export default function Code4BharatPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setDeleteConfirm(cert.id)}
+                  onClick={() => setDeleteConfirm(cert._id)}
                   className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -239,7 +310,7 @@ export default function Code4BharatPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             onClick={() => setDeleteConfirm(null)}
           >
             <motion.div
@@ -247,30 +318,30 @@ export default function Code4BharatPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center"
+              className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
             >
-              <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Delete Certificate?</h2>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this certificate? This action cannot be undone.
-              </p>
-              <div className="flex justify-center gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDelete(deleteConfirm)}
-                  className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 font-semibold"
-                >
-                  Delete
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setDeleteConfirm(null)}
-                  className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-300 font-semibold"
-                >
-                  Cancel
-                </motion.button>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Delete Certificate?</h2>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this certificate? This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDelete(deleteConfirm)}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

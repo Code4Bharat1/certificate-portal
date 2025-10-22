@@ -1,10 +1,76 @@
 'use client';
-
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function CategoryOverview() {
   const router = useRouter();
+  const [stats, setStats] = useState({
+    'marketing-junction': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },
+    'code4bharat': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      // Get auth token from sessionStorage
+      const token = typeof window !== 'undefined' 
+        ? sessionStorage.getItem('authToken') 
+        : null;
+
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/stats/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.success) {
+        setStats(response.data.data.categories);
+        console.log(response.data.data.categories);
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      setError('Failed to load statistics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[1, 2].map((i) => (
+          <div key={i} className="bg-gray-200 animate-pulse rounded-2xl h-64"></div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -18,15 +84,15 @@ export default function CategoryOverview() {
         <div className="space-y-2 mb-4">
           <div className="flex justify-between">
             <span>Total Certificates:</span>
-            <span className="font-bold">19</span>
+            <span className="font-bold">{stats['marketing-junction'].total}</span>
           </div>
           <div className="flex justify-between">
             <span>Downloaded:</span>
-            <span className="font-bold">12</span>
+            <span className="font-bold">{stats['marketing-junction'].downloaded}</span>
           </div>
           <div className="flex justify-between">
             <span>Pending:</span>
-            <span className="font-bold">3</span>
+            <span className="font-bold">{stats['marketing-junction'].pending}</span>
           </div>
         </div>
         <motion.button
@@ -44,15 +110,15 @@ export default function CategoryOverview() {
         <div className="space-y-2 mb-4">
           <div className="flex justify-between">
             <span>Total Certificates:</span>
-            <span className="font-bold">32</span>
+            <span className="font-bold">{stats['code4bharat'].total}</span>
           </div>
           <div className="flex justify-between">
             <span>Downloaded:</span>
-            <span className="font-bold">16</span>
+            <span className="font-bold">{stats['code4bharat'].downloaded}</span>
           </div>
           <div className="flex justify-between">
             <span>Pending:</span>
-            <span className="font-bold">4</span>
+            <span className="font-bold">{stats['code4bharat'].pending}</span>
           </div>
         </div>
         <motion.button

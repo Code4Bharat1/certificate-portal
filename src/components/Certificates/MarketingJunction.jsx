@@ -2,61 +2,128 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Download, FileText, Trash2, Search } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
-// Mock data for Marketing Junction certificates
-const mockCertificates = [
-  { id: 'MJ-001', name: 'John Doe', course: 'Digital Marketing', date: '2025-10-15', status: 'downloaded' },
-  { id: 'MJ-002', name: 'Jane Smith', course: 'Social Media Marketing', date: '2025-10-14', status: 'pending' },
-  { id: 'MJ-003', name: 'Mike Johnson', course: 'SEO Fundamentals', date: '2025-10-13', status: 'downloaded' },
-  { id: 'MJ-004', name: 'Sarah Williams', course: 'Content Marketing', date: '2025-10-12', status: 'downloaded' },
-  { id: 'MJ-005', name: 'David Brown', course: 'Email Marketing', date: '2025-10-11', status: 'pending' },
-  { id: 'MJ-006', name: 'Emily Davis', course: 'Marketing Analytics', date: '2025-10-10', status: 'downloaded' },
-  { id: 'MJ-007', name: 'Chris Wilson', course: 'Brand Management', date: '2025-10-09', status: 'pending' },
-  { id: 'MJ-008', name: 'Lisa Anderson', course: 'Influencer Marketing', date: '2025-10-08', status: 'downloaded' },
-];
-
 export default function MarketingJunctionPage() {
   const router = useRouter();
-  const [certificates, setCertificates] = useState(mockCertificates);
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // ✅ Fetch certificates from backend
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isAuthenticated = sessionStorage.getItem('isAuthenticated');
-      if (!isAuthenticated) {
-        router.push('/login');
+    const fetchCertificates = async () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const token = sessionStorage.getItem('authToken');
+          if (!token) {
+            router.push('/login');
+            return;
+          }
+
+          const res = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/certificates`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              params: { category: 'marketing-junction' },
+            }
+          );
+
+          if (res.data.success) {
+            setCertificates(res.data.data);
+          } else {
+            toast.error('Failed to fetch certificates');
+          }
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        toast.error('Error fetching certificates');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchCertificates();
   }, [router]);
 
+  // ✅ Filtering logic (search + status)
   const filteredCertificates = certificates.filter(cert => {
-    const matchesSearch = cert.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.course.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch =
+      cert.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.certificateId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.course?.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
-  const handleDownloadPDF = (cert) => {
-    toast.success(`Downloading ${cert.name}.pdf`);
-    console.log(`Downloading PDF for ${cert.name}`);
+  const handleDownloadPDF = async (cert) => {
+    try {
+      toast.success(`Downloading ${cert.name}.pdf`);
+      const token = sessionStorage.getItem('authToken');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/pdf`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${cert.name}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download PDF');
+    }
   };
 
-  const handleDownloadJPG = (cert) => {
-    toast.success(`Downloading ${cert.name}.jpg`);
-    console.log(`Downloading JPG for ${cert.name}`);
+  const handleDownloadJPG = async (cert) => {
+    try {
+      toast.success(`Downloading ${cert.name}.jpg`);
+      const token = sessionStorage.getItem('authToken');
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/jpg`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'image/jpeg' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${cert.name}.jpg`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download JPG');
+    }
   };
 
-  const handleDelete = (id) => {
-    setCertificates(certificates.filter(cert => cert.id !== id));
-    toast.success('Certificate deleted successfully');
+  const handleDelete = async (id) => {
+    try {
+      const token = sessionStorage.getItem('authToken');
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCertificates(certificates.filter(cert => cert._id !== id));
+      toast.success('Certificate deleted successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete certificate');
+    }
     setDeleteConfirm(null);
   };
 
@@ -65,10 +132,18 @@ export default function MarketingJunctionPage() {
     return certificates.filter(cert => cert.status === status).length;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600 text-lg">
+        Loading certificates...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Toaster position="top-right" />
-      
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -95,32 +170,22 @@ export default function MarketingJunctionPage() {
         </div>
       </div>
 
+      {/* Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search by name, ID, or course..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 text-black border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white shadow-sm"
-            />
-          </div>
-        </motion.div>
+        {/* Search */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by name, ID, or course..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 text-black border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white shadow-sm"
+          />
+        </div>
 
-        {/* Filter Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 flex gap-3 flex-wrap"
-        >
+        {/* Filters */}
+        <div className="mb-6 flex gap-3 flex-wrap">
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-6 py-2.5 rounded-xl font-semibold transition ${
@@ -151,13 +216,13 @@ export default function MarketingJunctionPage() {
           >
             Pending ({getStatusCount('pending')})
           </button>
-        </motion.div>
+        </div>
 
         {/* Certificates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCertificates.map((cert, index) => (
             <motion.div
-              key={cert.id}
+              key={cert._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -168,23 +233,27 @@ export default function MarketingJunctionPage() {
                   <h3 className="text-lg font-bold text-gray-800 mb-1">{cert.name}</h3>
                   <p className="text-sm text-gray-600">{cert.course}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  cert.status === 'downloaded' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    cert.status === 'downloaded'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
                   {cert.status}
                 </span>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2 mb-4 text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Certificate ID:</span>
-                  <span className="font-semibold text-gray-800">{cert.id}</span>
+                  <span className="font-semibold text-gray-800">{cert.certificateId}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Issue Date:</span>
-                  <span className="font-semibold text-gray-800">{cert.date}</span>
+                  <span className="font-semibold text-gray-800">
+                    {new Date(cert.issueDate).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
 
@@ -210,7 +279,7 @@ export default function MarketingJunctionPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setDeleteConfirm(cert.id)}
+                  onClick={() => setDeleteConfirm(cert._id)}
                   className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                 >
                   <Trash2 className="w-4 h-4" />
