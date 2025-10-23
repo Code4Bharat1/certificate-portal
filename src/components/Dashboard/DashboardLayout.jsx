@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }) {
                 Confirm Logout
               </h2>
               <p className="text-sm text-gray-600 mb-5">
-                Are you sure you want to log out of the admin dashboard?
+                Are you sure you want to log out of the Admin Certificate Portal?
               </p>
               <div className="flex justify-center gap-3">
                 <motion.button
