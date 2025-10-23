@@ -93,7 +93,7 @@ export default function LoginPage() {
           >
             <FileText className="w-10 h-10 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Portal</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to the Certificate Admin Portal</h1>
           <p className="text-gray-600">Sign in to access dashboard</p>
         </div>
         <div className="space-y-6">
