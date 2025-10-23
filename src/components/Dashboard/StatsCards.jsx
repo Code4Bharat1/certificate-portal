@@ -236,7 +236,7 @@ export default function StatsCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       {stats.map((stat, index) => (
         <StatCard key={stat.title} {...stat} index={index} />
       ))}

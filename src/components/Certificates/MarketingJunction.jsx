@@ -226,15 +226,15 @@ export default function MarketingJunctionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition"
+              className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition flex flex-col"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-800 mb-1">{cert.name}</h3>
-                  <p className="text-sm text-gray-600">{cert.course}</p>
+                <div className="flex-1 min-w-0 pr-3">
+                  <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">{cert.name}</h3>
+                  <p className="text-sm text-gray-600 truncate">{cert.course}</p>
                 </div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
                     cert.status === 'downloaded'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-amber-100 text-amber-700'
@@ -244,12 +244,12 @@ export default function MarketingJunctionPage() {
                 </span>
               </div>
 
-              <div className="space-y-2 mb-4 text-sm">
-                <div className="flex justify-between">
+              <div className="space-y-2 mb-4 text-sm flex-grow">
+                <div className="flex justify-between items-center">
                   <span className="text-gray-600">Certificate ID:</span>
-                  <span className="font-semibold text-gray-800">{cert.certificateId}</span>
+                  <span className="font-semibold text-gray-800 text-right break-all">{cert.certificateId}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-gray-600">Issue Date:</span>
                   <span className="font-semibold text-gray-800">
                     {new Date(cert.issueDate).toLocaleDateString()}
@@ -257,12 +257,12 @@ export default function MarketingJunctionPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleDownloadPDF(cert)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white py-2.5 rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
                 >
                   <Download className="w-4 h-4" />
                   PDF
@@ -271,7 +271,7 @@ export default function MarketingJunctionPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleDownloadJPG(cert)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition text-sm font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 bg-purple-500 text-white py-2.5 rounded-lg hover:bg-purple-600 transition text-sm font-semibold"
                 >
                   <Download className="w-4 h-4" />
                   JPG
@@ -280,7 +280,7 @@ export default function MarketingJunctionPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setDeleteConfirm(cert._id)}
-                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  className="p-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center"
                 >
                   <Trash2 className="w-4 h-4" />
                 </motion.button>

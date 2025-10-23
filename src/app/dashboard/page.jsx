@@ -24,12 +24,10 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <Toaster position="top-right" />
-      <div className="space-y-8">
         <StatsCards />
         <CategoryOverview />
         <QuickActions />
         <ActivityChart />
-      </div>
     </DashboardLayout>
   );
 }

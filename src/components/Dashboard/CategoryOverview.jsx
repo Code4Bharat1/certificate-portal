@@ -77,7 +77,7 @@ export default function CategoryOverview() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"
     >
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
         <h3 className="text-xl font-bold mb-4">Marketing Junction</h3>
