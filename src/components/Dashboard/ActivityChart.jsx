@@ -11,7 +11,7 @@ export default function ActivityChart() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
   useEffect(() => {
     fetchData();

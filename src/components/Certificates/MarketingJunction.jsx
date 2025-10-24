@@ -15,6 +15,8 @@ export default function MarketingJunctionPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235'
+
   // ✅ Fetch certificates from backend
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -27,7 +29,7 @@ export default function MarketingJunctionPage() {
           }
 
           const res = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/certificates`,
+            `${API_URL}/api/certificates`,
             {
               headers: { Authorization: `Bearer ${token}` },
               params: { category: 'marketing-junction' },
@@ -67,7 +69,7 @@ export default function MarketingJunctionPage() {
       toast.success(`Downloading ${cert.name}.pdf`);
       const token = sessionStorage.getItem('authToken');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/pdf`,
+        `${API_URL}/api/certificates/${cert._id}/download/pdf`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
@@ -92,7 +94,7 @@ export default function MarketingJunctionPage() {
       toast.success(`Downloading ${cert.name}.jpg`);
       const token = sessionStorage.getItem('authToken');
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${cert._id}/download/jpg`,
+        `${API_URL}/api/certificates/${cert._id}/download/jpg`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
@@ -115,7 +117,7 @@ export default function MarketingJunctionPage() {
   const handleDelete = async (id) => {
     try {
       const token = sessionStorage.getItem('authToken');
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/certificates/${id}`, {
+      await axios.delete(`${API_URL}/api/certificates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCertificates(certificates.filter(cert => cert._id !== id));
