@@ -76,6 +76,10 @@ export default function CreateCertificateProfessional() {
     'bootcamp': {
       label: 'BOOTCAMP',
       batches: []
+    },
+    'hr': {
+      label: 'HR',
+      batches: []
     }
   };
 
@@ -351,7 +355,7 @@ export default function CreateCertificateProfessional() {
     setIsCreating(true);
     try {
       const response = await axios.post(
-        `${API_URL}/api/certificates/create`,
+        `${API_URL}/api/certificates/`,
         {
           ...formData,
           certificateType: formData.category
@@ -886,7 +890,7 @@ Priya Patel,919876543213,Python Programming,bvoc,Batch 1,2025-01-15`;
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Preview</h2>
 
-                {showPreview && otpVerified ? (
+                {showPreview ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
