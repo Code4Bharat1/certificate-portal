@@ -16,6 +16,24 @@ export default function CategoryOverview() {
       total: 0,
       downloaded: 0,
       pending: 0
+    },
+    'BootCamp': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },
+    'Bvoc': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },'FSD': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },'HR': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
     }
   });
   const [loading, setLoading] = useState(true);
@@ -130,6 +148,120 @@ export default function CategoryOverview() {
           View All
         </motion.button>
       </div>
+      <div className="bg-gradient-to-br from-indigo-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
+        <h3 className="text-xl font-bold mb-4">BootCamp</h3>
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span>Total Certificates:</span>
+            <span className="font-bold">1234</span>
+            {/* <span className="font-bold">{stats['BootCamp'].total}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Downloaded:</span>
+            <span className="font-bold">1234</span>
+            {/* <span className="font-bold">{stats['BootCamp'].downloaded}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Pending:</span>
+            <span className="font-bold">124</span>
+            {/* <span className="font-bold">{stats['BootCamp'].pending}</span> */}
+            
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => router.push('/certificates/bootchamp')}
+          className="w-full bg-white text-pink-600 font-semibold py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          View All
+        </motion.button>
+      </div>
+      <div className="bg-gradient-to-br from-indigo-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
+        <h3 className="text-xl font-bold mb-4">BVOC</h3>
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span>Total Certificates:</span>
+            <span className="font-bold">12345</span>
+            {/* <span className="font-bold">{stats['Bvoc'].total}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Downloaded:</span>
+            <span className="font-bold">213</span>
+            {/* <span className="font-bold">{stats['Bvoc'].downloaded}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Pending:</span>
+            <span className="font-bold">21345</span>
+            {/* <span className="font-bold">{stats['Bvoc'].pending}</span> */}
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => router.push('/certificates/bvoc')}
+          className="w-full bg-white text-pink-600 font-semibold py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          View All
+        </motion.button>
+      </div>
+      <div className="bg-gradient-to-br from-indigo-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
+        <h3 className="text-xl font-bold mb-4">FSD</h3>
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span>Total Certificates:</span>
+            <span className="font-bold">12345</span>
+            {/* <span className="font-bold">{stats['FSD'].total}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Downloaded:</span>
+            <span className="font-bold">123456</span>
+            {/* <span className="font-bold">{stats['FSD'].downloaded}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Pending:</span>
+            <span className="font-bold">123io</span>
+            {/* <span className="font-bold">{stats['FSD'].pending}</span> */}
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => router.push('/certificates/fsd')}
+          className="w-full bg-white text-pink-600 font-semibold py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          View All
+        </motion.button>
+      </div>
+      <div className="bg-gradient-to-br from-indigo-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
+        <h3 className="text-xl font-bold mb-4">HR</h3>
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span>Total Certificates:</span>
+            <span className="font-bold">12345</span>
+            {/* <span className="font-bold">{stats['FSD'].total}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Downloaded:</span>
+            <span className="font-bold">123456</span>
+            {/* <span className="font-bold">{stats['FSD'].downloaded}</span> */}
+          </div>
+          <div className="flex justify-between">
+            <span>Pending:</span>
+            <span className="font-bold">123io</span>
+            {/* <span className="font-bold">{stats['FSD'].pending}</span> */}
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => router.push('/certificates/hr')}
+          className="w-full bg-white text-pink-600 font-semibold py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          View All
+        </motion.button>
+      </div>
+
     </motion.div>
   );
 }
