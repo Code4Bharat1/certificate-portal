@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, TrendingUp, Download, Clock, RefreshCw } from 'lucide-react';
+import { Calendar, TrendingUp, Download, Clock, RefreshCw, Layers, Package } from 'lucide-react';
 import axios from 'axios';
 
 const AnimatedCounter = ({ value, duration = 1000 }) => {
@@ -39,28 +39,18 @@ const StatCard = ({ title, icon: Icon, total, mj, c4b, gradient, bg, iconBg, ind
     whileHover={{ y: -5, transition: { duration: 0.2 } }}
     className={`${bg} rounded-2xl shadow-lg p-6 border border-gray-200`}
   >
-    {/* Icon */}
     <div className="flex items-center justify-between mb-4">
-      <div
-        className={`${iconBg} p-3 rounded-xl flex items-center justify-center`}
-      >
-        <Icon
-          className={`w-6 h-6 text-gray-700 relative z-10`}
-        />
+      <div className={`${iconBg} p-3 rounded-xl flex items-center justify-center`}>
+        <Icon className={`w-6 h-6 text-gray-700 relative z-10`} />
       </div>
     </div>
 
-    {/* Title */}
     <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
 
-    {/* Animated Counter */}
-    <div
-      className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-3`}
-    >
+    <div className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-3`}>
       <AnimatedCounter value={total} />
     </div>
 
-    {/* Category breakdown */}
     <div className="space-y-1 text-sm text-gray-600">
       <div className="flex justify-between">
         <span>• Marketing Junction:</span>
@@ -73,6 +63,97 @@ const StatCard = ({ title, icon: Icon, total, mj, c4b, gradient, bg, iconBg, ind
     </div>
   </motion.div>
 );
+
+const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, bg, iconBg, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+    className={`${bg} rounded-2xl shadow-lg p-6 border border-gray-200`}
+  >
+    <div className="flex items-center justify-between mb-4">
+      <div className={`${iconBg} p-3 rounded-xl flex items-center justify-center`}>
+        <Icon className={`w-6 h-6 text-gray-700 relative z-10`} />
+      </div>
+    </div>
+
+    <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
+
+    <div className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-3`}>
+      <AnimatedCounter value={operations} />
+      <span className="text-sm text-gray-500 ml-2">ops</span>
+    </div>
+
+    <div className="space-y-1 text-sm text-gray-600">
+      <div className="flex justify-between">
+        <span>• Total Certificates:</span>
+        <span className="font-semibold">{certificates}</span>
+      </div>
+      <div className="flex justify-between">
+        <span>• Avg per operation:</span>
+        <span className="font-semibold">
+          {operations > 0 ? Math.round(certificates / operations) : 0}
+        </span>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const CreationRatioCard = ({ individual, bulk, total, index }) => {
+  const bulkPercentage = total > 0 ? Math.round((bulk / total) * 100) : 0;
+  const individualPercentage = total > 0 ? Math.round((individual / total) * 100) : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-gray-200"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="bg-indigo-100 p-3 rounded-xl flex items-center justify-center">
+          <Package className="w-6 h-6 text-gray-700 relative z-10" />
+        </div>
+      </div>
+
+      <h3 className="text-sm font-medium text-gray-600 mb-2">Creation Ratio</h3>
+
+      <div className="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-pink-600 bg-clip-text text-transparent mb-3">
+        <AnimatedCounter value={total} />
+      </div>
+
+      <div className="space-y-2">
+        <div>
+          <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <span>Individual ({individualPercentage}%)</span>
+            <span className="font-semibold">{individual}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000"
+              style={{ width: `${individualPercentage}%` }}
+            ></div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <span>Bulk ({bulkPercentage}%)</span>
+            <span className="font-semibold">{bulk}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-1000"
+              style={{ width: `${bulkPercentage}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function StatsCards() {
   const [stats, setStats] = useState([
@@ -118,6 +199,18 @@ export default function StatsCards() {
     },
   ]);
 
+  const [bulkStats, setBulkStats] = useState({
+    last7Days: { operations: 0, certificates: 0 },
+    lastMonth: { operations: 0, certificates: 0 },
+    downloads: { operations: 0, certificates: 0 },
+  });
+
+  const [creationRatio, setCreationRatio] = useState({
+    individual: 0,
+    bulk: 0,
+    total: 0,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -128,12 +221,10 @@ export default function StatsCards() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
     try {
-      // Get auth token from sessionStorage
       const token = typeof window !== 'undefined' 
         ? sessionStorage.getItem('authToken') 
         : null;
 
-      // Replace with your actual backend API endpoint
       const response = await axios.get(`${API_URL}/api/stats/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -141,7 +232,6 @@ export default function StatsCards() {
         }
       });
 
-      // Extract data from backend response
       const data = response.data.data;
 
       setStats([
@@ -187,6 +277,14 @@ export default function StatsCards() {
         },
       ]);
 
+      if (data.bulk) {
+        setBulkStats(data.bulk);
+      }
+
+      if (data.creationRatio) {
+        setCreationRatio(data.creationRatio);
+      }
+
     } catch (err) {
       console.error('Error fetching stats:', err);
       setError(err.response?.data?.message || 'Failed to load statistics');
@@ -201,22 +299,41 @@ export default function StatsCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse"
-          >
-            <div className="h-12 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-8 bg-gray-200 rounded mb-3"></div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded"></div>
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse"
+            >
+              <div className="h-12 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-8 bg-gray-200 rounded mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded"></div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={`bulk-${i}`}
+              className="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse"
+            >
+              <div className="h-12 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-8 bg-gray-200 rounded mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
     );
   }
 
@@ -236,10 +353,53 @@ export default function StatsCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      {stats.map((stat, index) => (
-        <StatCard key={stat.title} {...stat} index={index} />
-      ))}
-    </div>
+    <>
+      {/* Regular Stats - First Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {stats.map((stat, index) => (
+          <StatCard key={stat.title} {...stat} index={index} />
+        ))}
+      </div>
+
+      {/* Bulk Stats - Second Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <BulkStatCard
+          title="Bulk Generated (7D)"
+          icon={Layers}
+          operations={bulkStats.last7Days.operations}
+          certificates={bulkStats.last7Days.certificates}
+          gradient="from-cyan-500 to-cyan-600"
+          bg="bg-cyan-50"
+          iconBg="bg-cyan-100"
+          index={0}
+        />
+        <BulkStatCard
+          title="Bulk Generated (30D)"
+          icon={Layers}
+          operations={bulkStats.lastMonth.operations}
+          certificates={bulkStats.lastMonth.certificates}
+          gradient="from-teal-500 to-teal-600"
+          bg="bg-teal-50"
+          iconBg="bg-teal-100"
+          index={1}
+        />
+        <BulkStatCard
+          title="Bulk Downloads"
+          icon={Download}
+          operations={bulkStats.downloads.operations}
+          certificates={bulkStats.downloads.certificates}
+          gradient="from-emerald-500 to-emerald-600"
+          bg="bg-emerald-50"
+          iconBg="bg-emerald-100"
+          index={2}
+        />
+        <CreationRatioCard
+          individual={creationRatio.individual}
+          bulk={creationRatio.bulk}
+          total={creationRatio.total}
+          index={3}
+        />
+      </div>
+    </>
   );
 }
