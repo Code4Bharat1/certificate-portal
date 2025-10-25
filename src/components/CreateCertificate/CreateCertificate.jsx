@@ -32,7 +32,6 @@ export default function CreateCertificateProfessional() {
   // Form States
   const [formData, setFormData] = useState({
     category: '',
-    subCategory: '',
     batch: '',
     internId: '',
     name: '',
@@ -56,14 +55,15 @@ export default function CreateCertificateProfessional() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Category Configuration
+  // Category Configuration (Internship removed)
   const categoryConfig = {
-    'internship': {
-      label: 'INTERNSHIP',
-      subCategories: {
-        'c4b': { label: 'Code4Bharat (C4B)'},
-        'mj': { label: 'Marketing Junction (MJ)'}
-      }
+    'code4bharat': {
+      label: 'Code4Bharat',
+      batches: []
+    },
+    'marketing-junction': {
+      label: 'Marketing Junction',
+      batches: []
     },
     'fsd': {
       label: 'FSD',
@@ -75,7 +75,7 @@ export default function CreateCertificateProfessional() {
     },
     'bootcamp': {
       label: 'BOOTCAMP',
-      batches: ['Bootcamp Batch 1', 'Bootcamp Batch 2', 'Bootcamp Batch 3']
+      batches: []
     }
   };
 
@@ -87,17 +87,20 @@ export default function CreateCertificateProfessional() {
     }
   }, [resendTimer]);
 
-  // Fetch names when category is selected
+  // Fetch names when category/batch is selected
   useEffect(() => {
-    if (formData.category === 'internship' && formData.subCategory) {
-      fetchNames();
-    } else if (formData.category && formData.category !== 'internship' && formData.batch) {
+    const shouldFetchNames = formData.category && (
+      categoryConfig[formData.category]?.batches?.length === 0 || 
+      formData.batch
+    );
+
+    if (shouldFetchNames) {
       fetchNames();
     } else {
       setNamesList([]);
       setFormData(prev => ({ ...prev, internId: '', name: '', course: '' }));
     }
-  }, [formData.category, formData.subCategory, formData.batch]);
+  }, [formData.category, formData.batch]);
 
   // Fetch courses when name is selected
   useEffect(() => {
@@ -128,7 +131,6 @@ export default function CreateCertificateProfessional() {
         headers: getAuthHeaders(),
         params: {
           category: formData.category,
-          subCategory: formData.subCategory,
           batch: formData.batch
         }
       });
@@ -170,7 +172,6 @@ export default function CreateCertificateProfessional() {
         headers: getAuthHeaders(),
         params: {
           category: formData.category,
-          subCategory: formData.subCategory,
           batch: formData.batch,
           internId: formData.internId
         }
@@ -182,6 +183,8 @@ export default function CreateCertificateProfessional() {
       } else {
         console.warn('Using mock course data (no courses found from backend)');
         const mockCourses = [
+          'Full Stack Certificate (MERN Stack)',
+          'Digital Marketing Specialist Certificate',
           'Web Development Fundamentals',
           'Full Stack Development',
           'Digital Marketing Basics',
@@ -196,6 +199,8 @@ export default function CreateCertificateProfessional() {
       console.error('Fetch courses error:', error);
       toast.error('Failed to load courses (using mock data)');
       const mockCourses = [
+        'Full Stack Certificate (MERN Stack)',
+        'Digital Marketing Specialist Certificate',
         'Web Development Fundamentals',
         'Full Stack Development',
         'Digital Marketing Basics',
@@ -214,14 +219,13 @@ export default function CreateCertificateProfessional() {
       const newData = { ...prev, [field]: value };
 
       if (field === 'category') {
-        newData.subCategory = '';
         newData.batch = '';
         newData.internId = '';
         newData.name = '';
         newData.course = '';
       }
 
-      if (field === 'subCategory' || field === 'batch') {
+      if (field === 'batch') {
         newData.internId = '';
         newData.name = '';
         newData.course = '';
@@ -240,16 +244,9 @@ export default function CreateCertificateProfessional() {
 
   const sendOTP = async () => {
     try {
-      const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
-      
-      if (!adminData.whatsappNumber) {
-        toast.error('WhatsApp number not found. Please update your profile.');
-        return;
-      }
-
       const response = await axios.post(
-        `${API_URL}/api/otp/send`,
-        { phoneNumber: adminData.whatsappNumber, adminName: adminData.name || 'Admin' },
+        `${API_URL}/api/certificates/otp/send`,
+        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' },
         { headers: getAuthHeaders() }
       );
 
@@ -277,9 +274,9 @@ export default function CreateCertificateProfessional() {
       const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
       
       const response = await axios.post(
-        `${API_URL}/api/otp/verify`,
+        `${API_URL}/api/certificates/otp/verify`,
         { 
-          phoneNumber: adminData.whatsappNumber,
+          phone: "919321488422",
           otp: otpCode 
         },
         { headers: getAuthHeaders() }
@@ -398,23 +395,21 @@ export default function CreateCertificateProfessional() {
       const text = e.target.result;
       const lines = text.split('\n').filter(line => line.trim());
       
-      // Skip header row
       const dataLines = lines.slice(1);
       
       const parsed = dataLines.map((line, index) => {
         const values = line.split(',').map(v => v.trim());
         
         return {
-          rowNumber: index + 2, // +2 because header is row 1, data starts at row 2
+          rowNumber: index + 2,
           name: values[0] || '',
           phone: values[1] || '',
           course: values[2] || '',
           category: values[3] || '',
-          subCategory: values[4] || '',
-          batch: values[5] || '',
-          issueDate: values[6] || new Date().toISOString().split('T')[0]
+          batch: values[4] || '',
+          issueDate: values[5] || new Date().toISOString().split('T')[0]
         };
-      }).filter(row => row.name && row.phone); // Filter out empty rows
+      }).filter(row => row.name && row.phone);
 
       setCsvData(parsed);
       toast.success(`${parsed.length} records loaded from CSV`);
@@ -423,11 +418,11 @@ export default function CreateCertificateProfessional() {
   };
 
   const downloadSampleCSV = () => {
-    const csvContent = `Name,Phone,Course,Category,SubCategory,Batch,IssueDate
-Aarav Sharma,919876543210,Web Development Fundamentals,internship,c4b,,2025-01-15
-Neha Verma,919876543211,Full Stack Development,fsd,,FSD1,2025-01-15
-Rahul Singh,919876543212,Digital Marketing Basics,internship,mj,,2025-01-15
-Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
+    const csvContent = `Name,Phone,Course,Category,Batch,IssueDate
+Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
+Neha Verma,919876543211,Full Stack Development,fsd,FSD1,2025-01-15
+Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
+Priya Patel,919876543213,Python Programming,bvoc,Batch 1,2025-01-15`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -503,7 +498,6 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
   const resetForm = () => {
     setFormData({
       category: '',
-      subCategory: '',
       batch: '',
       internId: '',
       name: '',
@@ -521,19 +515,33 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
       return false;
     }
 
-    if (formData.category === 'internship' && !formData.subCategory) {
-      return false;
-    }
-
-    if (formData.category !== 'internship' && !formData.batch) {
+    // Check if batch is required for this category
+    const hasBatches = categoryConfig[formData.category]?.batches?.length > 0;
+    if (hasBatches && !formData.batch) {
       return false;
     }
 
     return true;
   };
 
+  const needsBatchSelection = () => {
+    return formData.category && categoryConfig[formData.category]?.batches?.length > 0;
+  };
+
+  const canShowNameSelection = () => {
+    if (!formData.category) return false;
+    
+    // If category has batches, batch must be selected
+    if (needsBatchSelection()) {
+      return formData.batch !== '';
+    }
+    
+    // Otherwise, just category is enough
+    return true;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-6">
+    <div className="min-h-screen text-black bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-6">
       <Toaster position="top-center" />
       
       <motion.div
@@ -608,7 +616,7 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
                     CSV Format Required
                   </p>
                   <p className="text-xs text-blue-700 mb-3">
-                    Columns: Name, Phone, Course, Category, SubCategory, Batch, IssueDate
+                    Columns: Name, Phone, Course, Category, Batch, IssueDate
                   </p>
                   <button
                     onClick={downloadSampleCSV}
@@ -670,7 +678,7 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
                           <td className="px-4 py-2">{row.phone}</td>
                           <td className="px-4 py-2">{row.course}</td>
                           <td className="px-4 py-2">{row.category}</td>
-                          <td className="px-4 py-2">{row.batch || row.subCategory || '-'}</td>
+                          <td className="px-4 py-2">{row.batch || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -759,26 +767,8 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
                 </select>
               </div>
 
-              {/* Conditional Fields Based on Category */}
-              {formData.category === 'internship' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Sub Category *
-                  </label>
-                  <select
-                    value={formData.subCategory}
-                    onChange={(e) => handleInputChange('subCategory', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-                  >
-                    <option value="">Select Sub Category</option>
-                    {Object.entries(categoryConfig.internship.subCategories).map(([key, config]) => (
-                      <option key={key} value={key}>{config.label}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {formData.category && formData.category !== 'internship' && (
+              {/* Batch Selection (conditional) */}
+              {needsBatchSelection() && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Batch *
@@ -797,8 +787,7 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
               )}
 
               {/* Name Selection */}
-              {((formData.category === 'internship' && formData.subCategory) || 
-                (formData.category && formData.category !== 'internship' && formData.batch)) && (
+              {canShowNameSelection() && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <User className="w-4 h-4 inline mr-2" />
@@ -934,14 +923,6 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
                           <span className="text-gray-600">Category:</span>
                           <span className="font-semibold text-gray-900">{categoryConfig[formData.category]?.label}</span>
                         </div>
-                        {formData.category === 'internship' && formData.subCategory && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Type:</span>
-                            <span className="font-semibold text-gray-900">
-                              {categoryConfig.internship.subCategories[formData.subCategory]?.label}
-                            </span>
-                          </div>
-                        )}
                         {formData.batch && (
                           <div className="flex justify-between">
                             <span className="text-gray-600">Batch:</span>
@@ -979,7 +960,7 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
           </div>
         )}
 
-        {/* OTP Modal with WhatsApp Icon - BACKDROP CLICK DISABLED */}
+        {/* OTP Modal with WhatsApp Icon */}
         <AnimatePresence>
           {showOtpModal && (
             <motion.div
@@ -987,7 +968,6 @@ Priya Patel,919876543213,Python Programming,bvoc,,Batch 1,2025-01-15`;
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-              // NO onClick here - backdrop click disabled!
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
