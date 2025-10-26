@@ -57,19 +57,19 @@ export default function CreateCertificate() {
       label: 'Marketing Junction',
       batches: []
     },
-    'fsd': {
+    'FSD': {
       label: 'FSD',
-      batches: ['FSD1', 'FSD2', 'FSD3', 'FSD4']
+      batches: ['B-1', 'B-2', 'B-3', 'B-4']
     },
-    'bvoc': {
+    'BVOC': {
       label: 'BVOC',
-      batches: ['Batch 1', 'Batch 2']
+      batches: ['B-1', 'B-2']
     },
-    'bootcamp': {
+    'BOOTCAMP': {
       label: 'BOOTCAMP',
       batches: []
     },
-    'hr': {
+    'HR': {
       label: 'HR',
       batches: []
     }
@@ -120,31 +120,98 @@ export default function CreateCertificate() {
     return { 'Authorization': `Bearer ${token}` };
   };
 
+  // const fetchNames = async () => {
+  //   setLoadingNames(true);
+  //   try {
+  //     const response = await axios.get(`${API_URL}/api/people/`, {
+  //       headers: getAuthHeaders(),
+  //       params: {
+  //         category: formData.category,
+  //         batch: formData.batch
+  //       }
+  //     });
+
+  //     if (response.data.success && response.data.names?.length > 0) {
+  //       setNamesList(response.data.names);
+  //     } else {
+  //       const mockData = [
+  //         { internId: 'INT001', name: 'Aarav Sharma' },
+  //         { internId: 'INT002', name: 'Neha Verma' },
+  //         { internId: 'INT003', name: 'Rahul Singh' }
+  //       ];
+  //       setNamesList(mockData);
+  //       toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+  //     }
+  //   } catch (error) {
+  //     console.error('Fetch names error:', error);
+  //     toast.error('Failed to load names');
+  //   } finally {
+  //     setLoadingNames(false);
+  //   }
+  // };
+
   const fetchNames = async () => {
     setLoadingNames(true);
     try {
-      const response = await axios.get(`${API_URL}/api/certificates/names`, {
-        headers: getAuthHeaders(),
-        params: {
-          category: formData.category,
-          batch: formData.batch
-        }
-      });
+      if (formData.category === "code4bharat" || formData.category === "marketing-junction") {
+        const response = await axios.get(`${API_URL}/api/people/`, {
+          headers: getAuthHeaders(),
+          params: {
+            category: formData.category,
+          }
+        });
 
-      if (response.data.success && response.data.names?.length > 0) {
-        setNamesList(response.data.names);
-      } else {
-        const mockData = [
-          { internId: 'INT001', name: 'Aarav Sharma' },
-          { internId: 'INT002', name: 'Neha Verma' },
-          { internId: 'INT003', name: 'Rahul Singh' }
-        ];
-        setNamesList(mockData);
-        toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+        if (response.data.success && response.data.names?.length > 0) {
+          setNamesList(response.data.names);
+        } else {
+          console.warn('Using mock data (no names found from backend)');
+          const mockData = [
+            { internId: 'INT001', name: 'Aarav Sharma' },
+            { internId: 'INT002', name: 'Neha Verma' },
+            { internId: 'INT003', name: 'Rahul Singh' },
+            { internId: 'INT004', name: 'Priya Patel' },
+            { internId: 'INT005', name: 'Rohan Mehta' }
+          ];
+          setNamesList(mockData);
+          toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+        }
       }
+      else {
+        const response = await axios.get(`${API_URL}/api/people/`, {
+          headers: getAuthHeaders(),
+          params: {
+            category: formData.category,
+            batch: formData.batch
+          }
+        });
+
+        if (response.data.success && response.data.names?.length > 0) {
+          setNamesList(response.data.names);
+        } else {
+          console.warn('Using mock data (no names found from backend)');
+          const mockData = [
+            { internId: 'INT001', name: 'Aarav Sharma' },
+            { internId: 'INT002', name: 'Neha Verma' },
+            { internId: 'INT003', name: 'Rahul Singh' },
+            { internId: 'INT004', name: 'Priya Patel' },
+            { internId: 'INT005', name: 'Rohan Mehta' }
+          ];
+          setNamesList(mockData);
+          toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+        }
+      }
+
     } catch (error) {
       console.error('Fetch names error:', error);
-      toast.error('Failed to load names');
+      toast.error('Failed to load names (using mock data)');
+      const mockData = [
+        { internId: 'INT001', name: 'Aarav Sharma' },
+        { internId: 'INT002', name: 'Neha Verma' },
+        { internId: 'INT003', name: 'Rahul Singh' },
+        { internId: 'INT004', name: 'Priya Patel' },
+        { internId: 'INT005', name: 'Rohan Mehta' }
+      ];
+      setNamesList(mockData);
     } finally {
       setLoadingNames(false);
     }
@@ -333,7 +400,7 @@ export default function CreateCertificate() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
+    <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
       <Toaster position="top-center" />
       
       <motion.div
@@ -460,7 +527,7 @@ export default function CreateCertificate() {
                       <option value="">Select Name</option>
                       {namesList.map(person => (
                         <option key={person.internId} value={person.internId}>
-                          {person.name} ({person.internId})
+                          {person.name} {/*({person.internId})*/}
                         </option>
                       ))}
                     </select>
