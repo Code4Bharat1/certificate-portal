@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus, CheckCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import axios from 'axios'; // <-- Axios import
 
 export default function AddPeople() {
   const [formData, setFormData] = useState({
@@ -13,51 +14,55 @@ export default function AddPeople() {
     phone: '',
   });
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value, batch: '' });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Basic validations
-  if (!formData.name || !formData.category || !formData.phone) {
-    toast.error('Please fill all required fields');
-    return;
-  }
-
-  // Only check for batch if the category needs it
-  const categoryNeedsBatch = ['fsd', 'bvoc'].includes(formData.category);
-  if (categoryNeedsBatch && !formData.batch) {
-    toast.error('Please select a batch');
-    return;
-  }
-
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/people`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      toast.success('Person added successfully!');
-      setFormData({ name: '', category: '', batch: '', phone: '' });
-    } else {
-      toast.error(data.message || 'Failed to add person');
+    // Basic validations
+    if (!formData.name || !formData.category || !formData.phone) {
+      toast.error('Please fill all required fields');
+      return;
     }
-  } catch (err) {
-    toast.error('Something went wrong');
-  }
-};
 
+    const categoryNeedsBatch = ['FSD', 'BVOC'].includes(formData.category);
+    if (categoryNeedsBatch && !formData.batch) {
+      toast.error('Please select a batch');
+      return;
+    }
 
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/people`,
+        formData,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      console.log(res);
+      
+
+      if (res.data.success || res.status === 201) {
+        toast.success('Person added successfully!');
+        setFormData({ name: '', category: '', batch: '', phone: '' });
+      } else {
+        toast.error(res.data.message || 'Failed to add person');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Something went wrong');
+    }
+  };
 
   const getBatchOptions = () => {
-    if (formData.category === 'fsd') return ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
-    if (formData.category === 'bvoc') return ['Batch 1', 'Batch 2'];
+    if (formData.category === 'FSD') return ['B-1', 'B-2', 'B-3', 'B-4'];
+    if (formData.category === 'BVOC') return ['B-1', 'B-2'];
     return [];
   };
 
@@ -101,9 +106,9 @@ export default function AddPeople() {
               <option value="">Select category</option>
               <option value="code4bharat">Code4Bharat</option>
               <option value="marketing-junction">Marketing Junction</option>
-              <option value="fsd">FSD</option>
-              <option value="bvoc">BVOC</option>
-              <option value="hr">HR</option>
+              <option value="FSD">FSD</option>
+              <option value="BVOC">BVOC</option>
+              <option value="HR">HR</option>
             </select>
           </div>
 
