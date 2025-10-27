@@ -15,8 +15,8 @@ const getActivityIcon = (type) => {
       return <Plus className="w-4 h-4" />;
     case 'downloaded':
       return <Download className="w-4 h-4" />;
-    case 'updated':
-      return <Edit className="w-4 h-4" />;
+    // case 'updated':
+    //   return <Edit className="w-4 h-4" />;
     case 'deleted':
       return <Trash2 className="w-4 h-4" />;
     default:
@@ -54,13 +54,13 @@ const getActivityColor = (type) => {
         icon: 'bg-purple-100 text-purple-600',
         badge: 'bg-purple-100 text-purple-700'
       };
-    case 'updated':
-      return {
-        bg: 'from-amber-50 to-amber-100',
-        dot: 'bg-amber-500 shadow-amber-500/50',
-        icon: 'bg-amber-100 text-amber-600',
-        badge: 'bg-amber-100 text-amber-700'
-      };
+    // case 'updated':
+    //   return {
+    //     bg: 'from-amber-50 to-amber-100',
+    //     dot: 'bg-amber-500 shadow-amber-500/50',
+    //     icon: 'bg-amber-100 text-amber-600',
+    //     badge: 'bg-amber-100 text-amber-700'
+    //   };
     case 'deleted':
       return {
         bg: 'from-red-50 to-red-100',
@@ -304,10 +304,10 @@ export default function ActivityChart() {
               <div className="w-2 h-2 rounded-full bg-purple-500"></div>
               <span>Downloaded</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            {/* <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-amber-500"></div>
               <span>Updated</span>
-            </div>
+            </div> */}
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-red-500"></div>
               <span>Deleted</span>

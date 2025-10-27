@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }) {
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Certificate Portal
+              Portal
               </h1>
             </div>
 

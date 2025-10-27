@@ -79,7 +79,7 @@ export default function BulkCreateCertificate() {
 
         return {
           rowNumber: index + 2,
-          internId: values[0] || '',
+          
           name: values[1] || '',
           phone: values[2] || '',
           course: values[3] || '',
@@ -533,7 +533,7 @@ export default function BulkCreateCertificate() {
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">1.</span>
-                    <span>CSV must include: InternID, Name, Phone, Course, Category, Batch, IssueDate</span>
+                    <span>CSV must include: Name, Phone, Course, Category, Batch, IssueDate</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">2.</span>
