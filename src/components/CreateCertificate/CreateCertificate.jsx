@@ -342,23 +342,28 @@ export default function CreateCertificate() {
   };
 
   const generatePreview = async () => {
-    setLoadingPreview(true);
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/certificates/preview`,
-        formData,
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        setPreviewImage(response.data.previewUrl);
+  setLoadingPreview(true);
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/certificates/preview`,
+      formData,
+      { 
+        headers: getAuthHeaders(),
+        responseType: 'blob' // Important: Tell axios to expect binary data
       }
-    } catch (error) {
-      toast.error('Failed to generate preview');
-    } finally {
-      setLoadingPreview(false);
-    }
-  };
+    );
+
+    // Create a local URL from the blob
+    const imageUrl = URL.createObjectURL(response.data);
+    setPreviewImage(imageUrl);
+    
+  } catch (error) {
+    console.error('Preview error:', error);
+    toast.error('Failed to generate preview');
+  } finally {
+    setLoadingPreview(false);
+  }
+};
 
   const handleSubmit = async () => {
     if (!otpVerified) {
