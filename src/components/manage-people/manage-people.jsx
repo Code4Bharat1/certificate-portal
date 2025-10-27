@@ -544,7 +544,7 @@ export default function ManagePeople() {
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/dashboard")}
           className="mb-6 flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all text-gray-700 font-semibold"
         >
           <ArrowLeft className="w-5 h-5" />
