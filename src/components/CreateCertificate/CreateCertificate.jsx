@@ -226,14 +226,25 @@ export default function CreateCertificate() {
         headers: getAuthHeaders(),
         params: {
           category: formData.category,
-          // batch: formData.batch,
-          // internId: formData.internId
+          name: formData.name  // Pass the selected name
         }
       });
 
-      if (response.data.success && response.data.courses?.length > 0) {
-        setCoursesList(response.data.courses);
+      if (response.data.success) {
+        // Combine all courses (available + completed) for display
+        const allCoursesForCategory = response.data.allCourses || [];
+        setCoursesList(allCoursesForCategory);
+
+        // Set already created certificates for this student
         setCreatedCertificates(response.data.createdCertificates || []);
+
+        // Optional: Show info about completed courses
+        if (response.data.createdCertificates?.length > 0) {
+          toast.success(
+            `${response.data.createdCertificates.length} course(s) already completed`,
+            // { icon: '✅', duration: 3000 }
+          );
+        }
       }
     } catch (error) {
       console.error('Fetch courses error:', error);
@@ -532,7 +543,7 @@ export default function CreateCertificate() {
                 </div>
 
                 {/* Course Selection */}
-                <div>
+                {/* <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <BookOpen className="w-4 h-4 inline mr-2" />
                     Course *
@@ -553,6 +564,54 @@ export default function CreateCertificate() {
                         <option key={index} value={course}>{course}</option>
                       ))}
                     </select>
+                  )}
+                </div> */}
+
+                {/* // Replace the Course Selection section in your code with this: */}
+
+                {/* Course Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <BookOpen className="w-4 h-4 inline mr-2" />
+                    Course *
+                  </label>
+                  {loadingCourses ? (
+                    <div className="flex items-center justify-center py-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={formData.course}
+                        onChange={(e) => handleInputChange('course', e.target.value)}
+                        disabled={!coursesList.length}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
+                      >
+                        <option value="">Select Course</option>
+                        {coursesList.map((course, index) => {
+                          const isCompleted = createdCertificates.includes(course);
+                          return (
+                            <option
+                              key={index}
+                              value={course}
+                              style={{
+                                color: isCompleted ? '#16a34a' : '#000000',
+                                fontWeight: isCompleted ? '600' : '400',
+                                backgroundColor: isCompleted ? '#f0fdf4' : 'transparent'
+                              }}
+                            >
+                              {course}{isCompleted ? ' (Already Created)' : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {createdCertificates.length > 0 && (
+                        <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Green courses with "(Already Created)" are completed
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
