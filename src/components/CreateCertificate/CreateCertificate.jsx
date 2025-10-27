@@ -21,6 +21,8 @@ export default function CreateCertificate() {
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
+  const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
+
   // Form States
   const [formData, setFormData] = useState({
     name: '',
@@ -48,32 +50,56 @@ export default function CreateCertificate() {
   const [showPreview, setShowPreview] = useState(false);
 
   // Category Configuration
+  // const categoryConfig = {
+  //   'code4bharat': {
+  //     label: 'Code4Bharat',
+  //     batches: []
+  //   },
+  //   'marketing-junction': {
+  //     label: 'Marketing Junction',
+  //     batches: []
+  //   },
+  //   'FSD': {
+  //     label: 'FSD',
+  //     batches: ['B-1', 'B-2', 'B-3', 'B-4']
+  //   },
+  //   'BVOC': {
+  //     label: 'BVOC',
+  //     batches: ['B-1', 'B-2']
+  //   },
+  //   'BOOTCAMP': {
+  //     label: 'BOOTCAMP',
+  //     batches: []
+  //   },
+  //   'HR': {
+  //     label: 'HR',
+  //     batches: []
+  //   }
+  // };
+
   const categoryConfig = {
-    'code4bharat': {
-      label: 'Code4Bharat',
-      batches: []
-    },
-    'marketing-junction': {
-      label: 'Marketing Junction',
-      batches: []
-    },
-    'FSD': {
-      label: 'FSD',
-      batches: ['B-1', 'B-2', 'B-3', 'B-4']
-    },
-    'BVOC': {
-      label: 'BVOC',
-      batches: ['B-1', 'B-2']
-    },
-    'BOOTCAMP': {
-      label: 'BOOTCAMP',
-      batches: []
-    },
-    'HR': {
-      label: 'HR',
-      batches: []
+  'code4bharat': { label: 'Code4Bharat', batches: [] },
+  'marketing-junction': { label: 'Marketing Junction', batches: [] },
+  'FSD': { label: 'FSD', batches: batches.FSD || [] },
+  'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
+  'BOOTCAMP': { label: 'BOOTCAMP', batches: [] },
+  'HR': { label: 'HR', batches: [] }
+};
+
+  useEffect(() => {
+  const fetchBatches = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/batches`);
+      if (response.data.success) {
+        setBatches(response.data.batches);
+      }
+    } catch (error) {
+      console.error('Error fetching batches:', error);
+      toast.error('Failed to load batches');
     }
   };
+  fetchBatches();
+}, []);
 
   // OTP Timer
   useEffect(() => {
