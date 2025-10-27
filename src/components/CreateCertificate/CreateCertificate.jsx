@@ -163,18 +163,19 @@ export default function CreateCertificate() {
 
         if (response.data.success && response.data.names?.length > 0) {
           setNamesList(response.data.names);
-        } else {
-          console.warn('Using mock data (no names found from backend)');
-          const mockData = [
-            { internId: 'INT001', name: 'Aarav Sharma' },
-            { internId: 'INT002', name: 'Neha Verma' },
-            { internId: 'INT003', name: 'Rahul Singh' },
-            { internId: 'INT004', name: 'Priya Patel' },
-            { internId: 'INT005', name: 'Rohan Mehta' }
-          ];
-          setNamesList(mockData);
-          toast('Loaded mock data (testing mode)', { icon: '⚙️' });
         }
+        // else {
+        //   console.warn('Using mock data (no names found from backend)');
+        //   const mockData = [
+        //     { internId: 'INT001', name: 'Aarav Sharma' },
+        //     { internId: 'INT002', name: 'Neha Verma' },
+        //     { internId: 'INT003', name: 'Rahul Singh' },
+        //     { internId: 'INT004', name: 'Priya Patel' },
+        //     { internId: 'INT005', name: 'Rohan Mehta' }
+        //   ];
+        //   setNamesList(mockData);
+        //   toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+        // }
       }
       else {
         const response = await axios.get(`${API_URL}/api/people/`, {
@@ -187,18 +188,19 @@ export default function CreateCertificate() {
 
         if (response.data.success && response.data.names?.length > 0) {
           setNamesList(response.data.names);
-        } else {
-          console.warn('Using mock data (no names found from backend)');
-          const mockData = [
-            { internId: 'INT001', name: 'Aarav Sharma' },
-            { internId: 'INT002', name: 'Neha Verma' },
-            { internId: 'INT003', name: 'Rahul Singh' },
-            { internId: 'INT004', name: 'Priya Patel' },
-            { internId: 'INT005', name: 'Rohan Mehta' }
-          ];
-          setNamesList(mockData);
-          toast('Loaded mock data (testing mode)', { icon: '⚙️' });
         }
+        // else {
+        //   console.warn('Using mock data (no names found from backend)');
+        //   const mockData = [
+        //     { internId: 'INT001', name: 'Aarav Sharma' },
+        //     { internId: 'INT002', name: 'Neha Verma' },
+        //     { internId: 'INT003', name: 'Rahul Singh' },
+        //     { internId: 'INT004', name: 'Priya Patel' },
+        //     { internId: 'INT005', name: 'Rohan Mehta' }
+        //   ];
+        //   setNamesList(mockData);
+        //   toast('Loaded mock data (testing mode)', { icon: '⚙️' });
+        // }
       }
 
     } catch (error) {
@@ -342,28 +344,28 @@ export default function CreateCertificate() {
   };
 
   const generatePreview = async () => {
-  setLoadingPreview(true);
-  try {
-    const response = await axios.post(
-      `${API_URL}/api/certificates/preview`,
-      formData,
-      { 
-        headers: getAuthHeaders(),
-        responseType: 'blob' // Important: Tell axios to expect binary data
-      }
-    );
+    setLoadingPreview(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/certificates/preview`,
+        formData,
+        {
+          headers: getAuthHeaders(),
+          responseType: 'blob' // Important: Tell axios to expect binary data
+        }
+      );
 
-    // Create a local URL from the blob
-    const imageUrl = URL.createObjectURL(response.data);
-    setPreviewImage(imageUrl);
-    
-  } catch (error) {
-    console.error('Preview error:', error);
-    toast.error('Failed to generate preview');
-  } finally {
-    setLoadingPreview(false);
-  }
-};
+      // Create a local URL from the blob
+      const imageUrl = URL.createObjectURL(response.data);
+      setPreviewImage(imageUrl);
+
+    } catch (error) {
+      console.error('Preview error:', error);
+      toast.error('Failed to generate preview');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!otpVerified) {

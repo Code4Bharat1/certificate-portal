@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload, FileSpreadsheet, Download, CheckCircle, XCircle, 
+import {
+  Upload, FileSpreadsheet, Download, CheckCircle, XCircle,
   ArrowLeft, Loader2, AlertCircle, X, FileText, Image as ImageIcon,
   User, Hash, Calendar, Award, Eye, Trash2, Home
 } from 'lucide-react';
@@ -18,7 +18,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
 export default function BulkCreateCertificate() {
   const router = useRouter();
-  
+
   // States
   const [csvFile, setCsvFile] = useState(null);
   const [csvData, setCsvData] = useState([]);
@@ -26,7 +26,7 @@ export default function BulkCreateCertificate() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const [generatedCertificates, setGeneratedCertificates] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   // OTP States
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -71,12 +71,12 @@ export default function BulkCreateCertificate() {
     reader.onload = (e) => {
       const text = e.target.result;
       const lines = text.split('\n').filter(line => line.trim());
-      
+
       const dataLines = lines.slice(1);
-      
+
       const parsed = dataLines.map((line, index) => {
         const values = line.split(',').map(v => v.trim());
-        
+
         return {
           rowNumber: index + 2,
           internId: values[0] || '',
@@ -97,12 +97,13 @@ export default function BulkCreateCertificate() {
 
   // Download Sample CSV
   const downloadSampleCSV = () => {
-    const csvContent = `InternID,Name,Phone,Course,Category,Batch,IssueDate
-C4B001,Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
-FSD002,Neha Verma,919876543211,Full Stack Development,fsd,FSD1,2025-01-15
-MJ003,Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
-BV004,Priya Patel,919876543213,Python Programming,bvoc,Batch 1,2025-01-15
-BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
+    const csvContent = `
+    Name,Phone,Course,Category,Batch,IssueDate
+    Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
+    Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
+    Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
+    Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
+    Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -144,12 +145,12 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
         toast.error('Please enter complete OTP');
         return;
       }
-      
+
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/verify`,
-        { 
+        {
           phone: "919321488422",
-          otp: otpCode 
+          otp: otpCode
         },
         { headers: getAuthHeaders() }
       );
@@ -213,13 +214,13 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
           adminPhone: adminData.whatsappNumber || "919321488422",
           adminName: adminData.name || 'Admin'
         },
-        { 
+        {
           headers: getAuthHeaders(),
           onUploadProgress: (progressEvent) => {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setBulkProgress(prev => ({ 
-              ...prev, 
-              current: Math.floor(csvData.length * progress / 100) 
+            setBulkProgress(prev => ({
+              ...prev,
+              current: Math.floor(csvData.length * progress / 100)
             }));
           }
         }
@@ -227,15 +228,15 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
 
       if (response.data.success) {
         const { stats, certificates } = response.data;
-        
+
         // Store generated certificates
         setGeneratedCertificates(certificates || []);
-        
+
         toast.success(
           `✅ Bulk creation completed!\nSuccess: ${stats.successful} | Failed: ${stats.failed}`,
           { duration: 5000 }
         );
-        
+
         setShowSuccess(true);
       }
     } catch (error) {
@@ -250,7 +251,7 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
   const downloadAsPDF = async (certificate) => {
     try {
       toast.loading('Generating PDF...');
-      
+
       // Create a temporary div to render certificate
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
@@ -280,14 +281,14 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
 
       const canvas = await html2canvas(tempDiv);
       const imgData = canvas.toDataURL('image/png');
-      
+
       const pdf = new jsPDF('landscape', 'mm', 'a4');
       const imgWidth = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(`${certificate.name}_${certificate.certificateId}.pdf`);
-      
+
       document.body.removeChild(tempDiv);
       toast.dismiss();
       toast.success('PDF downloaded!');
@@ -301,11 +302,11 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
   const downloadAsJPG = async (certificate) => {
     try {
       toast.loading('Generating JPG...');
-      
+
       // Fetch the actual certificate image from backend
       const response = await axios.get(
         `${API_URL}/api/certificates/${certificate.certificateId}/image`,
-        { 
+        {
           headers: getAuthHeaders(),
           responseType: 'blob'
         }
@@ -319,7 +320,7 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       toast.dismiss();
       toast.success('JPG downloaded!');
     } catch (error) {
@@ -347,7 +348,7 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 p-6">
       <Toaster position="top-center" />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -431,8 +432,8 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
                           {csvFile ? csvFile.name : 'Click to upload CSV file'}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
-                          {csvData.length > 0 
-                            ? `${csvData.length} records loaded` 
+                          {csvData.length > 0
+                            ? `${csvData.length} records loaded`
                             : 'Upload CSV with student details'}
                         </p>
                       </div>
@@ -540,7 +541,11 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">3.</span>
-                    <span>Category: code4bharat, marketing-junction, fsd, bvoc, bootcamp, hr</span>
+                    <span>Category: code4bharat, marketing-junction, FSD, BVOC, BOOTCAMP, HR</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold">3.</span>
+                    <span>Batch: B-1, B-2, B-3 </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">4.</span>
@@ -637,8 +642,8 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
                   {/* Certificate Preview Image */}
                   {cert.previewUrl && (
                     <div className="mb-4 relative overflow-hidden rounded-lg bg-gray-100 aspect-[1.414/1]">
-                      <img 
-                        src={cert.previewUrl} 
+                      <img
+                        src={cert.previewUrl}
                         alt={cert.name}
                         className="w-full h-full object-cover"
                       />
@@ -747,7 +752,7 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h2>
                   <p className="text-gray-600">
-                    {otpSent 
+                    {otpSent
                       ? 'Enter the 6-digit code sent to your WhatsApp'
                       : 'We will send an OTP to verify this bulk operation'}
                   </p>
@@ -832,8 +837,8 @@ BC005,Rohan Mehta,919876543214,Data Analytics,bootcamp,,2025-01-15`;
                 </div>
 
                 {previewCertificate.previewUrl && (
-                  <img 
-                    src={previewCertificate.previewUrl} 
+                  <img
+                    src={previewCertificate.previewUrl}
                     alt={previewCertificate.name}
                     className="w-full rounded-lg shadow-lg mb-4"
                   />
