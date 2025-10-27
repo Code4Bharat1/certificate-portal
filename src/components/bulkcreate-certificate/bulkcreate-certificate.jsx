@@ -26,6 +26,8 @@ export default function BulkCreateCertificate() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const [generatedCertificates, setGeneratedCertificates] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [bulkStats, setBulkStats] = useState(null);
+  const [whatsappErrors, setWhatsappErrors] = useState([]);
 
   // OTP States
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -79,13 +81,12 @@ export default function BulkCreateCertificate() {
 
         return {
           rowNumber: index + 2,
-          
-          name: values[1] || '',
-          phone: values[2] || '',
-          course: values[3] || '',
-          category: values[4] || '',
-          batch: values[5] || '',
-          issueDate: values[6] || new Date().toISOString().split('T')[0]
+          name: values[0] || '',
+          phone: values[1] || '',
+          course: values[2] || '',
+          category: values[3] || '',
+          batch: values[4] || '',
+          issueDate: values[5] || new Date().toISOString().split('T')[0]
         };
       }).filter(row => row.name && row.phone);
 
@@ -97,13 +98,12 @@ export default function BulkCreateCertificate() {
 
   // Download Sample CSV
   const downloadSampleCSV = () => {
-    const csvContent = `
-    Name,Phone,Course,Category,Batch,IssueDate
-    Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
-    Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
-    Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
-    Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
-    Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
+    const csvContent = `Name,Phone,Course,Category,Batch,IssueDate
+Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
+Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
+Rahul Singh,919876543212,Digital Marketing Basics,marketiq,,2025-01-15
+Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
+Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -205,14 +205,12 @@ export default function BulkCreateCertificate() {
     setBulkProgress({ current: 0, total: csvData.length });
 
     try {
-      const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
-
       const response = await axios.post(
         `${API_URL}/api/certificates/bulk`,
         {
           certificates: csvData,
-          adminPhone: adminData.whatsappNumber || "919321488422",
-          adminName: adminData.name || 'Admin'
+          adminPhone: "919321488422",
+          adminName: 'Admin'
         },
         {
           headers: getAuthHeaders(),
@@ -226,21 +224,52 @@ export default function BulkCreateCertificate() {
         }
       );
 
+      console.log('✅ Backend Response:', response.data);
+
       if (response.data.success) {
-        const { stats, certificates } = response.data;
+        // ✅ FIXED: Extract data matching actual backend response structure
+        const { results, data } = response.data;
 
-        // Store generated certificates
-        setGeneratedCertificates(certificates || []);
+        // Store stats from results
+        const stats = {
+          total: results.total,
+          successful: results.successful,
+          failed: results.failed,
+          whatsappSent: 0,
+          whatsappFailed: 0
+        };
+        setBulkStats(stats);
+        
+        // Store generated certificates from data.successful
+        const successfulCerts = data.successful.map(cert => ({
+          certificateId: cert.certificateId,
+          name: cert.name,
+          course: csvData.find(c => c.name === cert.name)?.course || 'N/A',
+          category: csvData.find(c => c.name === cert.name)?.category || 'N/A',
+          batch: csvData.find(c => c.name === cert.name)?.batch || null,
+          issueDate: csvData.find(c => c.name === cert.name)?.issueDate || new Date().toISOString(),
+          phone: csvData.find(c => c.name === cert.name)?.phone || 'N/A'
+        }));
+        setGeneratedCertificates(successfulCerts);
+        
+        // Store failed certificates as WhatsApp errors
+        setWhatsappErrors(data.failed || []);
 
-        toast.success(
-          `✅ Bulk creation completed!\nSuccess: ${stats.successful} | Failed: ${stats.failed}`,
-          { duration: 5000 }
-        );
+        // Show detailed success message
+        let message = `✅ Bulk creation completed!\n`;
+        message += `✓ Certificates Created: ${results.successful}\n`;
+        
+        if (results.failed > 0) {
+          message += `❌ Failed: ${results.failed}`;
+        }
+
+        toast.success(message, { duration: 6000 });
 
         setShowSuccess(true);
       }
     } catch (error) {
-      console.error('Bulk creation error:', error);
+      console.error('❌ Bulk creation error:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.message || 'Bulk creation failed');
     } finally {
       setIsBulkCreating(false);
@@ -252,7 +281,6 @@ export default function BulkCreateCertificate() {
     try {
       toast.loading('Generating PDF...');
 
-      // Create a temporary div to render certificate
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
@@ -303,7 +331,6 @@ export default function BulkCreateCertificate() {
     try {
       toast.loading('Generating JPG...');
 
-      // Fetch the actual certificate image from backend
       const response = await axios.get(
         `${API_URL}/api/certificates/${certificate.certificateId}/image`,
         {
@@ -343,6 +370,8 @@ export default function BulkCreateCertificate() {
     setOtpVerified(false);
     setOtp(['', '', '', '', '', '']);
     setShowSuccess(false);
+    setBulkStats(null);
+    setWhatsappErrors([]);
   };
 
   return (
@@ -455,6 +484,7 @@ export default function BulkCreateCertificate() {
                             </div>
                             <div className="text-right">
                               <p className="text-xs text-gray-500">{row.category}</p>
+                              <p className="text-xs text-gray-500">{row.phone}</p>
                               {row.batch && <p className="text-xs text-gray-500">{row.batch}</p>}
                             </div>
                           </div>
@@ -541,18 +571,18 @@ export default function BulkCreateCertificate() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">3.</span>
-                    <span>Category: code4bharat, marketing-junction, FSD, BVOC, BOOTCAMP, HR</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-600 font-bold">3.</span>
-                    <span>Batch: B-1, B-2, B-3 </span>
+                    <span>Category: code4bharat, marketiq, FSD, BVOC, BOOTCAMP, HR</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">4.</span>
-                    <span>Date format: YYYY-MM-DD (e.g., 2025-01-15)</span>
+                    <span>Batch: B-1, B-2, B-3 (optional)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">5.</span>
+                    <span>Date format: YYYY-MM-DD (e.g., 2025-01-15)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold">6.</span>
                     <span>Download sample CSV template for reference</span>
                   </li>
                 </ul>
@@ -598,129 +628,182 @@ export default function BulkCreateCertificate() {
           </div>
         ) : (
           // Generated Certificates List
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Award className="w-6 h-6 text-green-600" />
-                Generated Certificates ({generatedCertificates.length})
-              </h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    generatedCertificates.forEach(cert => downloadAsJPG(cert));
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download All as JPG
-                </button>
-                <button
-                  onClick={() => {
-                    generatedCertificates.forEach(cert => downloadAsPDF(cert));
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download All as PDF
-                </button>
-              </div>
-            </div>
+          <div className="space-y-6">
+            {/* Stats Summary */}
+            {bulkStats && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-xl p-6"
+              >
+                <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Bulk Creation Summary</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm text-blue-600 font-medium">Total</p>
+                    <p className="text-2xl font-bold text-blue-700">{bulkStats.total}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <p className="text-sm text-green-600 font-medium">Successful</p>
+                    <p className="text-2xl font-bold text-green-700">{bulkStats.successful}</p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-lg p-4">
+                    <p className="text-sm text-emerald-600 font-medium">WhatsApp Sent</p>
+                    <p className="text-2xl font-bold text-emerald-700">{bulkStats.whatsappSent || 0}</p>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <p className="text-sm text-orange-600 font-medium">WhatsApp Failed</p>
+                    <p className="text-2xl font-bold text-orange-700">{bulkStats.whatsappFailed || 0}</p>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-4">
+                    <p className="text-sm text-red-600 font-medium">Failed</p>
+                    <p className="text-2xl font-bold text-red-700">{bulkStats.failed || 0}</p>
+                  </div>
+                </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {generatedCertificates.map((cert, index) => (
-                <motion.div
-                  key={cert.certificateId}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-2 border-gray-200 rounded-xl p-5 hover:border-purple-400 hover:shadow-lg transition-all group"
-                >
-                  {/* Certificate Preview Image */}
-                  {cert.previewUrl && (
-                    <div className="mb-4 relative overflow-hidden rounded-lg bg-gray-100 aspect-[1.414/1]">
-                      <img
-                        src={cert.previewUrl}
-                        alt={cert.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                {/* WhatsApp Errors */}
+                {whatsappErrors.length > 0 && (
+                  <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <h4 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      WhatsApp Delivery Issues ({whatsappErrors.length})
+                    </h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {whatsappErrors.map((error, idx) => (
+                        <div key={idx} className="text-sm text-orange-800">
+                          <span className="font-semibold">{error.name}</span> ({error.phone}): {error.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Certificates Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl shadow-xl p-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Award className="w-6 h-6 text-green-600" />
+                  Generated Certificates ({generatedCertificates.length})
+                </h2>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      generatedCertificates.forEach(cert => downloadAsJPG(cert));
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download All as JPG
+                  </button>
+                  <button
+                    onClick={() => {
+                      generatedCertificates.forEach(cert => downloadAsPDF(cert));
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download All as PDF
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {generatedCertificates.map((cert, index) => (
+                  <motion.div
+                    key={cert.certificateId}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-2 border-gray-200 rounded-xl p-5 hover:border-purple-400 hover:shadow-lg transition-all group"
+                  >
+                    {/* Certificate Preview Image */}
+                    {cert.previewUrl && (
+                      <div className="mb-4 relative overflow-hidden rounded-lg bg-gray-100 aspect-[1.414/1]">
+                        <img
+                          src={cert.previewUrl}
+                          alt={cert.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={() => handlePreview(cert)}
+                            className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-all flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Preview
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Certificate Details */}
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <User className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 mb-1">Name</p>
+                          <p className="font-bold text-gray-900 truncate">{cert.name}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Hash className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 mb-1">Certificate ID</p>
+                          <p className="font-mono text-sm text-gray-900 truncate">{cert.certificateId}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Award className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 mb-1">Course</p>
+                          <p className="text-sm text-gray-900 line-clamp-2">{cert.course}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Calendar className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500 mb-1">Issue Date</p>
+                          <p className="text-sm text-gray-900">
+                            {new Date(cert.issueDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-2 gap-2 pt-3 border-t">
                         <button
-                          onClick={() => handlePreview(cert)}
-                          className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-all flex items-center gap-2"
+                          onClick={() => downloadAsJPG(cert)}
+                          className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-all flex items-center justify-center gap-1"
                         >
-                          <Eye className="w-4 h-4" />
-                          Preview
+                          <ImageIcon className="w-4 h-4" />
+                          JPG
+                        </button>
+                        <button
+                          onClick={() => downloadAsPDF(cert)}
+                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 transition-all flex items-center justify-center gap-1"
+                        >
+                          <FileText className="w-4 h-4" />
+                          PDF
                         </button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Certificate Details */}
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <User className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 mb-1">Name</p>
-                        <p className="font-bold text-gray-900 truncate">{cert.name}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Hash className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 mb-1">Certificate ID</p>
-                        <p className="font-mono text-sm text-gray-900 truncate">{cert.certificateId}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Award className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 mb-1">Course</p>
-                        <p className="text-sm text-gray-900 line-clamp-2">{cert.course}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Calendar className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 mb-1">Issue Date</p>
-                        <p className="text-sm text-gray-900">
-                          {new Date(cert.issueDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-2 pt-3 border-t">
-                      <button
-                        onClick={() => downloadAsJPG(cert)}
-                        className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-all flex items-center justify-center gap-1"
-                      >
-                        <ImageIcon className="w-4 h-4" />
-                        JPG
-                      </button>
-                      <button
-                        onClick={() => downloadAsPDF(cert)}
-                        className="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 transition-all flex items-center justify-center gap-1"
-                      >
-                        <FileText className="w-4 h-4" />
-                        PDF
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         )}
 
         {/* OTP Modal */}
@@ -906,7 +989,17 @@ export default function BulkCreateCertificate() {
                 </motion.div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
                 <p className="text-gray-600 mb-4">
-                  All certificates created successfully! WhatsApp notifications sent to all students.
+                  {bulkStats && (
+                    <>
+                      Created {bulkStats.successful} certificates successfully!
+                      {bulkStats.whatsappSent > 0 && (
+                        <> {bulkStats.whatsappSent} WhatsApp notifications sent.</>
+                      )}
+                      {bulkStats.whatsappFailed > 0 && (
+                        <> {bulkStats.whatsappFailed} WhatsApp notifications failed.</>
+                      )}
+                    </>
+                  )}
                 </p>
                 <button
                   onClick={() => setShowSuccess(false)}
