@@ -1,4 +1,4 @@
-import AddPeople from '@/components/Add-People/Add-People'
+import AddPeople from '@/components/manage-people/manage-people'
 import React from 'react'
 
 const page = () => {
