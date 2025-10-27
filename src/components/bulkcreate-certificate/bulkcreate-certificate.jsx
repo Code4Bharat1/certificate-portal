@@ -208,7 +208,7 @@ export default function BulkCreateCertificate() {
       const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
 
       const response = await axios.post(
-        `${API_URL}/api/certificates/bulk-create`,
+        `${API_URL}/api/certificates/bulk`,
         {
           certificates: csvData,
           adminPhone: adminData.whatsappNumber || "919321488422",
