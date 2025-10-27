@@ -405,7 +405,7 @@ export default function TemplateManagement() {
                 id="fileInput"
                 onChange={handleFileSelect}
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.psd,.ai"
+                accept="image/*,"
               />
               <label htmlFor="fileInput" className="cursor-pointer">
                 <div className="flex flex-col items-center gap-4">
@@ -421,7 +421,7 @@ export default function TemplateManagement() {
                       {selectedFile ? selectedFile.name : 'Click to upload template'}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Supports: Images, PDF, DOC, PSD, AI files (Max 50MB)
+                      Supports: Images (Max 50MB)
                     </p>
                   </div>
                 </div>
