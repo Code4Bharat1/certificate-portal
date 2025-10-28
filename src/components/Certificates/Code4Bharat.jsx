@@ -79,6 +79,9 @@ export default function Code4BharatPage() {
         }
       );
 
+      console.log(response);
+      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

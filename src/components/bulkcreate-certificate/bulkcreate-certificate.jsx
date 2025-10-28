@@ -101,7 +101,7 @@ export default function BulkCreateCertificate() {
     const csvContent = `Name,Phone,Course,Category,Batch,IssueDate
 Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
 Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
-Rahul Singh,919876543212,Digital Marketing Basics,marketiq,,2025-01-15
+Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
 Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
 Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
 
@@ -235,11 +235,11 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
           total: results.total,
           successful: results.successful,
           failed: results.failed,
-          whatsappSent: 0,
-          whatsappFailed: 0
+          whatsappSent: results.whatsappSent,
+          whatsappFailed: results.whatsappFailed
         };
         setBulkStats(stats);
-        
+
         // Store generated certificates from data.successful
         const successfulCerts = data.successful.map(cert => ({
           certificateId: cert.certificateId,
@@ -251,14 +251,14 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
           phone: csvData.find(c => c.name === cert.name)?.phone || 'N/A'
         }));
         setGeneratedCertificates(successfulCerts);
-        
+
         // Store failed certificates as WhatsApp errors
         setWhatsappErrors(data.failed || []);
 
         // Show detailed success message
         let message = `✅ Bulk creation completed!\n`;
         message += `✓ Certificates Created: ${results.successful}\n`;
-        
+
         if (results.failed > 0) {
           message += `❌ Failed: ${results.failed}`;
         }
@@ -276,85 +276,295 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
     }
   };
 
-  // Download Certificate as PDF
+  // ✅ Download Certificate as PDF (same as handleDownloadPDF)
   const downloadAsPDF = async (certificate) => {
     try {
-      toast.loading('Generating PDF...');
-
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.innerHTML = `
-        <div style="padding: 40px; background: white; width: 800px;">
-          <div style="text-align: center; border: 3px solid #4F46E5; padding: 30px; border-radius: 10px;">
-            <h1 style="color: #4F46E5; font-size: 32px; margin-bottom: 10px;">Certificate of Completion</h1>
-            <p style="font-size: 18px; margin: 20px 0;">This is to certify that</p>
-            <h2 style="color: #1F2937; font-size: 28px; margin: 20px 0;">${certificate.name}</h2>
-            <p style="font-size: 16px; margin: 20px 0;">has successfully completed</p>
-            <h3 style="color: #4F46E5; font-size: 24px; margin: 20px 0;">${certificate.course}</h3>
-            <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 14px;">
-              <div>
-                <p><strong>Certificate ID:</strong> ${certificate.certificateId}</p>
-                <p><strong>Issue Date:</strong> ${new Date(certificate.issueDate).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p><strong>Category:</strong> ${certificate.category}</p>
-                ${certificate.batch ? `<p><strong>Batch:</strong> ${certificate.batch}</p>` : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(tempDiv);
-
-      const canvas = await html2canvas(tempDiv);
-      const imgData = canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const imgWidth = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`${certificate.name}_${certificate.certificateId}.pdf`);
-
-      document.body.removeChild(tempDiv);
-      toast.dismiss();
-      toast.success('PDF downloaded!');
-    } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to generate PDF');
-    }
-  };
-
-  // Download Certificate as JPG
-  const downloadAsJPG = async (certificate) => {
-    try {
-      toast.loading('Generating JPG...');
+      toast.success(`Downloading ${certificate.name}.pdf`);
+      const token = sessionStorage.getItem('authToken');
 
       const response = await axios.get(
-        `${API_URL}/api/certificates/${certificate.certificateId}/image`,
+        `${API_URL}/api/certificates/${certificate.certificateId}/download/pdf`,
         {
-          headers: getAuthHeaders(),
-          responseType: 'blob'
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
         }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${certificate.name}_${certificate.certificateId}.jpg`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${certificate.name}.pdf`;
+      a.click();
       window.URL.revokeObjectURL(url);
-
-      toast.dismiss();
-      toast.success('JPG downloaded!');
     } catch (error) {
-      toast.dismiss();
+      console.error(error);
+      toast.error('Failed to download PDF');
+    }
+  };
+
+  // ✅ Download Certificate as JPG (same as handleDownloadJPG)
+  const downloadAsJPG = async (certificate) => {
+    try {
+      toast.success(`Downloading ${certificate.name}.jpg`);
+      const token = sessionStorage.getItem('authToken');
+
+      const response = await axios.get(
+        `${API_URL}/api/certificates/${certificate.certificateId}/download/jpg`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'image/jpeg' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${certificate.name}.jpg`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
       toast.error('Failed to download JPG');
     }
   };
+
+  // Bulk Download All Certificates as Single PDF
+  const handleBulkDownloadPDF = async () => {
+    try {
+      toast.loading('Preparing bulk PDF download...', { id: 'bulk-pdf' });
+
+      const certificateIds = generatedCertificates.map(cert => cert._id || cert.certificateId);
+
+      const token = sessionStorage.getItem('authToken');
+
+      const response = await axios.post(
+        `${API_URL}/api/certificates/bulk/download`,
+        { certificateIds },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          responseType: 'blob',
+        }
+      );
+
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificates_bulk_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('✅ Bulk PDF downloaded successfully!', { id: 'bulk-pdf' });
+
+      // Check response headers for results
+      const resultsHeader = response.headers['x-download-results'];
+      if (resultsHeader) {
+        try {
+          const results = JSON.parse(resultsHeader);
+          if (results.failed > 0) {
+            toast.error(`⚠️ ${results.failed} certificates failed to process`, {
+              duration: 5000
+            });
+          }
+        } catch (e) {
+          console.error('Failed to parse results header:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Bulk PDF download error:', error);
+      toast.error('Failed to download bulk PDF', { id: 'bulk-pdf' });
+    }
+  };
+
+  // Alternative: Bulk Download with Results Info
+  const handleBulkDownloadWithInfo = async () => {
+    try {
+      toast.loading('Preparing bulk PDF download...', { id: 'bulk-pdf-info' });
+
+      const certificateIds = generatedCertificates.map(cert => cert._id || cert.certificateId);
+
+      const token = sessionStorage.getItem('authToken');
+
+      const response = await axios.post(
+        `${API_URL}/api/certificates/bulk/download-info`,
+        { certificateIds },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        const { results, data } = response.data;
+
+        // Show results to user
+        if (results.failed > 0) {
+          toast.error(
+            `⚠️ ${results.failed} certificates failed. ${results.successful} succeeded.`,
+            { duration: 6000 }
+          );
+
+          // Log failed certificates
+          console.error('Failed certificates:', data.failed);
+        }
+
+        // Download PDF from base64
+        const base64Data = data.pdf;
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        toast.success(
+          `✅ Downloaded ${results.successful} certificates successfully!`,
+          { id: 'bulk-pdf-info' }
+        );
+      }
+    } catch (error) {
+      console.error('Bulk PDF download error:', error);
+      toast.error(
+        error.response?.data?.message || 'Failed to download bulk PDF',
+        { id: 'bulk-pdf-info' }
+      );
+    }
+  };
+
+  // Bulk Download All as Individual JPGs (Sequential)
+  const handleBulkDownloadJPG = async () => {
+    const total = generatedCertificates.length;
+    let successful = 0;
+    let failed = 0;
+
+    toast.loading(`Downloading ${total} certificates as JPG...`, { id: 'bulk-jpg' });
+
+    for (let i = 0; i < generatedCertificates.length; i++) {
+      const cert = generatedCertificates[i];
+
+      try {
+        const token = sessionStorage.getItem('authToken');
+
+        const response = await axios.get(
+          `${API_URL}/api/certificates/${cert.certificateId}/download/jpg`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+
+        const blob = new Blob([response.data], { type: 'image/jpeg' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${cert.name.replace(/\s+/g, '_')}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        successful++;
+
+        // Update progress
+        toast.loading(
+          `Downloading JPGs... ${i + 1}/${total}`,
+          { id: 'bulk-jpg' }
+        );
+
+        // Small delay to prevent overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error(`Failed to download ${cert.name}:`, error);
+        failed++;
+      }
+    }
+
+    if (failed === 0) {
+      toast.success(`✅ All ${successful} JPGs downloaded successfully!`, { id: 'bulk-jpg' });
+    } else {
+      toast.error(
+        `⚠️ Downloaded ${successful} JPGs. ${failed} failed.`,
+        { id: 'bulk-jpg', duration: 5000 }
+      );
+    }
+  };
+
+  // Bulk Download All as Individual PDFs (Sequential)
+  const handleBulkDownloadPDFIndividual = async () => {
+    const total = generatedCertificates.length;
+    let successful = 0;
+    let failed = 0;
+
+    toast.loading(`Downloading ${total} certificates as PDF...`, { id: 'bulk-pdf-individual' });
+
+    for (let i = 0; i < generatedCertificates.length; i++) {
+      const cert = generatedCertificates[i];
+
+      try {
+        const token = sessionStorage.getItem('authToken');
+
+        const response = await axios.get(
+          `${API_URL}/api/certificates/${cert.certificateId}/download/pdf`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${cert.name.replace(/\s+/g, '_')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        successful++;
+
+        // Update progress
+        toast.loading(
+          `Downloading PDFs... ${i + 1}/${total}`,
+          { id: 'bulk-pdf-individual' }
+        );
+
+        // Small delay to prevent overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error(`Failed to download ${cert.name}:`, error);
+        failed++;
+      }
+    }
+
+    if (failed === 0) {
+      toast.success(`✅ All ${successful} PDFs downloaded successfully!`, { id: 'bulk-pdf-individual' });
+    } else {
+      toast.error(
+        `⚠️ Downloaded ${successful} PDFs. ${failed} failed.`,
+        { id: 'bulk-pdf-individual', duration: 5000 }
+      );
+    }
+  };
+
 
   // Preview Certificate
   const handlePreview = (certificate) => {
@@ -571,7 +781,7 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">3.</span>
-                    <span>Category: code4bharat, marketiq, FSD, BVOC, BOOTCAMP, HR</span>
+                    <span>Category: code4bharat, marketing-junction, FSD, BVOC, BOOTCAMP, HR</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">4.</span>
@@ -691,20 +901,28 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
                   Generated Certificates ({generatedCertificates.length})
                 </h2>
                 <div className="flex gap-3">
+                  {/* Single Merged PDF Download */}
                   <button
-                    onClick={() => {
-                      generatedCertificates.forEach(cert => downloadAsJPG(cert));
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center gap-2"
+                    onClick={handleBulkDownloadPDF}
+                    className="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2"
                   >
-                    <Download className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
+                    Download All (Merged PDF)
+                  </button>
+
+                  {/* Individual JPG Downloads */}
+                  <button
+                    onClick={handleBulkDownloadJPG}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <ImageIcon className="w-4 h-4" />
                     Download All as JPG
                   </button>
+
+                  {/* Individual PDF Downloads */}
                   <button
-                    onClick={() => {
-                      generatedCertificates.forEach(cert => downloadAsPDF(cert));
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all flex items-center gap-2"
+                    onClick={handleBulkDownloadPDFIndividual}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
                     Download All as PDF
