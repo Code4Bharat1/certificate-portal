@@ -30,7 +30,7 @@ export default function CreateCertificate() {
     issueDate: '',
     course: '',
     batch: '',
-    // internId: '',
+    description: "",
   });
 
   // Data Lists
@@ -49,57 +49,29 @@ export default function CreateCertificate() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Category Configuration
-  // const categoryConfig = {
-  //   'code4bharat': {
-  //     label: 'Code4Bharat',
-  //     batches: []
-  //   },
-  //   'marketing-junction': {
-  //     label: 'Marketing Junction',
-  //     batches: []
-  //   },
-  //   'FSD': {
-  //     label: 'FSD',
-  //     batches: ['B-1', 'B-2', 'B-3', 'B-4']
-  //   },
-  //   'BVOC': {
-  //     label: 'BVOC',
-  //     batches: ['B-1', 'B-2']
-  //   },
-  //   'BOOTCAMP': {
-  //     label: 'BOOTCAMP',
-  //     batches: []
-  //   },
-  //   'HR': {
-  //     label: 'HR',
-  //     batches: []
-  //   }
-  // };
-
   const categoryConfig = {
-  'code4bharat': { label: 'Code4Bharat', batches: [] },
-  'marketing-junction': { label: 'Marketing Junction', batches: [] },
-  'FSD': { label: 'FSD', batches: batches.FSD || [] },
-  'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
-  'BOOTCAMP': { label: 'BOOTCAMP', batches: [] },
-  'HR': { label: 'HR', batches: [] }
-};
+    'code4bharat': { label: 'Code4Bharat', batches: [] },
+    'marketing-junction': { label: 'Marketing Junction', batches: [] },
+    'FSD': { label: 'FSD', batches: batches.FSD || [] },
+    // 'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
+    // 'BOOTCAMP': { label: 'BOOTCAMP', batches: [] },
+    // 'HR': { label: 'HR', batches: [] }
+  };
 
   useEffect(() => {
-  const fetchBatches = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/batches`);
-      if (response.data.success) {
-        setBatches(response.data.batches);
+    const fetchBatches = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/batches`);
+        if (response.data.success) {
+          setBatches(response.data.batches);
+        }
+      } catch (error) {
+        console.error('Error fetching batches:', error);
+        toast.error('Failed to load batches');
       }
-    } catch (error) {
-      console.error('Error fetching batches:', error);
-      toast.error('Failed to load batches');
-    }
-  };
-  fetchBatches();
-}, []);
+    };
+    fetchBatches();
+  }, []);
 
   // OTP Timer
   useEffect(() => {
@@ -146,104 +118,39 @@ export default function CreateCertificate() {
     return { 'Authorization': `Bearer ${token}` };
   };
 
-  // const fetchNames = async () => {
-  //   setLoadingNames(true);
-  //   try {
-  //     const response = await axios.get(`${API_URL}/api/people/`, {
-  //       headers: getAuthHeaders(),
-  //       params: {
-  //         category: formData.category,
-  //         batch: formData.batch
-  //       }
-  //     });
-
-  //     if (response.data.success && response.data.names?.length > 0) {
-  //       setNamesList(response.data.names);
-  //     } else {
-  //       const mockData = [
-  //         { internId: 'INT001', name: 'Aarav Sharma' },
-  //         { internId: 'INT002', name: 'Neha Verma' },
-  //         { internId: 'INT003', name: 'Rahul Singh' }
-  //       ];
-  //       setNamesList(mockData);
-  //       toast('Loaded mock data (testing mode)', { icon: '⚙️' });
-  //     }
-  //   } catch (error) {
-  //     console.error('Fetch names error:', error);
-  //     toast.error('Failed to load names');
-  //   } finally {
-  //     setLoadingNames(false);
-  //   }
-  // };
-
   const fetchNames = async () => {
     setLoadingNames(true);
     try {
+      let response;
+
       if (formData.category === "code4bharat" || formData.category === "marketing-junction") {
-        const response = await axios.get(`${API_URL}/api/people/`, {
+        response = await axios.get(`${API_URL}/api/people/`, {
           headers: getAuthHeaders(),
-          params: {
-            category: formData.category,
-          }
+          params: { category: formData.category }
         });
-
-        if (response.data.success && response.data.names?.length > 0) {
-          setNamesList(response.data.names);
-        }
-        // else {
-        //   console.warn('Using mock data (no names found from backend)');
-        //   const mockData = [
-        //     { internId: 'INT001', name: 'Aarav Sharma' },
-        //     { internId: 'INT002', name: 'Neha Verma' },
-        //     { internId: 'INT003', name: 'Rahul Singh' },
-        //     { internId: 'INT004', name: 'Priya Patel' },
-        //     { internId: 'INT005', name: 'Rohan Mehta' }
-        //   ];
-        //   setNamesList(mockData);
-        //   toast('Loaded mock data (testing mode)', { icon: '⚙️' });
-        // }
+      } else {
+        response = await axios.get(`${API_URL}/api/people/`, {
+          headers: getAuthHeaders(),
+          params: { category: formData.category, batch: formData.batch }
+        });
       }
-      else {
-        const response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: {
-            category: formData.category,
-            batch: formData.batch
-          }
-        });
 
-        if (response.data.success && response.data.names?.length > 0) {
-          setNamesList(response.data.names);
-        }
-        // else {
-        //   console.warn('Using mock data (no names found from backend)');
-        //   const mockData = [
-        //     { internId: 'INT001', name: 'Aarav Sharma' },
-        //     { internId: 'INT002', name: 'Neha Verma' },
-        //     { internId: 'INT003', name: 'Rahul Singh' },
-        //     { internId: 'INT004', name: 'Priya Patel' },
-        //     { internId: 'INT005', name: 'Rohan Mehta' }
-        //   ];
-        //   setNamesList(mockData);
-        //   toast('Loaded mock data (testing mode)', { icon: '⚙️' });
-        // }
+      if (response.data.success && response.data.names?.length > 0) {
+        // ✅ Filter out disabled people
+        const enabledNames = response.data.names.filter(person => !person.disabled);
+        setNamesList(enabledNames);
+      } else {
+        setNamesList([]);
       }
 
     } catch (error) {
       console.error('Fetch names error:', error);
       toast.error('Failed to load names (using mock data)');
-      const mockData = [
-        { internId: 'INT001', name: 'Aarav Sharma' },
-        { internId: 'INT002', name: 'Neha Verma' },
-        { internId: 'INT003', name: 'Rahul Singh' },
-        { internId: 'INT004', name: 'Priya Patel' },
-        { internId: 'INT005', name: 'Rohan Mehta' }
-      ];
-      setNamesList(mockData);
     } finally {
       setLoadingNames(false);
     }
   };
+
 
   const fetchCourses = async () => {
     setLoadingCourses(true);
@@ -317,12 +224,25 @@ export default function CreateCertificate() {
       toast.error('Please select a course');
       return false;
     }
+    if (formData.course === "custom" && !formData.customCourse?.trim()) {
+      toast.error('Please enter the custom course name');
+      return false;
+    }
+    if (formData.course === "Certificate of Appreciation" && !formData.description.trim()) {
+      toast.error('Please enter the description');
+      return false;
+    }
     if (!formData.issueDate) {
       toast.error('Please select issue date');
       return false;
     }
     return true;
   };
+
+  const isDescriptionInvalid =
+    formData.course === 'Certificate of Appreciation' &&
+    (formData.description.trim().length < 100 ||
+      formData.description.trim().length > 1000);
 
   const handlePreview = () => {
     if (validateForm()) {
@@ -383,9 +303,14 @@ export default function CreateCertificate() {
   const generatePreview = async () => {
     setLoadingPreview(true);
     try {
+      const payload = {
+        ...formData,
+        course: formData.course === "custom" ? formData.customCourse : formData.course,
+      };
+
       const response = await axios.post(
         `${API_URL}/api/certificates/preview`,
-        formData,
+        payload,
         {
           headers: getAuthHeaders(),
           responseType: 'blob' // Important: Tell axios to expect binary data
@@ -412,9 +337,14 @@ export default function CreateCertificate() {
 
     setIsCreating(true);
     try {
+      const payload = {
+        ...formData,
+        course: formData.course === "custom" ? formData.customCourse : formData.course,
+      };
+
       const response = await axios.post(
         `${API_URL}/api/certificates/`,
-        formData,
+        payload,
         { headers: getAuthHeaders() }
       );
 
@@ -569,38 +499,12 @@ export default function CreateCertificate() {
                 </div>
 
                 {/* Course Selection */}
-                {/* <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <BookOpen className="w-4 h-4 inline mr-2" />
-                    Course *
-                  </label>
-                  {loadingCourses ? (
-                    <div className="flex items-center justify-center py-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                    </div>
-                  ) : (
-                    <select
-                      value={formData.course}
-                      onChange={(e) => handleInputChange('course', e.target.value)}
-                      disabled={!coursesList.length}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
-                    >
-                      <option value="">Select Course</option>
-                      {coursesList.map((course, index) => (
-                        <option key={index} value={course}>{course}</option>
-                      ))}
-                    </select>
-                  )}
-                </div> */}
-
-                {/* // Replace the Course Selection section in your code with this: */}
-
-                {/* Course Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <BookOpen className="w-4 h-4 inline mr-2" />
                     Course *
                   </label>
+
                   {loadingCourses ? (
                     <div className="flex items-center justify-center py-3">
                       <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
@@ -610,8 +514,10 @@ export default function CreateCertificate() {
                       <select
                         value={formData.course}
                         onChange={(e) => handleInputChange('course', e.target.value)}
-                        disabled={!coursesList.length}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
+                        disabled={!coursesList.length && formData.category !== ""}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+                   focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                   outline-none transition-all disabled:bg-gray-50"
                       >
                         <option value="">Select Course</option>
                         {coursesList.map((course, index) => {
@@ -630,7 +536,29 @@ export default function CreateCertificate() {
                             </option>
                           );
                         })}
+
+                        {/* 👇 New Option for Custom Course */}
+                        <option value="custom">Other (Custom Course)</option>
                       </select>
+
+                      {/* 👇 Show custom course input when selected */}
+                      {formData.course === "custom" && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Enter Custom Course Name *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter custom course name"
+                            value={formData.customCourse || ""}
+                            onChange={(e) => handleInputChange("customCourse", e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+                       focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                       outline-none transition-all"
+                          />
+                        </div>
+                      )}
+
                       {createdCertificates.length > 0 && (
                         <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
@@ -640,6 +568,30 @@ export default function CreateCertificate() {
                     </>
                   )}
                 </div>
+
+
+                {formData.course === "Certificate of Appreciation" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Description *
+                    </label>
+                    <p className={`text-xs mt-1 ${formData.description.length > 1000 ? 'text-red-500' : 'text-gray-500'}`}>
+                      {formData.description.length}/1000 characters
+                    </p>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      placeholder="Enter certificate description"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+                 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                 outline-none transition-all resize-none"
+                      rows={3}
+                      required
+                    />
+                  </div>
+                )}
+
+
 
                 {/* Issue Date */}
                 <div>
@@ -660,8 +612,15 @@ export default function CreateCertificate() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  disabled={isDescriptionInvalid}
                   onClick={handlePreview}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  className={`w-full text-white py-4
+                  rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center
+                  justify-center gap-2
+                  ${isDescriptionInvalid
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600'}
+                  `}
                 >
                   <Shield className="w-5 h-5" />
                   Verify & Preview
@@ -795,7 +754,8 @@ export default function CreateCertificate() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Course:</span>
-                    <span className="font-semibold text-gray-900">{formData.course}</span>
+                    {/* <span className="font-semibold text-gray-900">{formData.course}</span> */}
+                    {formData.course === "custom" ? formData.customCourse : formData.course}
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>

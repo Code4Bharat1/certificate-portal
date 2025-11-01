@@ -54,7 +54,9 @@ export default function ManagePeople() {
     batch: "",
     phone: "",
   });
-  
+
+  const MAX_NAME_LENGTH = 50; // Character limit for name
+
   // State for disabled view mode: "all", "active", "disabled"
   const [viewMode, setViewMode] = useState("active");
 
@@ -240,7 +242,7 @@ export default function ManagePeople() {
         active: activeCount,
         disabled: disabledCount
       });
-      
+
       setPeople(peopleData);
 
       if (peopleData.length === 0) {
@@ -360,7 +362,7 @@ export default function ManagePeople() {
   const handleToggleDisable = async (person) => {
     const newDisabledState = !person.disabled;
     const action = newDisabledState ? "disable" : "enable";
-    
+
     console.log(`🔄 Attempting to ${action} person:`, {
       id: person._id,
       name: person.name,
@@ -383,13 +385,13 @@ export default function ManagePeople() {
 
       if (res.data.success) {
         console.log(`✅ Person ${action}d successfully:`, res.data);
-        
+
         // Update local state
         const updatedPeople = people.map((p) =>
           p._id === person._id ? { ...p, disabled: newDisabledState } : p
         );
         setPeople(updatedPeople);
-        
+
         toast.success(`${person.name} has been ${action}d successfully`);
         console.log(`✨ Updated people list. Total: ${updatedPeople.length}, Disabled: ${updatedPeople.filter(p => p.disabled).length}`);
       }
@@ -442,7 +444,7 @@ export default function ManagePeople() {
         name: formData.name.trim(),
         category: formData.category,
         batch: formData.batch || null,
-        phone: `+91${formData.phone}`,
+        phone: `${formData.phone}`,
       };
 
       if (isEditMode) {
@@ -653,7 +655,7 @@ export default function ManagePeople() {
               <Layers className="w-5 h-5" />
               Manage Batches
             </motion.button>
-            
+
             {/* View Mode Toggle Buttons */}
             <div className="flex gap-2 bg-white rounded-xl p-1 shadow-lg border border-gray-200">
               <motion.button
@@ -663,11 +665,10 @@ export default function ManagePeople() {
                   setViewMode("active");
                   console.log("🟢 Switched to ACTIVE view mode");
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "active"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "active"
                     ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <UserCheck className="w-4 h-4" />
                 Active ({activePeople})
@@ -680,11 +681,10 @@ export default function ManagePeople() {
                   setViewMode("disabled");
                   console.log("🔴 Switched to DISABLED view mode");
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "disabled"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "disabled"
                     ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <UserX className="w-4 h-4" />
                 Disabled ({disabledPeople})
@@ -697,11 +697,10 @@ export default function ManagePeople() {
                   setViewMode("all");
                   console.log("👁️ Switched to ALL view mode");
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "all"
                     ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <Users className="w-4 h-4" />
                 All ({totalPeople})
@@ -781,16 +780,15 @@ export default function ManagePeople() {
         >
           <p className="text-gray-600">
             Showing{" "}
-            <span className={`font-bold ${
-              viewMode === "active" ? "text-green-600" :
-              viewMode === "disabled" ? "text-red-600" :
-              "text-blue-600"
-            }`}>
+            <span className={`font-bold ${viewMode === "active" ? "text-green-600" :
+                viewMode === "disabled" ? "text-red-600" :
+                  "text-blue-600"
+              }`}>
               {filteredPeople.length}
             </span>{" "}
-            {viewMode === "active" ? "active" : 
-             viewMode === "disabled" ? "disabled" : 
-             "total"} {filteredPeople.length === 1 ? "person" : "people"}
+            {viewMode === "active" ? "active" :
+              viewMode === "disabled" ? "disabled" :
+                "total"} {filteredPeople.length === 1 ? "person" : "people"}
             <span className="text-gray-400 mx-2">•</span>
             <span className="text-gray-500">
               Total: {totalPeople} ({activePeople} active, {disabledPeople} disabled)
@@ -817,18 +815,18 @@ export default function ManagePeople() {
               <Users className="w-24 h-24 text-gray-300 mx-auto mb-4" />
             )}
             <h3 className="text-2xl font-bold text-gray-700 mb-2">
-              {viewMode === "disabled" 
+              {viewMode === "disabled"
                 ? "No Disabled People"
                 : viewMode === "active"
-                ? "No Active People"
-                : "No People Found"}
+                  ? "No Active People"
+                  : "No People Found"}
             </h3>
             <p className="text-gray-500 mb-6">
               {searchQuery || selectedCategory !== "all" || selectedBatch !== "all"
                 ? "Try adjusting your filters or search query"
                 : viewMode === "disabled"
-                ? "Great! No one is currently disabled"
-                : "Start by adding your first person"}
+                  ? "Great! No one is currently disabled"
+                  : "Start by adding your first person"}
             </p>
             {!searchQuery && selectedCategory === "all" && selectedBatch === "all" && viewMode === "active" && (
               <motion.button
@@ -856,11 +854,10 @@ export default function ManagePeople() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border ${
-                  person.disabled 
-                    ? "border-red-200 opacity-75" 
+                className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border ${person.disabled
+                    ? "border-red-200 opacity-75"
                     : "border-gray-100"
-                }`}
+                  }`}
               >
                 <div className="p-6">
                   {/* Header with Category Badge */}
@@ -880,9 +877,8 @@ export default function ManagePeople() {
                   </div>
 
                   {/* Name */}
-                  <h3 className={`text-xl font-bold mb-2 truncate ${
-                    person.disabled ? "text-gray-500" : "text-gray-800"
-                  }`}>
+                  <h3 className={`text-xl font-bold mb-2 truncate ${person.disabled ? "text-gray-500" : "text-gray-800"
+                    }`}>
                     {person.name}
                   </h3>
 
@@ -916,11 +912,10 @@ export default function ManagePeople() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleToggleDisable(person)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-colors ${
-                        person.disabled
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-colors ${person.disabled
                           ? "bg-green-50 text-green-600 hover:bg-green-100"
                           : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                      }`}
+                        }`}
                     >
                       {person.disabled ? (
                         <>
@@ -996,6 +991,7 @@ export default function ManagePeople() {
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none text-gray-800"
                     placeholder="John Doe"
+                    maxLength={MAX_NAME_LENGTH}
                     required
                   />
                 </div>

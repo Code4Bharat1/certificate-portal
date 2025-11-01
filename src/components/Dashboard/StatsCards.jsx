@@ -31,7 +31,21 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
   return <span>{count}</span>;
 };
 
-const StatCard = ({ title, icon: Icon, total, mj, c4b, gradient, bg, iconBg, index }) => (
+const StatCard = ({
+  title,
+  icon: Icon,
+  total,
+  mj,
+  c4b,
+  fsd,
+  hr,
+  bc,
+  bvoc,
+  gradient,
+  bg,
+  iconBg,
+  index
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -41,28 +55,47 @@ const StatCard = ({ title, icon: Icon, total, mj, c4b, gradient, bg, iconBg, ind
   >
     <div className="flex items-center justify-between mb-4">
       <div className={`${iconBg} p-3 rounded-xl flex items-center justify-center`}>
-        <Icon className={`w-6 h-6 text-gray-700 relative z-10`} />
+        <Icon className="w-6 h-6 text-gray-700 relative z-10" />
       </div>
     </div>
 
     <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
 
-    <div className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-3`}>
+    <div className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-4`}>
       <AnimatedCounter value={total} />
     </div>
 
-    <div className="space-y-1 text-sm text-gray-600">
+    {/* Category Stats Grid */}
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-600">
       <div className="flex justify-between">
-        <span>• Marketing Junction:</span>
+        <span>MJ:</span>
         <span className="font-semibold">{mj}</span>
       </div>
       <div className="flex justify-between">
-        <span>• C4B:</span>
+        <span>C4B:</span>
         <span className="font-semibold">{c4b}</span>
       </div>
+      <div className="flex justify-between">
+        <span>FSD:</span>
+        <span className="font-semibold">{fsd}</span>
+      </div>
+      <div className="flex justify-between">
+        <span>HR:</span>
+        <span className="font-semibold">{hr}</span>
+      </div>
+      <div className="flex justify-between">
+        <span>BOOTCAMP:</span>
+        <span className="font-semibold">{bc}</span>
+      </div>
+      {/* <div className="flex justify-between">
+        <span>BVOC:</span>
+        <span className="font-semibold">{bvoc}</span>
+      </div> */}
     </div>
   </motion.div>
 );
+
+
 
 const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, bg, iconBg, index }) => (
   <motion.div
@@ -101,8 +134,20 @@ const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, b
 );
 
 const CreationRatioCard = ({ individual, bulk, total, index }) => {
-  const bulkPercentage = total > 0 ? Math.round((bulk / total) * 100) : 0;
-  const individualPercentage = total > 0 ? Math.round((individual / total) * 100) : 0;
+  let bulkPercentage = total > 0 ? Math.round((bulk / total) * 100) : 0;
+  let individualPercentage = total > 0 ? Math.round((individual / total) * 100) : 0;
+
+  // ✅ Ensure total ratio never exceeds 100%
+  if (bulkPercentage + individualPercentage > 100) {
+    const sum = bulkPercentage + individualPercentage;
+    bulkPercentage = Math.round((bulkPercentage / sum) * 100);
+    individualPercentage = Math.round((individualPercentage / sum) * 100);
+  }
+
+  // ✅ Ensure no negative or weird values
+  bulkPercentage = Math.max(0, Math.min(100, bulkPercentage));
+  individualPercentage = Math.max(0, Math.min(100, individualPercentage));
+
 
   return (
     <motion.div
@@ -221,8 +266,8 @@ export default function StatsCards() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
     try {
-      const token = typeof window !== 'undefined' 
-        ? sessionStorage.getItem('authToken') 
+      const token = typeof window !== 'undefined'
+        ? sessionStorage.getItem('authToken')
         : null;
 
       const response = await axios.get(`${API_URL}/api/stats/dashboard`, {
@@ -241,6 +286,10 @@ export default function StatsCards() {
           total: data.last7Days?.total || 0,
           mj: data.last7Days?.marketingJunction || 0,
           c4b: data.last7Days?.code4bharat || 0,
+          fsd: data.last7Days?.FSD || 0,
+          hr: data.last7Days?.HR || 0,
+          bc: data.last7Days?.BOOTCAMP || 0,
+          bvoc: data.last7Days?.BVOC || 0,
           gradient: 'from-blue-500 to-blue-600',
           bg: 'bg-blue-50',
           iconBg: 'bg-blue-100',
@@ -251,6 +300,10 @@ export default function StatsCards() {
           total: data.lastMonth?.total || 0,
           mj: data.lastMonth?.marketingJunction || 0,
           c4b: data.lastMonth?.code4bharat || 0,
+          fsd: data.lastMonth?.FSD || 0,
+          hr: data.lastMonth?.HR || 0,
+          bc: data.lastMonth?.BOOTCAMP || 0,
+          bvoc: data.lastMonth?.BVOC || 0,
           gradient: 'from-purple-500 to-purple-600',
           bg: 'bg-purple-50',
           iconBg: 'bg-purple-100',
@@ -261,6 +314,10 @@ export default function StatsCards() {
           total: data.downloaded?.total || 0,
           mj: data.downloaded?.marketingJunction || 0,
           c4b: data.downloaded?.code4bharat || 0,
+          fsd: data.downloaded?.FSD || 0,
+          hr: data.downloaded?.HR || 0,
+          bc: data.downloaded?.BOOTCAMP || 0,
+          bvoc: data.downloaded?.BVOC || 0,
           gradient: 'from-green-500 to-green-600',
           bg: 'bg-green-50',
           iconBg: 'bg-green-100',
@@ -271,11 +328,16 @@ export default function StatsCards() {
           total: data.pending?.total || 0,
           mj: data.pending?.marketingJunction || 0,
           c4b: data.pending?.code4bharat || 0,
+          fsd: data.pending?.FSD || 0,
+          hr: data.pending?.HR || 0,
+          bc: data.pending?.BOOTCAMP || 0,
+          bvoc: data.pending?.BVOC || 0,
           gradient: 'from-amber-500 to-red-500',
           bg: 'bg-amber-50',
           iconBg: 'bg-amber-100',
         },
       ]);
+
 
       if (data.bulk) {
         setBulkStats(data.bulk);

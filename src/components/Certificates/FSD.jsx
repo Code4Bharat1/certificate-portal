@@ -32,7 +32,7 @@ export default function FsdPage() {
             `${API_URL}/api/certificates`,
             {
               headers: { Authorization: `Bearer ${token}` },
-              params: { category: 'fsd' },
+              params: { category: 'FSD' },
             }
           );
 

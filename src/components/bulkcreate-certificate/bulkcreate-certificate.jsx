@@ -98,12 +98,13 @@ export default function BulkCreateCertificate() {
 
   // Download Sample CSV
   const downloadSampleCSV = () => {
-    const csvContent = `Name,Phone,Course,Category,Batch,IssueDate
-Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
-Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
-Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
-Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
-Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
+    const csvContent = `
+    Name,Phone,Course,Category,Batch,IssueDate
+    Aarav Sharma,919876543210,Web Development Fundamentals,code4bharat,,2025-01-15
+    Neha Verma,919876543211,Full Stack Development,FSD,B-1,2025-01-15
+    Rahul Singh,919876543212,Digital Marketing Basics,marketing-junction,,2025-01-15
+    Priya Patel,919876543213,Python Programming,BVOC,B-1,2025-01-15
+    Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -781,7 +782,7 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">3.</span>
-                    <span>Category: code4bharat, marketing-junction, FSD, BVOC, BOOTCAMP, HR</span>
+                    <span>Category: code4bharat, marketing-junction, FSD, BOOTCAMP</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">4.</span>
@@ -791,13 +792,13 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
                     <span className="text-purple-600 font-bold">5.</span>
                     <span>Date format: YYYY-MM-DD (e.g., 2025-01-15)</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  {/* <li className="flex items-start gap-2">
                     <span className="text-purple-600 font-bold">6.</span>
                     <span>Download sample CSV template for reference</span>
-                  </li>
+                  </li> */}
                 </ul>
 
-                <motion.button
+                {/* <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={downloadSampleCSV}
@@ -805,7 +806,7 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
                 >
                   <Download className="w-5 h-5" />
                   Download Sample CSV
-                </motion.button>
+                </motion.button> */}
               </div>
 
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200">
@@ -1031,7 +1032,7 @@ Rohan Mehta,919876543214,Data Analytics,BOOTCAMP,,2025-01-15`;
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              className="fixed text-black inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
