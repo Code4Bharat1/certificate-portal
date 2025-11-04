@@ -27,8 +27,14 @@ export default function CreateLetter() {
     name: '',
     category: '',
     issueDate: '',
-    course: '', // 'Appreciation Letter' or 'Experience Certificate'
+    course: '', // Letter type
     description: '',
+    subject: '',
+    role: '',
+    startDate: '',
+    endDate: '',
+    duration: '',
+    batch: ''
   });
 
   // Data Lists
@@ -50,6 +56,89 @@ export default function CreateLetter() {
     'marketing-junction': { label: 'Marketing Junction', batches: [] },
     'FSD': { label: 'FSD', batches: batches.FSD || [] },
     'HR': { label: 'HR', batches: [] },
+    'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
+  };
+
+  // Letter types based on category
+  const getLetterTypes = (category) => {
+    if (category === 'code4bharat' || category === 'marketing-junction' || category === 'HR') {
+      return [
+        'Appreciation Letter',
+        'Experience Certificate',
+        'Internship Joining Letter',
+        'Memo',
+        'Non-Disclosure Agreement'
+      ];
+    } else if (category === 'FSD') {
+      return [
+        'Appreciation Letter',
+        'Experience Certificate',
+        'Offer Letter',
+        'Warning Letter',
+        'Non-Disclosure Agreement',
+        'Live Project Agreement'
+      ];
+    } else if (category === 'BVOC') {
+      return [
+        'Appreciation Letter',
+        'Warning Letter',
+        'Community Letter'
+      ];
+    }
+    return [];
+  };
+
+  // Roles based on category
+  const getRoles = (category) => {
+    if (category === 'code4bharat') {
+      return [
+        'Junior Software Developer',
+        'Cyber Security Analyst'
+      ];
+    } else if (category === 'marketing-junction') {
+      return [
+        'Digital Marketing Intern',
+        'Content Writer Intern',
+        'Social Media Manager Intern',
+        'SEO Specialist Intern',
+        'Graphic Designer Intern'
+      ];
+    } else if (category === 'HR') {
+      return [
+        'HR Intern',
+        'Talent Acquisition Intern',
+        'HR Operations Intern',
+        'Training & Development Intern'
+      ];
+    } else if (category === 'FSD') {
+      return [
+        'Full Stack Developer',
+        'Software Engineer',
+        'Technical Lead',
+        'Project Manager'
+      ];
+    }
+    return [];
+  };
+
+  // Check if subject field is needed
+  const needsSubject = () => {
+    return formData.course === 'Appreciation Letter' || 
+           formData.course === 'Warning Letter' || 
+           formData.course === 'Memo' ||
+           formData.course === 'Community Letter';
+  };
+
+  // Check if role field is needed
+  const needsRole = () => {
+    return formData.course === 'Experience Certificate' || 
+           formData.course === 'Internship Joining Letter' ||
+           formData.course === 'Offer Letter';
+  };
+
+  // Check if dates are needed (for Offer Letter)
+  const needsDates = () => {
+    return formData.course === 'Offer Letter';
   };
 
   useEffect(() => {
@@ -113,7 +202,6 @@ export default function CreateLetter() {
       }
 
       if (response.data.success && Array.isArray(response.data.names)) {
-        // Filter out disabled people
         const enabled = response.data.names.filter(person => !person.disabled);
         setNamesList(enabled);
       } else {
@@ -129,12 +217,37 @@ export default function CreateLetter() {
 
   const handleInputChange = (field, value) => {
     if (field === 'category') {
-      setFormData(prev => ({ ...prev, category: value, batch: '', name: '' }));
+      setFormData(prev => ({ 
+        ...prev, 
+        category: value, 
+        batch: '', 
+        name: '', 
+        course: '',
+        subject: '',
+        role: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        duration: ''
+      }));
+      setPreviewImage(null);
+      setOtpVerified(false);
+    } else if (field === 'course') {
+      setFormData(prev => ({ 
+        ...prev, 
+        course: value,
+        subject: '',
+        role: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        duration: ''
+      }));
       setPreviewImage(null);
       setOtpVerified(false);
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
-      if (field === 'course' || field === 'issueDate') {
+      if (field === 'issueDate') {
         setPreviewImage(null);
         setOtpVerified(false);
       }
@@ -154,8 +267,20 @@ export default function CreateLetter() {
       toast.error('Please select letter type');
       return false;
     }
-    if (formData.course === 'Appreciation Letter' && !formData.description.trim()) {
-      toast.error('Please enter the description for Appreciation Letter');
+    if (needsSubject() && !formData.subject.trim()) {
+      toast.error('Please enter the subject');
+      return false;
+    }
+    if (needsSubject() && formData.subject.length > 50) {
+      toast.error('Subject cannot exceed 50 characters');
+      return false;
+    }
+    if (needsRole() && !formData.role) {
+      toast.error('Please select a role');
+      return false;
+    }
+    if (needsDates() && (!formData.startDate || !formData.endDate)) {
+      toast.error('Please select start and end dates for Offer Letter');
       return false;
     }
     if (formData.description && formData.description.length > 1000) {
@@ -169,10 +294,6 @@ export default function CreateLetter() {
     return true;
   };
 
-  const isDescriptionInvalid =
-    formData.course === 'Appreciation Letter' &&
-    (formData.description.trim().length < 10 || formData.description.trim().length > 1000);
-
   const handlePreview = () => {
     if (validateForm()) {
       setShowOtpModal(true);
@@ -183,7 +304,7 @@ export default function CreateLetter() {
     try {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' }, // adjust if your backend expects different payload
+        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' },
         { headers: getAuthHeaders() }
       );
 
@@ -232,11 +353,7 @@ export default function CreateLetter() {
   const generatePreview = async () => {
     setLoadingPreview(true);
     try {
-      const payload = {
-        ...formData,
-        // if you need to map fields differently for letters API, change here
-      };
-
+      const payload = { ...formData };
       const response = await axios.post(
         `${API_URL}/api/letters/preview`,
         payload,
@@ -274,7 +391,6 @@ export default function CreateLetter() {
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
-          // router.push('/letters') // optional redirect
         }, 2000);
       } else {
         toast.error(response.data.message || 'Failed to create letter');
@@ -293,7 +409,11 @@ export default function CreateLetter() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <motion.button whileHover={{ x: -5 }} onClick={() => router.back()} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+          <motion.button 
+            whileHover={{ x: -5 }} 
+            onClick={() => router.back()} 
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back</span>
           </motion.button>
@@ -303,7 +423,7 @@ export default function CreateLetter() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Create Letter
               </h1>
-              <p className="text-gray-600 mt-2">Generate Appreciation or Experience letters with OTP verification</p>
+              <p className="text-gray-600 mt-2">Generate various types of letters with OTP verification</p>
             </div>
           </div>
         </div>
@@ -311,7 +431,11 @@ export default function CreateLetter() {
         {!showPreview ? (
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-2xl shadow-xl p-8">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="bg-white rounded-2xl shadow-xl p-8"
+            >
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <FileText className="w-6 h-6 text-blue-600" />
                 Letter Information
@@ -383,7 +507,7 @@ export default function CreateLetter() {
                   )}
                 </div>
 
-                {/* Course / Letter Type */}
+                {/* Letter Type */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <BookOpen className="w-4 h-4 inline mr-2" />
@@ -392,26 +516,114 @@ export default function CreateLetter() {
                   <select
                     value={formData.course}
                     onChange={(e) => handleInputChange('course', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    disabled={!formData.category}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
                   >
                     <option value="">Select Letter Type</option>
-                    <option value="Appreciation Letter">Appreciation Letter</option>
-                    <option value="Experience Certificate">Experience Certificate</option>
+                    {getLetterTypes(formData.category).map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Description (required for Appreciation) */}
+                {/* Subject (for Appreciation, Warning, Memo, Community Letter) */}
+                {needsSubject() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <FileText className="w-4 h-4 inline mr-2" />
+                      Subject *
+                    </label>
+                    <p className={`text-xs mb-2 ${formData.subject.length > 50 ? 'text-red-500' : 'text-gray-500'}`}>
+                      {formData.subject.length}/50 characters
+                    </p>
+                    <input
+                      type="text"
+                      value={formData.subject}
+                      onChange={(e) => handleInputChange('subject', e.target.value)}
+                      placeholder="Enter subject"
+                      maxLength={50}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Role (for Experience, Internship Joining, Offer Letter) */}
+                {needsRole() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <Award className="w-4 h-4 inline mr-2" />
+                      Role *
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    >
+                      <option value="">Select Role</option>
+                      {getRoles(formData.category).map((role) => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Start & End Date (for Offer Letter) */}
+                {needsDates() && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.startDate}
+                          onChange={(e) => handleInputChange('startDate', e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.endDate}
+                          onChange={(e) => handleInputChange('endDate', e.target.value)}
+                          min={formData.startDate}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Duration (e.g., 3 months, 6 months)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.duration}
+                        onChange={(e) => handleInputChange('duration', e.target.value)}
+                        placeholder="Enter duration"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Description (optional) */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Description {formData.course === 'Appreciation Letter' && '*'}
+                    Description*
                   </label>
-                  <p className={`text-xs mt-1 ${formData.description.length > 1000 ? 'text-red-500' : 'text-gray-500'}`}>
+                  <p className={`text-xs mb-2 ${formData.description.length > 1000 ? 'text-red-500' : 'text-gray-500'}`}>
                     {formData.description.length}/1000 characters
                   </p>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Enter description"
+                    placeholder="Enter any additional information"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none"
                     rows={4}
                     maxLength={1000}
@@ -437,10 +649,8 @@ export default function CreateLetter() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={isDescriptionInvalid}
                   onClick={handlePreview}
-                  className={`w-full text-white py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2
-                    ${isDescriptionInvalid ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600'}`}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                 >
                   <Shield className="w-5 h-5" />
                   Verify & Preview
@@ -448,17 +658,39 @@ export default function CreateLetter() {
               </div>
             </motion.div>
 
-            {/* Info / Preview Placeholder */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            {/* Info Section */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="space-y-6"
+            >
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Instructions</h3>
                 <ul className="space-y-3 text-gray-700">
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">1.</span><span>Select category and batch (if applicable)</span></li>
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">2.</span><span>Choose the recipient name from the dropdown</span></li>
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">3.</span><span>Select letter type</span></li>
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">4.</span><span>Fill description</span></li>
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">5.</span><span>Verify via WhatsApp OTP</span></li>
-                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">6.</span><span>Review preview and create letter</span></li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">1.</span>
+                    <span>Select category and batch (if applicable)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">2.</span>
+                    <span>Choose the recipient name from the dropdown</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">3.</span>
+                    <span>Select letter type</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">4.</span>
+                    <span>Fill required fields (subject/role/dates based on letter type)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">5.</span>
+                    <span>Verify via WhatsApp OTP</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold">6.</span>
+                    <span>Review preview and create letter</span>
+                  </li>
                 </ul>
               </div>
 
@@ -467,17 +699,41 @@ export default function CreateLetter() {
                   <FaWhatsapp className="w-6 h-6 text-green-600 mt-1" />
                   <div>
                     <h4 className="font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h4>
-                    <p className="text-sm text-gray-700">For security, you'll receive a 6-digit OTP via WhatsApp before creating the letter.</p>
+                    <p className="text-sm text-gray-700">
+                      For security, you'll receive a 6-digit OTP via WhatsApp before creating the letter.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
+                <h4 className="font-bold text-gray-900 mb-3">📝 Letter Types by Category</h4>
+                <div className="space-y-3 text-sm text-gray-700">
+                  <div>
+                    <p className="font-semibold text-gray-900">Code4Bharat, Marketing Junction, HR:</p>
+                    <p className="text-xs mt-1">Appreciation, Experience, Internship Joining, Memo, NDA</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">FSD:</p>
+                    <p className="text-xs mt-1">Appreciation, Experience, Offer, Warning, NDA, Live Project</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">BVOC:</p>
+                    <p className="text-xs mt-1">Appreciation, Warning, Community Letter</p>
                   </div>
                 </div>
               </div>
             </motion.div>
           </div>
         ) : (
-          // Preview + Create
+          // Preview Section
           <div className="grid lg:grid-cols-2 gap-8">
-            <div>
-              <motion.button whileHover={{ x: -5 }} onClick={() => setShowPreview(false)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+            <div className="space-y-4">
+              <motion.button 
+                whileHover={{ x: -5 }} 
+                onClick={() => setShowPreview(false)} 
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="font-medium">Back to Form</span>
               </motion.button>
@@ -510,17 +766,74 @@ export default function CreateLetter() {
                   <p className="text-gray-600 font-medium">Generating preview...</p>
                 </div>
               ) : previewImage ? (
-                <img src={previewImage} alt="Letter Preview" className="w-full rounded-lg shadow-md border border-gray-200" />
+                <img 
+                  src={previewImage} 
+                  alt="Letter Preview" 
+                  className="w-full rounded-lg shadow-md border border-gray-200" 
+                />
               ) : null}
 
               <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200">
                 <h3 className="font-semibold text-gray-900 mb-3 text-lg">Letter Details</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-600">Name:</span><span className="font-semibold text-gray-900">{formData.name}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-semibold text-gray-900">{formData.course}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Issue Date:</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-semibold text-gray-900">{formData.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-semibold text-gray-900">{formData.course}</span>
+                  </div>
+                  {formData.subject && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subject:</span>
+                      <span className="font-semibold text-gray-900">{formData.subject}</span>
+                    </div>
+                  )}
+                  {formData.role && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Role:</span>
+                      <span className="font-semibold text-gray-900">{formData.role}</span>
+                    </div>
+                  )}
+                  {formData.startDate && formData.endDate && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Start Date:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(formData.startDate).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">End Date:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(formData.endDate).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      {formData.duration && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Duration:</span>
+                          <span className="font-semibold text-gray-900">{formData.duration}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
-                      {formData.issueDate ? new Date(formData.issueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                      {formData.issueDate ? new Date(formData.issueDate).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : ''}
                     </span>
                   </div>
                 </div>
@@ -532,9 +845,23 @@ export default function CreateLetter() {
         {/* OTP Modal */}
         <AnimatePresence>
           {showOtpModal && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full relative">
-                <button onClick={() => setShowOtpModal(false)} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.9, opacity: 0 }} 
+                onClick={(e) => e.stopPropagation()} 
+                className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full relative"
+              >
+                <button 
+                  onClick={() => setShowOtpModal(false)} 
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
 
@@ -565,17 +892,31 @@ export default function CreateLetter() {
                       ))}
                     </div>
 
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={verifyOTP} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg mb-3 flex items-center justify-center gap-2">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }} 
+                      whileTap={{ scale: 0.98 }} 
+                      onClick={verifyOTP} 
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg mb-3 flex items-center justify-center gap-2"
+                    >
                       <FaWhatsapp className="w-5 h-5" />
                       Verify OTP
                     </motion.button>
 
-                    <button onClick={resendTimer === 0 ? sendOTP : null} disabled={resendTimer > 0} className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors">
+                    <button 
+                      onClick={resendTimer === 0 ? sendOTP : null} 
+                      disabled={resendTimer > 0} 
+                      className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
+                    >
                       {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
                     </button>
                   </>
                 ) : (
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={sendOTP} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }} 
+                    whileTap={{ scale: 0.98 }} 
+                    onClick={sendOTP} 
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  >
                     <FaWhatsapp className="w-5 h-5" />
                     Send OTP via WhatsApp
                   </motion.button>
@@ -588,15 +929,31 @@ export default function CreateLetter() {
         {/* Success Modal */}
         <AnimatePresence>
           {showSuccess && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} transition={{ duration: 0.5 }}>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            >
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.8, opacity: 0 }} 
+                className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md"
+              >
+                <motion.div 
+                  initial={{ scale: 0 }} 
+                  animate={{ scale: [0, 1.2, 1] }} 
+                  transition={{ duration: 0.5 }}
+                >
                   <div className="inline-block p-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-xl mb-4">
                     <CheckCircle className="w-16 h-16 text-white" />
                   </div>
                 </motion.div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
-                <p className="text-gray-600">Letter created successfully! WhatsApp notification sent to the user.</p>
+                <p className="text-gray-600">
+                  Letter created successfully! WhatsApp notification sent to the user.
+                </p>
               </motion.div>
             </motion.div>
           )}
