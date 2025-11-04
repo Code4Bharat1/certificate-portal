@@ -37,7 +37,19 @@ export default function MarketingJunctionPage() {
           );
 
           if (res.data.success) {
-            setCertificates(res.data.data);
+            // defend against missing arrays
+            const certificates = Array.isArray(res.data.data) ? res.data.data : [];
+            const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+
+            const combined = [
+              ...certificates.map((c) => ({ ...c, type: 'certificate' })),
+              ...letters.map((l) => ({ ...l, type: 'letter' })),
+            ];
+
+            // keep newest first (api already sorts but safe)
+            combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setCertificates(combined);
           } else {
             toast.error('Failed to fetch certificates');
           }
@@ -58,11 +70,13 @@ export default function MarketingJunctionPage() {
     const matchesSearch =
       cert.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.certificateId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.letterId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.course?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
 
   const handleDownloadPDF = async (cert) => {
     try {
@@ -190,31 +204,28 @@ export default function MarketingJunctionPage() {
         <div className="mb-6 flex gap-3 flex-wrap">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'all'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'all'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             All ({getStatusCount('all')})
           </button>
           <button
             onClick={() => setStatusFilter('downloaded')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'downloaded'
-                ? 'bg-green-500 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'downloaded'
+              ? 'bg-green-500 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             Downloaded ({getStatusCount('downloaded')})
           </button>
           <button
             onClick={() => setStatusFilter('pending')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'pending'
-                ? 'bg-amber-500 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'pending'
+              ? 'bg-amber-500 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             Pending ({getStatusCount('pending')})
           </button>
@@ -236,11 +247,10 @@ export default function MarketingJunctionPage() {
                   <p className="text-sm text-gray-600 truncate">{cert.course}</p>
                 </div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
-                    cert.status === 'downloaded'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${cert.status === 'downloaded'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                    }`}
                 >
                   {cert.status}
                 </span>
@@ -249,7 +259,11 @@ export default function MarketingJunctionPage() {
               <div className="space-y-2 mb-4 text-sm flex-grow">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Certificate ID:</span>
-                  <span className="font-semibold text-gray-800 text-right break-all">{cert.certificateId}</span>
+                  {/* <span className="font-semibold text-gray-800 text-right break-all">{cert.certificateId}</span> */}
+                  <span className="font-semibold text-gray-800 text-right break-all">
+                    {cert.certificateId || cert.letterId}
+                  </span>
+
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Issue Date:</span>

@@ -16,20 +16,18 @@ export default function VerifyCertificate() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-//   useEffect(() => {
-//     if (verificationResult) {
-//       const timer = setTimeout(() => {
-//         setVerificationResult(null);
-//         setPreviewImage(null);
-//       }, 10000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [verificationResult]);
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    setIsAdmin(!!token);
+  }, []);
 
   const fetchCertificatePreview = async (certificateId) => {
     setLoadingPreview(true);
     try {
+      console.log(certificateId);
+      
       const response = await axios.get(`${API_URL}/api/certificates/${certificateId}/download/jpg`, {
         responseType: 'blob'
       });
@@ -79,9 +77,11 @@ export default function VerifyCertificate() {
         status: data?.status || null
       });
 
+      console.log(data);
+      
+
       if (valid) {
         toast.success('Certificate verified successfully!');
-        // Fetch preview for valid certificates
         fetchCertificatePreview(data.certificateId);
       } else {
         toast.error('Invalid certificate!');
@@ -120,21 +120,23 @@ export default function VerifyCertificate() {
         transition={{ duration: 0.6 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Back Button */}
-        <motion.button
-          whileHover={{ scale: 1.05, x: -5 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => router.push('/dashboard')}
-          className="mb-6 flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all text-gray-700 font-medium"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back to Dashboard
-        </motion.button>
+        {/* Back Button - only visible for admin */}
+        {isAdmin && (
+          <motion.button
+            whileHover={{ scale: 1.05, x: -5 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/dashboard')}
+            className="mb-6 flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all text-gray-700 font-medium"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Dashboard
+          </motion.button>
+        )}
 
         <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl p-8 overflow-hidden border-2 border-gray-100">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-100/50 to-emerald-100/50 rounded-full blur-3xl -z-0" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-100/50 to-cyan-100/50 rounded-full blur-3xl -z-0" />
-          
+
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-8">
               <motion.div
@@ -235,6 +237,7 @@ export default function VerifyCertificate() {
                           )}
                         </motion.h3>
                         
+                        {/* Valid Certificate Details */}
                         {verificationResult.valid && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -288,17 +291,17 @@ export default function VerifyCertificate() {
                                   {verificationResult.category === 'code4bharat' ? 'Code4Bharat' : 'Marketing Junction'}
                                 </span>
                               </div>
-                              <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                              {/* <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
                                 verificationResult.status === 'downloaded' ? 'bg-green-600 text-white' :
                                 verificationResult.status === 'pending' ? 'bg-yellow-500 text-white' :
                                 'bg-gray-600 text-white'
                               }`}>
                                 {verificationResult.status?.toUpperCase()}
-                              </span>
+                              </span> */}
                             </div>
                           </motion.div>
                         )}
-                        
+
                         {!verificationResult.valid && (
                           <motion.p
                             initial={{ opacity: 0 }}
@@ -313,7 +316,7 @@ export default function VerifyCertificate() {
                     </div>
                   </div>
 
-                  {/* Preview Section - Only show for valid certificates */}
+                  {/* Preview Section */}
                   {verificationResult.valid && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -334,13 +337,25 @@ export default function VerifyCertificate() {
                           </div>
                         </div>
                       ) : previewImage ? (
-                        <motion.img 
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          src={previewImage} 
-                          alt="Certificate Preview" 
-                          className="w-full rounded-xl shadow-lg border-2 border-gray-200"
-                        />
+                        <>
+                          <motion.img 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            src={previewImage} 
+                            alt="Certificate Preview" 
+                            className="w-full rounded-xl shadow-lg border-2 border-gray-200"
+                          />
+
+                          {/* ✅ Download PDF Button */}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => window.open(`${API_URL}/api/certificates/${verificationResult.id}/download/pdf`, "_blank")}
+                            className="mt-5 w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-xl transition-all"
+                          >
+                            Download PDF
+                          </motion.button>
+                        </>
                       ) : (
                         <div className="w-full aspect-[1.414/1] bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
                           <div className="text-center text-gray-500">

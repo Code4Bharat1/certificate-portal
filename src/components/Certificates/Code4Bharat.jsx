@@ -9,7 +9,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 export default function Code4BharatPage() {
   const router = useRouter();
-  const [certificates, setCertificates] = useState([]);
+  const [items, setItems] = useState([]); // contains both certificates & letters
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -17,9 +17,9 @@ export default function Code4BharatPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
-  // Fetch certificates from backend
+  // Fetch certificates + letters from backend
   useEffect(() => {
-    const fetchCertificates = async () => {
+    const fetchAll = async () => {
       try {
         if (typeof window !== 'undefined') {
           const token = sessionStorage.getItem('authToken');
@@ -37,56 +37,72 @@ export default function Code4BharatPage() {
           );
 
           if (res.data.success) {
-            setCertificates(res.data.data);
+            // defend against missing arrays
+            const certificates = Array.isArray(res.data.data) ? res.data.data : [];
+            const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+
+            const combined = [
+              ...certificates.map((c) => ({ ...c, type: 'certificate' })),
+              ...letters.map((l) => ({ ...l, type: 'letter' })),
+            ];
+
+            // keep newest first (api already sorts but safe)
+            combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setItems(combined);
           } else {
-            toast.error('Failed to fetch certificates');
+            toast.error('Failed to fetch certificates and letters');
           }
         }
       } catch (error) {
         console.error('Fetch error:', error);
-        toast.error('Error fetching certificates');
+        toast.error('Error fetching certificates and letters');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCertificates();
-  }, [router]);
+    fetchAll();
+  }, [router, API_URL]);
 
-  // ✅ Filter logic (search + status)
-  const filteredCertificates = certificates.filter((cert) => {
+  // Filter logic (search + status)
+  const filteredItems = items.filter((it) => {
+    const search = searchTerm.trim().toLowerCase();
     const matchesSearch =
-      cert.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.certificateId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cert.course?.toLowerCase().includes(searchTerm.toLowerCase());
+      !search ||
+      (it.name && it.name.toLowerCase().includes(search)) ||
+      (it.certificateId && it.certificateId.toLowerCase().includes(search)) ||
+      (it.letterId && it.letterId.toLowerCase().includes(search)) ||
+      (it.course && it.course.toLowerCase().includes(search));
 
-    const matchesStatus =
-      statusFilter === 'all' || cert.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || it.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  // ✅ Download PDF
-  const handleDownloadPDF = async (cert) => {
+  // Helper: base path depending on type
+  const apiBaseFor = (it) => (it.type === 'letter' ? 'letters' : 'certificates');
+
+  // Download PDF (works for both)
+  const handleDownloadPDF = async (it) => {
     try {
-      toast.success(`Downloading ${cert.name}.pdf`);
+      toast.success(`Downloading ${it.name}.pdf`);
       const token = sessionStorage.getItem('authToken');
+      // const base = apiBaseFor(it);
       const response = await axios.get(
-        `${API_URL}/api/certificates/${cert._id}/download/pdf`,
+        `${API_URL}/api/certificates/${it._id}/download/pdf`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
         }
       );
 
-      console.log(response);
-      
-
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${cert.name}.pdf`;
+      // include type in filename to avoid collisions
+      a.download = `${it.name}-${it.type}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -95,13 +111,14 @@ export default function Code4BharatPage() {
     }
   };
 
-  // ✅ Download JPG
-  const handleDownloadJPG = async (cert) => {
+  // Download JPG (works for both)
+  const handleDownloadJPG = async (it) => {
     try {
-      toast.success(`Downloading ${cert.name}.jpg`);
+      toast.success(`Downloading ${it.name}.jpg`);
       const token = sessionStorage.getItem('authToken');
+      // const base = apiBaseFor(it);
       const response = await axios.get(
-        `${API_URL}/api/certificates/${cert._id}/download/jpg`,
+        `${API_URL}/api/certificates/${it._id}/download/jpg`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
@@ -112,7 +129,7 @@ export default function Code4BharatPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${cert.name}.jpg`;
+      a.download = `${it.name}-${it.type}.jpg`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -121,31 +138,34 @@ export default function Code4BharatPage() {
     }
   };
 
-  // ✅ Delete certificate
+  // Delete (works for both)
   const handleDelete = async (id) => {
     try {
       const token = sessionStorage.getItem('authToken');
+      // find item to know its type
+      const it = items.find((x) => x._id === id);
+      // const base = it ? apiBaseFor(it) : 'certificates';
       await axios.delete(`${API_URL}/api/certificates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCertificates(certificates.filter((cert) => cert._id !== id));
-      toast.success('Certificate deleted successfully');
+      setItems((prev) => prev.filter((x) => x._id !== id));
+      toast.success(`${it?.type === 'letter' ? 'Letter' : 'Certificate'} deleted successfully`);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to delete certificate');
+      toast.error('Failed to delete');
     }
     setDeleteConfirm(null);
   };
 
   const getStatusCount = (status) => {
-    if (status === 'all') return certificates.length;
-    return certificates.filter((cert) => cert.status === status).length;
+    if (status === 'all') return items.length;
+    return items.filter((it) => it.status === status).length;
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600 text-lg">
-        Loading certificates...
+        Loading certificates & letters...
       </div>
     );
   }
@@ -169,12 +189,12 @@ export default function Code4BharatPage() {
               </motion.button>
               <div>
                 <h1 className="text-3xl font-bold">Code4Bharat</h1>
-                <p className="text-indigo-100 text-sm">Manage all Code4Bharat certificates</p>
+                <p className="text-indigo-100 text-sm">Manage all Code4Bharat certificates & letters</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
               <FileText className="w-5 h-5" />
-              <span className="font-semibold">{certificates.length} Certificates</span>
+              <span className="font-semibold">{items.length} Items</span>
             </div>
           </div>
         </div>
@@ -228,41 +248,49 @@ export default function Code4BharatPage() {
           </button>
         </div>
 
-        {/* Certificates Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCertificates.map((cert, index) => (
+          {filteredItems.map((it, index) => (
             <motion.div
-              key={cert._id}
+              key={it._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.03 }}
               className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition flex flex-col"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 min-w-0 pr-3">
-                  <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">{cert.name}</h3>
-                  <p className="text-sm text-gray-600 truncate">{cert.course}</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">{it.name}</h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
+                      {/* {it.type === 'letter' ? 'Letter' : 'Certificate'} */}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 truncate">{it.course}</p>
                 </div>
+
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
-                    cert.status === 'downloaded'
+                    it.status === 'downloaded'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-amber-100 text-amber-700'
                   }`}
                 >
-                  {cert.status}
+                  {it.status || 'pending'}
                 </span>
               </div>
 
               <div className="space-y-2 mb-4 text-sm flex-grow">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Certificate ID:</span>
-                  <span className="font-semibold text-gray-800 text-right break-all">{cert.certificateId}</span>
+                  <span className="text-gray-600">{it.type === 'letter' ? 'Letter ID:' : 'Certificate ID:'}</span>
+                  <span className="font-semibold text-gray-800 text-right break-all">
+                    {it.type === 'letter' ? (it.letterId || it.lettertId || it.certificateId || it._id) : (it.certificateId || it.letterId || it._id)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Issue Date:</span>
                   <span className="font-semibold text-gray-800">
-                    {new Date(cert.issueDate).toLocaleDateString()}
+                    {it.issueDate ? new Date(it.issueDate).toLocaleDateString() : '—'}
                   </span>
                 </div>
               </div>
@@ -271,25 +299,27 @@ export default function Code4BharatPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDownloadPDF(cert)}
+                  onClick={() => handleDownloadPDF(it)}
                   className="flex-1 flex items-center justify-center gap-2 bg-indigo-500 text-white py-2.5 rounded-lg hover:bg-indigo-600 transition text-sm font-semibold"
                 >
                   <Download className="w-4 h-4" />
                   PDF
                 </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDownloadJPG(cert)}
+                  onClick={() => handleDownloadJPG(it)}
                   className="flex-1 flex items-center justify-center gap-2 bg-pink-500 text-white py-2.5 rounded-lg hover:bg-pink-600 transition text-sm font-semibold"
                 >
                   <Download className="w-4 h-4" />
                   JPG
                 </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setDeleteConfirm(cert._id)}
+                  onClick={() => setDeleteConfirm(it._id)}
                   className="p-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -299,10 +329,10 @@ export default function Code4BharatPage() {
           ))}
         </div>
 
-        {filteredCertificates.length === 0 && (
+        {filteredItems.length === 0 && (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No certificates found</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No items found</h3>
             <p className="text-gray-600">Try adjusting your search or filter</p>
           </div>
         )}
@@ -329,9 +359,15 @@ export default function Code4BharatPage() {
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trash2 className="w-8 h-8 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Delete Certificate?</h2>
+                {/* find the item being deleted to show proper text */}
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {(() => {
+                    const it = items.find((x) => x._id === deleteConfirm);
+                    return `${it?.type === 'letter' ? 'Delete Letter?' : 'Delete Certificate?'}`;
+                  })()}
+                </h2>
                 <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this certificate? This action cannot be undone.
+                  Are you sure you want to delete this {items.find((x) => x._id === deleteConfirm)?.type || 'item'}? This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                   <button
