@@ -1,17 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Loader2, ArrowLeft, Award, Tag, User, BookOpen, Calendar,
-  Shield, CheckCircle, X, FileText, Upload, ArrowRight
-} from 'lucide-react';
-import { FaWhatsapp } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+  Loader2,
+  ArrowLeft,
+  Award,
+  Tag,
+  User,
+  BookOpen,
+  Calendar,
+  Shield,
+  CheckCircle,
+  X,
+  FileText,
+  Upload,
+  ArrowRight,
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateLetter() {
   const router = useRouter();
@@ -24,17 +35,26 @@ export default function CreateLetter() {
 
   // Form States
   const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    issueDate: '',
-    course: '', // Letter type
-    description: '',
-    subject: '',
-    role: '',
-    startDate: '',
-    endDate: '',
-    duration: '',
-    batch: ''
+    name: "",
+    category: "",
+    issueDate: "",
+    letterType: "", // Main letter type
+    course: "", // Subtype (or same as letterType if no subtype)
+    description: "",
+    subject: "",
+    role: "",
+    startDate: "",
+    endDate: "",
+    duration: "",
+    batch: "",
+    committeeType: "",
+    attendancePercent: "",
+    assignmentName: "",
+    misconductReason: "",
+    attendanceMonth: "",
+    attendanceYear: "",
+    testingPanelName: "",
+    errorDetectionCount: "",
   });
 
   // Data Lists
@@ -42,7 +62,7 @@ export default function CreateLetter() {
 
   // OTP States
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [otpVerified, setOtpVerified] = useState(false);
@@ -53,99 +73,183 @@ export default function CreateLetter() {
 
   const [pdfPreview, setPdfPreview] = useState(null);
 
-
   const categoryConfig = {
-    'code4bharat': { label: 'Code4Bharat', batches: [] },
-    'marketing-junction': { label: 'Marketing Junction', batches: [] },
-    'FSD': { label: 'FSD', batches: batches.FSD || [] },
-    'HR': { label: 'HR', batches: [] },
-    'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
+    code4bharat: { label: "Code4Bharat", batches: [] },
+    "marketing-junction": { label: "Marketing Junction", batches: [] },
+    FSD: { label: "FSD", batches: batches.FSD || [] },
+    HR: { label: "HR", batches: [] },
+    BVOC: { label: "BVOC", batches: batches.BVOC || [] },
   };
 
-  // Letter types based on category
-  const getLetterTypes = (category) => {
-    if (category === 'code4bharat' || category === 'marketing-junction' || category === 'HR') {
-      return [
-        'Appreciation Letter',
-        'Experience Certificate',
-        'Internship Joining Letter - Unpaid',
-        'Internship Joining Letter - Paid',
-        'Memo',
-        'Non-Disclosure Agreement'
-      ];
-    } else if (category === 'FSD') {
-      return [
-        'Appreciation Letter',
-        'Experience Certificate',
-        'Offer Letter',
-        'Warning Letter',
-        'Non-Disclosure Agreement',
-        'Live Project Agreement'
-      ];
-    } else if (category === 'BVOC') {
-      return [
-        'Appreciation Letter',
-        'Warning Letter',
-        'Committee President Letter',
-        'Committee Vice-President Letter',
-        'Committee Member Letter',
-      ];
+  // Letter types and subtypes configuration
+  const getLetterTypesConfig = (category) => {
+    if (
+      category === "code4bharat" ||
+      category === "marketing-junction" ||
+      category === "HR"
+    ) {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Performance",
+          "Appreciation for Consistent Performance",
+          "Appreciation for Detecting Errors and Debugging",
+          "Appreciation for Outstanding Performance",
+        ],
+        "Experience Certificate": [],
+        "Internship Joining Letter": [
+          "Internship Joining Letter - Paid",
+          "Internship Joining Letter - Unpaid",
+        ],
+        "Memo": [],
+        "Non-Disclosure Agreement": [],
+        "Other": [],
+        "Promotion Letter": [],
+        "Timeline Letter": [],
+      };
+    } else if (category === "FSD") {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Attendance",
+          "Appreciation for Outstanding Performance",
+        ],
+        "Experience Certificate": [],
+        "Live Project Agreement": [],
+        "Non-Disclosure Agreement": [],
+        "Offer Letter": [],
+        "Other": [],
+        "Warning Letter": [
+          "Warning for Incomplete Assignment/Project Submissions",
+          "Warning for Low Attendance",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Unauthorized Absence from Training Sessions",
+          "Warning Regarding Punctuality and Professional Discipline",
+        ],
+      };
+    } else if (category === "BVOC") {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Attendance",
+          "Appreciation for Detecting Errors And Debugging",
+          "Appreciation for Outstanding Performance",
+        ],
+        "Committee Letter": [
+          "Committee Member",
+          "Committee President",
+          "Committee Vice-President",
+        ],
+        "Other": [],
+        "Warning Letter": [
+          "Warning for Incomplete Assignment/Project Submissions",
+          "Warning for Low Attendance",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Punctuality and Discipline",
+          "Warning for Unauthorized Absence from Sessions",
+        ],
+      };
     }
-    return [];
+    return {};
+  };
+
+  // Get main letter types (alphabetically sorted)
+  const getLetterTypes = (category) => {
+    const config = getLetterTypesConfig(category);
+    return Object.keys(config).sort();
+  };
+
+  // Get subtypes for selected letter type (alphabetically sorted)
+  const getLetterSubtypes = (category, letterType) => {
+    const config = getLetterTypesConfig(category);
+    return config[letterType] || [];
+  };
+
+  // Check if selected letter type has subtypes
+  const hasSubtypes = (category, letterType) => {
+    const subtypes = getLetterSubtypes(category, letterType);
+    return subtypes.length > 0;
   };
 
   // Roles based on category
   const getRoles = (category) => {
-    if (category === 'code4bharat') {
+    if (category === "code4bharat") {
+      return ["Cyber Security Analyst", "Junior Software Developer"];
+    } else if (category === "marketing-junction") {
       return [
-        'Junior Software Developer',
-        'Cyber Security Analyst'
+        "Content Writer Intern",
+        "Digital Marketing Intern",
+        "Graphic Designer Intern",
+        "SEO Specialist Intern",
+        "Social Media Manager Intern",
       ];
-    } else if (category === 'marketing-junction') {
+    } else if (category === "HR") {
       return [
-        'Digital Marketing Intern',
-        'Content Writer Intern',
-        'Social Media Manager Intern',
-        'SEO Specialist Intern',
-        'Graphic Designer Intern'
+        "HR Intern",
+        "HR Operations Intern",
+        "Talent Acquisition Intern",
+        "Training & Development Intern",
       ];
-    } else if (category === 'HR') {
-      return [
-        'HR Intern',
-        'Talent Acquisition Intern',
-        'HR Operations Intern',
-        'Training & Development Intern'
-      ];
-    } else if (category === 'FSD') {
-      return [
-        'Full Stack Developer',
-        'Software Engineer',
-        'Technical Lead',
-        'Project Manager'
-      ];
+    } else if (category === "FSD") {
+      return ["Full Stack Developer"];
     }
     return [];
   };
 
-  // Check if subject field is needed
-  const needsSubject = () => {
-    return formData.course === 'Appreciation Letter' ||
-      formData.course === 'Warning Letter' ||
-      formData.course === 'Memo';
-    // formData.course === 'Community Letter';
+  // BVOC specific conditional field logic
+
+  // 1. Committee-related
+  const needsCommittee = () => {
+    return [
+      "Committee President",
+      "Committee Vice President",
+      "Committee Member",
+    ].includes(formData.course);
   };
+
+  // 2. Warning for Low Attendance
+  const needsAttendancePercent = () =>
+    formData.course === "Warning for Low Attendance";
+
+  // 3. Warning for Incomplete Assignment
+  const needsIncompleteAssignmentInputs = () =>
+    formData.course === "Warning for Incomplete Assignment/Project Submissions";
+
+  // 4. Misconduct / Disrespectful Behaviour
+  const needsMisconductReason = () =>
+    formData.course === "Warning for Misconduct or Disrespectful Behavior";
+
+  // 5. Appreciation for Best Attendance
+  const needsBestAttendanceMonthYear = () =>
+    formData.course === "Appreciation for Best Attendance";
+
+  // 6. Appreciation for Outstanding Performance
+  const needsOutstandingPerformanceMonthYear = () =>
+    formData.course === "Appreciation for Outstanding Performance";
+
+  // 7. Detecting Errors & Debugging
+  const needsDebuggingInputs = () =>
+    formData.course === "Appreciation for Detecting Errors And Debugging";
+
+
+  // Check if subject field is needed
+  // const needsSubject = () => {
+  //   return (
+  //     formData.letterType === "Appreciation Letter" ||
+  //     formData.letterType === "Warning Letter" ||
+  //     formData.course === "Memo"
+  //   );
+  // };
 
   // Check if role field is needed
   const needsRole = () => {
-    return formData.course === 'Internship Joining Letter - Unpaid' ||
-      formData.course === 'Internship Joining Letter - Paid' ||
-      formData.course === 'Offer Letter';
-    // formData.course === 'Experience Certificate';
+    return (
+      formData.course === "Internship Joining Letter - Unpaid" ||
+      formData.course === "Internship Joining Letter - Paid" ||
+      formData.course === "Offer Letter"
+    );
   };
 
   // Check if dates are needed (for Offer Letter)
   const needsDates = () => {
-    return formData.course === 'Offer Letter';
+    return formData.course === "Offer Letter";
   };
 
   useEffect(() => {
@@ -156,8 +260,8 @@ export default function CreateLetter() {
           setBatches(response.data.batches);
         }
       } catch (error) {
-        console.error('Error fetching batches:', error);
-        toast.error('Failed to load batches');
+        console.error("Error fetching batches:", error);
+        toast.error("Failed to load batches");
       }
     };
     fetchBatches();
@@ -173,88 +277,113 @@ export default function CreateLetter() {
 
   // Fetch names when category / batch change
   useEffect(() => {
-    const shouldFetchNames = formData.category && (
-      categoryConfig[formData.category]?.batches?.length === 0 ||
-      formData.batch
-    );
+    const shouldFetchNames =
+      formData.category &&
+      (categoryConfig[formData.category]?.batches?.length === 0 ||
+        formData.batch);
 
     if (shouldFetchNames) {
       fetchNames();
     } else {
       setNamesList([]);
-      setFormData(prev => ({ ...prev, name: '' }));
+      setFormData((prev) => ({ ...prev, name: "" }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.category, formData.batch]);
 
   const getAuthHeaders = () => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
-    return { 'Authorization': `Bearer ${token}` };
+    const token =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("authToken")
+        : null;
+    return { Authorization: `Bearer ${token}` };
   };
 
   const fetchNames = async () => {
     setLoadingNames(true);
     try {
       let response;
-      if (formData.category === "code4bharat" || formData.category === "marketing-junction") {
+      if (
+        formData.category === "code4bharat" ||
+        formData.category === "marketing-junction"
+      ) {
         response = await axios.get(`${API_URL}/api/people/`, {
           headers: getAuthHeaders(),
-          params: { category: formData.category }
+          params: { category: formData.category },
         });
       } else {
         response = await axios.get(`${API_URL}/api/people/`, {
           headers: getAuthHeaders(),
-          params: { category: formData.category, batch: formData.batch }
+          params: { category: formData.category, batch: formData.batch },
         });
       }
 
       if (response.data.success && Array.isArray(response.data.names)) {
-        const enabled = response.data.names.filter(person => !person.disabled);
+        const enabled = response.data.names.filter(
+          (person) => !person.disabled
+        );
         setNamesList(enabled);
       } else {
         setNamesList([]);
       }
     } catch (error) {
-      console.error('Fetch names error:', error);
-      toast.error('Failed to load names');
+      console.error("Fetch names error:", error);
+      toast.error("Failed to load names");
     } finally {
       setLoadingNames(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    if (field === 'category') {
-      setFormData(prev => ({
+    if (field === "category") {
+      setFormData((prev) => ({
         ...prev,
         category: value,
-        batch: '',
-        name: '',
-        course: '',
-        subject: '',
-        role: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        duration: ''
+        batch: "",
+        name: "",
+        letterType: "",
+        course: "",
+        subject: "",
+        role: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        duration: "",
       }));
       setPreviewImage(null);
       setOtpVerified(false);
-    } else if (field === 'course') {
-      setFormData(prev => ({
+    } else if (field === "letterType") {
+      // When letter type changes, reset course and check if subtypes exist
+      const subtypes = getLetterSubtypes(formData.category, value);
+      setFormData((prev) => ({
+        ...prev,
+        letterType: value,
+        course: subtypes.length === 0 ? value : "", // If no subtypes, set course same as letterType
+        subject: "",
+        role: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        duration: "",
+      }));
+      setPreviewImage(null);
+      setOtpVerified(false);
+    } else if (field === "course") {
+      setFormData((prev) => ({
         ...prev,
         course: value,
-        subject: '',
-        role: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        duration: ''
+        subject: "",
+        role: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        duration: "",
       }));
       setPreviewImage(null);
       setOtpVerified(false);
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-      if (field === 'issueDate') {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      if (field === "issueDate") {
         setPreviewImage(null);
         setOtpVerified(false);
       }
@@ -263,39 +392,43 @@ export default function CreateLetter() {
 
   const validateForm = () => {
     if (!formData.category) {
-      toast.error('Please select a category');
+      toast.error("Please select a category");
       return false;
     }
     if (!formData.name) {
-      toast.error('Please select a name');
+      toast.error("Please select a name");
       return false;
     }
-    if (!formData.course) {
-      toast.error('Please select letter type');
+    if (!formData.letterType) {
+      toast.error("Please select letter type");
       return false;
     }
-    if (needsSubject() && !formData.subject.trim()) {
-      toast.error('Please enter the subject');
+    if (hasSubtypes(formData.category, formData.letterType) && !formData.course) {
+      toast.error("Please select letter subtype");
       return false;
     }
-    if (needsSubject() && formData.subject.length > 50) {
-      toast.error('Subject cannot exceed 50 characters');
-      return false;
-    }
+    // if (needsSubject() && !formData.subject.trim()) {
+    //   toast.error("Please enter the subject");
+    //   return false;
+    // }
+    // if (needsSubject() && formData.subject.length > 50) {
+    //   toast.error("Subject cannot exceed 50 characters");
+    //   return false;
+    // }
     if (needsRole() && !formData.role) {
-      toast.error('Please select a role');
+      toast.error("Please select a role");
       return false;
     }
     if (needsDates() && (!formData.startDate || !formData.endDate)) {
-      toast.error('Please select start and end dates for Offer Letter');
+      toast.error("Please select start and end dates for Offer Letter");
       return false;
     }
     if (formData.description && formData.description.length > 1000) {
-      toast.error('Description cannot exceed 1000 characters');
+      toast.error("Description cannot exceed 1000 characters");
       return false;
     }
     if (!formData.issueDate) {
-      toast.error('Please select issue date');
+      toast.error("Please select issue date");
       return false;
     }
     return true;
@@ -311,20 +444,20 @@ export default function CreateLetter() {
     try {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' },
+        { phone: "919321488422", name: "HR-NEXCORE ALLIANCE" },
         { headers: getAuthHeaders() }
       );
 
       if (response.data.success) {
-        toast.success('OTP sent to your WhatsApp! 📱');
+        toast.success("OTP sent to your WhatsApp! 📱");
         setOtpSent(true);
         setResendTimer(60);
       } else {
-        toast.error(response.data.message || 'Failed to send OTP');
+        toast.error(response.data.message || "Failed to send OTP");
       }
     } catch (error) {
-      console.error('sendOTP error:', error);
-      toast.error('Failed to send OTP');
+      console.error("sendOTP error:", error);
+      toast.error("Failed to send OTP");
     }
   };
 
@@ -339,16 +472,16 @@ export default function CreateLetter() {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       document.getElementById(`otp-${index - 1}`)?.focus();
     }
   };
 
   const verifyOTP = async () => {
     try {
-      const otpCode = otp.join('');
+      const otpCode = otp.join("");
       if (otpCode.length !== 6) {
-        toast.error('Please enter complete OTP');
+        toast.error("Please enter complete OTP");
         return;
       }
 
@@ -356,53 +489,27 @@ export default function CreateLetter() {
         `${API_URL}/api/certificates/otp/verify`,
         {
           phone: "919321488422",
-          otp: otpCode
+          otp: otpCode,
         },
         { headers: getAuthHeaders() }
       );
 
-      // console.log(response, response.data.success);
-
-
       if (response.data.success) {
-        toast.success('✅ OTP Verified Successfully!');
+        toast.success("✅ OTP Verified Successfully!");
         setOtpVerified(true);
         setShowOtpModal(false);
         setShowPreview(true);
         generatePreview();
       } else {
-        toast.error('Invalid OTP');
-        setOtp(['', '', '', '', '', '']);
+        toast.error("Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
       }
     } catch (error) {
-      console.error('Verify OTP error:', error);
-      toast.error('OTP verification failed');
-      setOtp(['', '', '', '', '', '']);
+      console.error("Verify OTP error:", error);
+      toast.error("OTP verification failed");
+      setOtp(["", "", "", "", "", ""]);
     }
   };
-
-  // const generatePreview = async () => {
-  //   setLoadingPreview(true);
-  //   try {
-  //     const payload = { ...formData };
-  //     const response = await axios.post(
-  //       `${API_URL}/api/letters/preview`,
-  //       payload,
-  //       {
-  //         headers: getAuthHeaders(),
-  //         responseType: 'blob'
-  //       }
-  //     );
-
-  //     const imageUrl = URL.createObjectURL(response.data);
-  //     setPreviewImage(imageUrl);
-  //   } catch (error) {
-  //     console.error('Preview error:', error);
-  //     toast.error('Failed to generate preview');
-  //   } finally {
-  //     setLoadingPreview(false);
-  //   }
-  // };
 
   const generatePreview = async () => {
     setLoadingPreview(true);
@@ -413,44 +520,40 @@ export default function CreateLetter() {
         payload,
         {
           headers: getAuthHeaders(),
-          responseType: 'blob'
+          responseType: "blob",
         }
       );
 
-      const fileType = response.data.type || response.headers['content-type'];
+      const fileType = response.data.type || response.headers["content-type"];
 
       const fileUrl = URL.createObjectURL(response.data);
 
-      if (fileType.includes('pdf')) {
-        setPreviewImage(null);        // Clear image
-        setPdfPreview(fileUrl);       // <-- new state for PDF
+      if (fileType.includes("pdf")) {
+        setPreviewImage(null);
+        setPdfPreview(fileUrl);
       } else {
         setPdfPreview(null);
         setPreviewImage(fileUrl);
       }
-
     } catch (error) {
-      console.error('Preview error:', error);
-      toast.error('Failed to generate preview');
+      console.error("Preview error:", error);
+      toast.error("Failed to generate preview");
     } finally {
       setLoadingPreview(false);
     }
   };
 
-
   const handleSubmit = async () => {
     if (!otpVerified) {
-      toast.error('Please verify OTP first');
+      toast.error("Please verify OTP first");
       return;
     }
     setIsCreating(true);
     try {
       const payload = { ...formData };
-      const response = await axios.post(
-        `${API_URL}/api/letters`,
-        payload,
-        { headers: getAuthHeaders() }
-      );
+      const response = await axios.post(`${API_URL}/api/letters`, payload, {
+        headers: getAuthHeaders(),
+      });
 
       if (response.data.success) {
         setShowSuccess(true);
@@ -458,11 +561,11 @@ export default function CreateLetter() {
           setShowSuccess(false);
         }, 2000);
       } else {
-        toast.error(response.data.message || 'Failed to create letter');
+        toast.error(response.data.message || "Failed to create letter");
       }
     } catch (error) {
-      console.error('Create letter error:', error);
-      toast.error('Failed to create letter');
+      console.error("Create letter error:", error);
+      toast.error("Failed to create letter");
     } finally {
       setIsCreating(false);
     }
@@ -471,7 +574,11 @@ export default function CreateLetter() {
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
       <Toaster position="top-center" />
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-7xl mx-auto"
+      >
         {/* Header */}
         <div className="mb-8">
           <motion.button
@@ -488,7 +595,9 @@ export default function CreateLetter() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Create Letter
               </h1>
-              <p className="text-gray-600 mt-2">Generate various types of letters with OTP verification</p>
+              <p className="text-gray-600 mt-2">
+                Generate various types of letters with OTP verification
+              </p>
             </div>
           </div>
         </div>
@@ -515,35 +624,46 @@ export default function CreateLetter() {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("category", e.target.value)
+                    }
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
                     {Object.entries(categoryConfig).map(([key, config]) => (
-                      <option key={key} value={key}>{config.label}</option>
+                      <option key={key} value={key}>
+                        {config.label}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 {/* Batch selection (if needed) */}
-                {formData.category && categoryConfig[formData.category]?.batches?.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <BookOpen className="w-4 h-4 inline mr-2" />
-                      Batch *
-                    </label>
-                    <select
-                      value={formData.batch || ''}
-                      onChange={(e) => handleInputChange('batch', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    >
-                      <option value="">Select Batch</option>
-                      {categoryConfig[formData.category].batches.map(batch => (
-                        <option key={batch} value={batch}>{batch}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {formData.category &&
+                  categoryConfig[formData.category]?.batches?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <BookOpen className="w-4 h-4 inline mr-2" />
+                        Batch *
+                      </label>
+                      <select
+                        value={formData.batch || ""}
+                        onChange={(e) =>
+                          handleInputChange("batch", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      >
+                        <option value="">Select Batch</option>
+                        {categoryConfig[formData.category].batches.map(
+                          (batch) => (
+                            <option key={batch} value={batch}>
+                              {batch}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  )}
 
                 {/* Name */}
                 <div>
@@ -558,7 +678,9 @@ export default function CreateLetter() {
                   ) : (
                     <select
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       disabled={!namesList.length}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
                     >
@@ -579,38 +701,77 @@ export default function CreateLetter() {
                     Letter Type *
                   </label>
                   <select
-                    value={formData.course}
-                    onChange={(e) => handleInputChange('course', e.target.value)}
+                    value={formData.letterType}
+                    onChange={(e) =>
+                      handleInputChange("letterType", e.target.value)
+                    }
                     disabled={!formData.category}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
                   >
                     <option value="">Select Letter Type</option>
                     {getLetterTypes(formData.category).map((type) => (
-                      <option key={type} value={type}>{type}</option>
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
                     ))}
                   </select>
                 </div>
 
+                {/* Letter Subtype (if applicable) */}
+                {formData.letterType &&
+                  hasSubtypes(formData.category, formData.letterType) && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <FileText className="w-4 h-4 inline mr-2" />
+                        Letter Subtype *
+                      </label>
+                      <select
+                        value={formData.course}
+                        onChange={(e) =>
+                          handleInputChange("course", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      >
+                        <option value="">Select Subtype</option>
+                        {getLetterSubtypes(
+                          formData.category,
+                          formData.letterType
+                        ).map((subtype) => (
+                          <option key={subtype} value={subtype}>
+                            {subtype}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                 {/* Subject (for Appreciation, Warning, Memo, Community Letter) */}
-                {needsSubject() && (
+                {/* {needsSubject() && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       <FileText className="w-4 h-4 inline mr-2" />
                       Subject *
                     </label>
-                    <p className={`text-xs mb-2 ${formData.subject.length > 50 ? 'text-red-500' : 'text-gray-500'}`}>
+                    <p
+                      className={`text-xs mb-2 ${formData.subject.length > 50
+                        ? "text-red-500"
+                        : "text-gray-500"
+                        }`}
+                    >
                       {formData.subject.length}/50 characters
                     </p>
                     <input
                       type="text"
                       value={formData.subject}
-                      onChange={(e) => handleInputChange('subject', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("subject", e.target.value)
+                      }
                       placeholder="Enter subject"
                       maxLength={50}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                     />
                   </div>
-                )}
+                )} */}
 
                 {/* Role (for Experience, Internship Joining, Offer Letter) */}
                 {needsRole() && (
@@ -621,12 +782,16 @@ export default function CreateLetter() {
                     </label>
                     <select
                       value={formData.role}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("role", e.target.value)
+                      }
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                     >
                       <option value="">Select Role</option>
                       {getRoles(formData.category).map((role) => (
-                        <option key={role} value={role}>{role}</option>
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -644,7 +809,9 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.startDate}
-                          onChange={(e) => handleInputChange('startDate', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("startDate", e.target.value)
+                          }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         />
                       </div>
@@ -656,7 +823,9 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.endDate}
-                          onChange={(e) => handleInputChange('endDate', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("endDate", e.target.value)
+                          }
                           min={formData.startDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         />
@@ -669,7 +838,9 @@ export default function CreateLetter() {
                       <input
                         type="text"
                         value={formData.duration}
-                        onChange={(e) => handleInputChange('duration', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("duration", e.target.value)
+                        }
                         placeholder="Enter duration"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -677,23 +848,206 @@ export default function CreateLetter() {
                   </>
                 )}
 
-                {/* Description (optional) */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Description*
-                  </label>
-                  <p className={`text-xs mb-2 ${formData.description.length > 1000 ? 'text-red-500' : 'text-gray-500'}`}>
-                    {formData.description.length}/1000 characters
-                  </p>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Enter any additional information"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none"
-                    rows={4}
-                    maxLength={1000}
-                  />
-                </div>
+                {/* Description — hidden only for BVOC */}
+                {/* {formData.category !== "BVOC" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Description *
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
+                      placeholder="Enter description"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      rows={4}
+                    />
+                  </div>
+                )} */}
+
+                {/* Committee Type (President / Vice / Member) */}
+                {needsCommittee() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Committee Name *
+                    </label>
+                    <select
+                      value={formData.committeeType || ""}
+                      onChange={(e) => handleInputChange("committeeType", e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    >
+                      <option value="">Select Committee</option>
+                      <option value="Technical">Technical</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Cultural">Cultural</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Warning for Low Attendance */}
+                {needsAttendancePercent() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Attendance Percentage (0–99%) *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.attendancePercent || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || (val >= 0 && val <= 99))
+                          handleInputChange("attendancePercent", val);
+                      }}
+                      min="0"
+                      max="99"
+                      placeholder="Enter %"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Warning for Incomplete Assignment */}
+                {needsIncompleteAssignmentInputs() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Subject Name (max 10 chars) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        value={formData.subjectName || ""}
+                        onChange={(e) => handleInputChange("subjectName", e.target.value)}
+                        placeholder="Enter subject"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Project Name (max 15 chars) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={formData.projectName || ""}
+                        onChange={(e) => handleInputChange("projectName", e.target.value)}
+                        placeholder="Enter project"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Misconduct or Disrespectful Behaviour */}
+                {needsMisconductReason() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Reason (max 50 chars) *
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={50}
+                      value={formData.misconductReason || ""}
+                      onChange={(e) => handleInputChange("misconductReason", e.target.value)}
+                      placeholder="Enter reason"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Appreciation for Best Attendance */}
+                {needsBestAttendanceMonthYear() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Month *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.attendanceMonth || ""}
+                        onChange={(e) => handleInputChange("attendanceMonth", e.target.value)}
+                        placeholder="e.g. January"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Year *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.attendanceYear || ""}
+                        onChange={(e) => handleInputChange("attendanceYear", e.target.value)}
+                        placeholder="e.g. 2025"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Appreciation for Outstanding Performance */}
+                {needsOutstandingPerformanceMonthYear() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Month *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.performanceMonth || ""}
+                        onChange={(e) => handleInputChange("performanceMonth", e.target.value)}
+                        placeholder="e.g. March"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Year *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.performanceYear || ""}
+                        onChange={(e) => handleInputChange("performanceYear", e.target.value)}
+                        placeholder="e.g. 2025"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Detecting Errors and Debugging */}
+                {needsDebuggingInputs() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Testing Phase (max 15 chars) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={formData.testingPhase || ""}
+                        onChange={(e) => handleInputChange("testingPhase", e.target.value)}
+                        placeholder="e.g. Admin Panel Testing phase"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Uncover (max 15 chars) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={formData.uncover || ""}
+                        onChange={(e) => handleInputChange("uncover", e.target.value)}
+                        placeholder="e.g. twenty functional bugs"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
 
                 {/* Issue Date */}
                 <div>
@@ -704,8 +1058,10 @@ export default function CreateLetter() {
                   <input
                     type="date"
                     value={formData.issueDate}
-                    onChange={(e) => handleInputChange('issueDate', e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) =>
+                      handleInputChange("issueDate", e.target.value)
+                    }
+                    max={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
@@ -730,7 +1086,9 @@ export default function CreateLetter() {
               className="space-y-6"
             >
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Instructions</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  📋 Instructions
+                </h3>
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">1.</span>
@@ -742,11 +1100,14 @@ export default function CreateLetter() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">3.</span>
-                    <span>Select letter type</span>
+                    <span>Select letter type and subtype (if applicable)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">4.</span>
-                    <span>Fill required fields (subject/role/dates based on letter type)</span>
+                    <span>
+                      Fill required fields (subject/role/dates based on letter
+                      type)
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">5.</span>
@@ -763,28 +1124,42 @@ export default function CreateLetter() {
                 <div className="flex items-start gap-3">
                   <FaWhatsapp className="w-6 h-6 text-green-600 mt-1" />
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h4>
+                    <h4 className="font-bold text-gray-900 mb-2">
+                      WhatsApp OTP Verification
+                    </h4>
                     <p className="text-sm text-gray-700">
-                      For security, you'll receive a 6-digit OTP via WhatsApp before creating the letter.
+                      For security, you'll receive a 6-digit OTP via WhatsApp
+                      before creating the letter.
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
-                <h4 className="font-bold text-gray-900 mb-3">📝 Letter Types by Category</h4>
+                <h4 className="font-bold text-gray-900 mb-3">
+                  📝 Letter Types by Category
+                </h4>
                 <div className="space-y-3 text-sm text-gray-700">
                   <div>
-                    <p className="font-semibold text-gray-900">Code4Bharat, Marketing Junction, HR:</p>
-                    <p className="text-xs mt-1">Appreciation, Experience, Internship Joining, Memo, NDA</p>
+                    <p className="font-semibold text-gray-900">
+                      Code4Bharat, Marketing Junction, HR:
+                    </p>
+                    <p className="text-xs mt-1">
+                      Appreciation, Experience, Internship Joining, Memo, NDA, Promotion, Timeline
+                    </p>
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">FSD:</p>
-                    <p className="text-xs mt-1">Appreciation, Experience, Offer, Warning, NDA, Live Project</p>
+                    <p className="text-xs mt-1">
+                      Appreciation, Experience, Offer, Warning, NDA, Live
+                      Project
+                    </p>
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">BVOC:</p>
-                    <p className="text-xs mt-1">Appreciation, Warning, Community Letter</p>
+                    <p className="text-xs mt-1">
+                      Appreciation, Committee, Warning
+                    </p>
                   </div>
                 </div>
               </div>
@@ -828,7 +1203,9 @@ export default function CreateLetter() {
               {loadingPreview ? (
                 <div className="flex flex-col items-center justify-center h-64">
                   <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
-                  <p className="text-gray-600 font-medium">Generating preview...</p>
+                  <p className="text-gray-600 font-medium">
+                    Generating preview...
+                  </p>
                 </div>
               ) : (
                 <>
@@ -850,26 +1227,36 @@ export default function CreateLetter() {
               )}
 
               <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200">
-                <h3 className="font-semibold text-gray-900 mb-3 text-lg">Letter Details</h3>
+                <h3 className="font-semibold text-gray-900 mb-3 text-lg">
+                  Letter Details
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Name:</span>
-                    <span className="font-semibold text-gray-900">{formData.name}</span>
+                    <span className="font-semibold text-gray-900">
+                      {formData.name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Type:</span>
-                    <span className="font-semibold text-gray-900">{formData.course}</span>
+                    <span className="font-semibold text-gray-900">
+                      {formData.course || formData.letterType}
+                    </span>
                   </div>
-                  {formData.subject && (
+                  {/* {formData.subject && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subject:</span>
-                      <span className="font-semibold text-gray-900">{formData.subject}</span>
+                      <span className="font-semibold text-gray-900">
+                        {formData.subject}
+                      </span>
                     </div>
-                  )}
+                  )} */}
                   {formData.role && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Role:</span>
-                      <span className="font-semibold text-gray-900">{formData.role}</span>
+                      <span className="font-semibold text-gray-900">
+                        {formData.role}
+                      </span>
                     </div>
                   )}
                   {formData.startDate && formData.endDate && (
@@ -877,27 +1264,35 @@ export default function CreateLetter() {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Start Date:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.startDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(formData.startDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">End Date:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.endDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(formData.endDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                         </span>
                       </div>
                       {formData.duration && (
                         <div className="flex justify-between">
                           <span className="text-gray-600">Duration:</span>
-                          <span className="font-semibold text-gray-900">{formData.duration}</span>
+                          <span className="font-semibold text-gray-900">
+                            {formData.duration}
+                          </span>
                         </div>
                       )}
                     </>
@@ -905,11 +1300,16 @@ export default function CreateLetter() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
-                      {formData.issueDate ? new Date(formData.issueDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : ''}
+                      {formData.issueDate
+                        ? new Date(formData.issueDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -945,9 +1345,13 @@ export default function CreateLetter() {
                   <div className="inline-block p-4 bg-green-100 rounded-full mb-4">
                     <FaWhatsapp className="w-12 h-12 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    WhatsApp OTP Verification
+                  </h2>
                   <p className="text-gray-600">
-                    {otpSent ? 'Enter the 6-digit code sent to your WhatsApp' : 'We will send an OTP to verify this action'}
+                    {otpSent
+                      ? "Enter the 6-digit code sent to your WhatsApp"
+                      : "We will send an OTP to verify this action"}
                   </p>
                 </div>
 
@@ -961,7 +1365,9 @@ export default function CreateLetter() {
                           type="text"
                           maxLength={1}
                           value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onChange={(e) =>
+                            handleOtpChange(index, e.target.value)
+                          }
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
                           className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
                         />
@@ -983,7 +1389,9 @@ export default function CreateLetter() {
                       disabled={resendTimer > 0}
                       className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
                     >
-                      {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
+                      {resendTimer > 0
+                        ? `Resend OTP in ${resendTimer}s`
+                        : "Resend OTP"}
                     </button>
                   </>
                 ) : (
@@ -1026,9 +1434,12 @@ export default function CreateLetter() {
                     <CheckCircle className="w-16 h-16 text-white" />
                   </div>
                 </motion.div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Success!
+                </h3>
                 <p className="text-gray-600">
-                  Letter created successfully! WhatsApp notification sent to the user.
+                  Letter created successfully! WhatsApp notification sent to the
+                  user.
                 </p>
               </motion.div>
             </motion.div>

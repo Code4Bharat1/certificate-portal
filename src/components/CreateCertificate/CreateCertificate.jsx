@@ -306,12 +306,14 @@ export default function CreateCertificate() {
       );
 
       console.log(response);
-      
+
 
       if (response.data.success) {
         toast.success('✅ OTP Verified Successfully!');
         setOtpVerified(true);
         setShowOtpModal(false);
+        setShowPreview(true);
+        generatePreview();
       } else {
         toast.error('Invalid OTP');
         setOtp(['', '', '', '', '', '']);
