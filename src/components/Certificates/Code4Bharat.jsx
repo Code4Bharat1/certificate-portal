@@ -88,14 +88,27 @@ export default function Code4BharatPage() {
     try {
       toast.success(`Downloading ${it.name}.pdf`);
       const token = sessionStorage.getItem('authToken');
-      // const base = apiBaseFor(it);
-      const response = await axios.get(
-        `${API_URL}/api/certificates/${it._id}/download/pdf`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      let response;
+      console.log(it.type);
+
+      if (it.type === "certificate") {
+        response = await axios.get(
+          `${API_URL}/api/certificates/${it._id}/download/pdf`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+      }
+      else {
+        response = await axios.get(
+          `${API_URL}/api/letters/${it._id}/download.pdf`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+      }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
@@ -116,14 +129,25 @@ export default function Code4BharatPage() {
     try {
       toast.success(`Downloading ${it.name}.jpg`);
       const token = sessionStorage.getItem('authToken');
-      // const base = apiBaseFor(it);
-      const response = await axios.get(
-        `${API_URL}/api/certificates/${it._id}/download/jpg`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      let response;
+      if (it.type === "certificate") {
+        response = await axios.get(
+          `${API_URL}/api/certificates/${it._id}/download/jpg`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+      }
+      else {
+        response = await axios.get(
+          `${API_URL}/api/letters/${it._id}/download.jpg`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob',
+          }
+        );
+      }
 
       const blob = new Blob([response.data], { type: 'image/jpeg' });
       const url = window.URL.createObjectURL(blob);
@@ -218,31 +242,28 @@ export default function Code4BharatPage() {
         <div className="mb-6 flex gap-3 flex-wrap">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'all'
-                ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'all'
+              ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             All ({getStatusCount('all')})
           </button>
           <button
             onClick={() => setStatusFilter('downloaded')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'downloaded'
-                ? 'bg-green-500 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'downloaded'
+              ? 'bg-green-500 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             Downloaded ({getStatusCount('downloaded')})
           </button>
           <button
             onClick={() => setStatusFilter('pending')}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition ${
-              statusFilter === 'pending'
-                ? 'bg-amber-500 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-semibold transition ${statusFilter === 'pending'
+              ? 'bg-amber-500 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
           >
             Pending ({getStatusCount('pending')})
           </button>
@@ -270,11 +291,10 @@ export default function Code4BharatPage() {
                 </div>
 
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
-                    it.status === 'downloaded'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${it.status === 'downloaded'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                    }`}
                 >
                   {it.status || 'pending'}
                 </span>
@@ -306,15 +326,17 @@ export default function Code4BharatPage() {
                   PDF
                 </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDownloadJPG(it)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-pink-500 text-white py-2.5 rounded-lg hover:bg-pink-600 transition text-sm font-semibold"
-                >
-                  <Download className="w-4 h-4" />
-                  JPG
-                </motion.button>
+                {it.type !== 'letter' && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDownloadJPG(it)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-pink-500 text-white py-2.5 rounded-lg hover:bg-pink-600 transition text-sm font-semibold"
+                  >
+                    <Download className="w-4 h-4" />
+                    JPG
+                  </motion.button>
+                )}
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -325,6 +347,7 @@ export default function Code4BharatPage() {
                   <Trash2 className="w-4 h-4" />
                 </motion.button>
               </div>
+
             </motion.div>
           ))}
         </div>

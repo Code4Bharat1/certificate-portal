@@ -288,15 +288,38 @@ export default function CreateCertificate() {
     }
   };
 
-  const verifyOTP = () => {
-    const enteredOtp = otp.join('');
-    if (enteredOtp.length === 6) {
-      toast.success('OTP Verified!');
-      setOtpVerified(true);
-      setShowOtpModal(false);
-      setShowPreview(true);
-    } else {
-      toast.error('Please enter complete OTP');
+  const verifyOTP = async () => {
+    try {
+      const otpCode = otp.join('');
+      if (otpCode.length !== 6) {
+        toast.error('Please enter complete OTP');
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919321488422",
+          otp: otpCode
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      console.log(response);
+      
+
+      if (response.data.success) {
+        toast.success('✅ OTP Verified Successfully!');
+        setOtpVerified(true);
+        setShowOtpModal(false);
+      } else {
+        toast.error('Invalid OTP');
+        setOtp(['', '', '', '', '', '']);
+      }
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      toast.error('OTP verification failed');
+      setOtp(['', '', '', '', '', '']);
     }
   };
 

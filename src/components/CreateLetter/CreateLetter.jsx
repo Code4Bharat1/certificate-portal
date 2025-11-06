@@ -51,6 +51,9 @@ export default function CreateLetter() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  const [pdfPreview, setPdfPreview] = useState(null);
+
+
   const categoryConfig = {
     'code4bharat': { label: 'Code4Bharat', batches: [] },
     'marketing-junction': { label: 'Marketing Junction', batches: [] },
@@ -65,7 +68,8 @@ export default function CreateLetter() {
       return [
         'Appreciation Letter',
         'Experience Certificate',
-        'Internship Joining Letter',
+        'Internship Joining Letter - Unpaid',
+        'Internship Joining Letter - Paid',
         'Memo',
         'Non-Disclosure Agreement'
       ];
@@ -82,7 +86,9 @@ export default function CreateLetter() {
       return [
         'Appreciation Letter',
         'Warning Letter',
-        'Community Letter'
+        'Committee President Letter',
+        'Committee Vice-President Letter',
+        'Committee Member Letter',
       ];
     }
     return [];
@@ -123,17 +129,18 @@ export default function CreateLetter() {
 
   // Check if subject field is needed
   const needsSubject = () => {
-    return formData.course === 'Appreciation Letter' || 
-           formData.course === 'Warning Letter' || 
-           formData.course === 'Memo' ||
-           formData.course === 'Community Letter';
+    return formData.course === 'Appreciation Letter' ||
+      formData.course === 'Warning Letter' ||
+      formData.course === 'Memo';
+    // formData.course === 'Community Letter';
   };
 
   // Check if role field is needed
   const needsRole = () => {
-    return formData.course === 'Experience Certificate' || 
-           formData.course === 'Internship Joining Letter' ||
-           formData.course === 'Offer Letter';
+    return formData.course === 'Internship Joining Letter - Unpaid' ||
+      formData.course === 'Internship Joining Letter - Paid' ||
+      formData.course === 'Offer Letter';
+    // formData.course === 'Experience Certificate';
   };
 
   // Check if dates are needed (for Offer Letter)
@@ -217,11 +224,11 @@ export default function CreateLetter() {
 
   const handleInputChange = (field, value) => {
     if (field === 'category') {
-      setFormData(prev => ({ 
-        ...prev, 
-        category: value, 
-        batch: '', 
-        name: '', 
+      setFormData(prev => ({
+        ...prev,
+        category: value,
+        batch: '',
+        name: '',
         course: '',
         subject: '',
         role: '',
@@ -233,8 +240,8 @@ export default function CreateLetter() {
       setPreviewImage(null);
       setOtpVerified(false);
     } else if (field === 'course') {
-      setFormData(prev => ({ 
-        ...prev, 
+      setFormData(prev => ({
+        ...prev,
         course: value,
         subject: '',
         role: '',
@@ -337,18 +344,65 @@ export default function CreateLetter() {
     }
   };
 
-  const verifyOTP = () => {
-    const enteredOtp = otp.join('');
-    if (enteredOtp.length === 6) {
-      toast.success('OTP Verified!');
-      setOtpVerified(true);
-      setShowOtpModal(false);
-      setShowPreview(true);
-      generatePreview();
-    } else {
-      toast.error('Please enter complete OTP');
+  const verifyOTP = async () => {
+    try {
+      const otpCode = otp.join('');
+      if (otpCode.length !== 6) {
+        toast.error('Please enter complete OTP');
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919321488422",
+          otp: otpCode
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      // console.log(response, response.data.success);
+
+
+      if (response.data.success) {
+        toast.success('✅ OTP Verified Successfully!');
+        setOtpVerified(true);
+        setShowOtpModal(false);
+        setShowPreview(true);
+        generatePreview();
+      } else {
+        toast.error('Invalid OTP');
+        setOtp(['', '', '', '', '', '']);
+      }
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      toast.error('OTP verification failed');
+      setOtp(['', '', '', '', '', '']);
     }
   };
+
+  // const generatePreview = async () => {
+  //   setLoadingPreview(true);
+  //   try {
+  //     const payload = { ...formData };
+  //     const response = await axios.post(
+  //       `${API_URL}/api/letters/preview`,
+  //       payload,
+  //       {
+  //         headers: getAuthHeaders(),
+  //         responseType: 'blob'
+  //       }
+  //     );
+
+  //     const imageUrl = URL.createObjectURL(response.data);
+  //     setPreviewImage(imageUrl);
+  //   } catch (error) {
+  //     console.error('Preview error:', error);
+  //     toast.error('Failed to generate preview');
+  //   } finally {
+  //     setLoadingPreview(false);
+  //   }
+  // };
 
   const generatePreview = async () => {
     setLoadingPreview(true);
@@ -363,8 +417,18 @@ export default function CreateLetter() {
         }
       );
 
-      const imageUrl = URL.createObjectURL(response.data);
-      setPreviewImage(imageUrl);
+      const fileType = response.data.type || response.headers['content-type'];
+
+      const fileUrl = URL.createObjectURL(response.data);
+
+      if (fileType.includes('pdf')) {
+        setPreviewImage(null);        // Clear image
+        setPdfPreview(fileUrl);       // <-- new state for PDF
+      } else {
+        setPdfPreview(null);
+        setPreviewImage(fileUrl);
+      }
+
     } catch (error) {
       console.error('Preview error:', error);
       toast.error('Failed to generate preview');
@@ -372,6 +436,7 @@ export default function CreateLetter() {
       setLoadingPreview(false);
     }
   };
+
 
   const handleSubmit = async () => {
     if (!otpVerified) {
@@ -409,9 +474,9 @@ export default function CreateLetter() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <motion.button 
-            whileHover={{ x: -5 }} 
-            onClick={() => router.back()} 
+          <motion.button
+            whileHover={{ x: -5 }}
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -431,9 +496,9 @@ export default function CreateLetter() {
         {!showPreview ? (
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               className="bg-white rounded-2xl shadow-xl p-8"
             >
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -659,9 +724,9 @@ export default function CreateLetter() {
             </motion.div>
 
             {/* Info Section */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
@@ -729,9 +794,9 @@ export default function CreateLetter() {
           // Preview Section
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <motion.button 
-                whileHover={{ x: -5 }} 
-                onClick={() => setShowPreview(false)} 
+              <motion.button
+                whileHover={{ x: -5 }}
+                onClick={() => setShowPreview(false)}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -765,13 +830,24 @@ export default function CreateLetter() {
                   <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
                   <p className="text-gray-600 font-medium">Generating preview...</p>
                 </div>
-              ) : previewImage ? (
-                <img 
-                  src={previewImage} 
-                  alt="Letter Preview" 
-                  className="w-full rounded-lg shadow-md border border-gray-200" 
-                />
-              ) : null}
+              ) : (
+                <>
+                  {previewImage && (
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="w-full rounded-xl shadow-lg"
+                    />
+                  )}
+
+                  {pdfPreview && (
+                    <iframe
+                      src={pdfPreview}
+                      className="w-full h-[80vh] rounded-xl border shadow-lg"
+                    ></iframe>
+                  )}
+                </>
+              )}
 
               <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200">
                 <h3 className="font-semibold text-gray-900 mb-3 text-lg">Letter Details</h3>
@@ -801,20 +877,20 @@ export default function CreateLetter() {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Start Date:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.startDate).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
+                          {new Date(formData.startDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
                           })}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">End Date:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.endDate).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
+                          {new Date(formData.endDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
                           })}
                         </span>
                       </div>
@@ -829,10 +905,10 @@ export default function CreateLetter() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
-                      {formData.issueDate ? new Date(formData.issueDate).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
+                      {formData.issueDate ? new Date(formData.issueDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
                       }) : ''}
                     </span>
                   </div>
@@ -845,21 +921,21 @@ export default function CreateLetter() {
         {/* OTP Modal */}
         <AnimatePresence>
           {showOtpModal && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             >
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0 }} 
-                animate={{ scale: 1, opacity: 1 }} 
-                exit={{ scale: 0.9, opacity: 0 }} 
-                onClick={(e) => e.stopPropagation()} 
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full relative"
               >
-                <button 
-                  onClick={() => setShowOtpModal(false)} 
+                <button
+                  onClick={() => setShowOtpModal(false)}
                   className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-500" />
@@ -892,29 +968,29 @@ export default function CreateLetter() {
                       ))}
                     </div>
 
-                    <motion.button 
-                      whileHover={{ scale: 1.02 }} 
-                      whileTap={{ scale: 0.98 }} 
-                      onClick={verifyOTP} 
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={verifyOTP}
                       className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg mb-3 flex items-center justify-center gap-2"
                     >
                       <FaWhatsapp className="w-5 h-5" />
                       Verify OTP
                     </motion.button>
 
-                    <button 
-                      onClick={resendTimer === 0 ? sendOTP : null} 
-                      disabled={resendTimer > 0} 
+                    <button
+                      onClick={resendTimer === 0 ? sendOTP : null}
+                      disabled={resendTimer > 0}
                       className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
                     >
                       {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
                     </button>
                   </>
                 ) : (
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }} 
-                    whileTap={{ scale: 0.98 }} 
-                    onClick={sendOTP} 
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={sendOTP}
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
                     <FaWhatsapp className="w-5 h-5" />
@@ -929,21 +1005,21 @@ export default function CreateLetter() {
         {/* Success Modal */}
         <AnimatePresence>
           {showSuccess && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
             >
-              <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }} 
-                animate={{ scale: 1, opacity: 1 }} 
-                exit={{ scale: 0.8, opacity: 0 }} 
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
                 className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md"
               >
-                <motion.div 
-                  initial={{ scale: 0 }} 
-                  animate={{ scale: [0, 1.2, 1] }} 
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.2, 1] }}
                   transition={{ duration: 0.5 }}
                 >
                   <div className="inline-block p-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-xl mb-4">
