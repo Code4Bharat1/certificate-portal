@@ -383,6 +383,16 @@ export default function ManagePeople() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 py-8 px-4">
+      <Toaster position="top-right" />
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => router.push("/dashboard")}
+        className="fixed top-6 left-6 z-50 bg-white text-gray-700 rounded-full p-3 shadow-lg hover:shadow-xl transition-all border border-gray-200"
+      >
+        <ArrowLeft className="w-6 h-6" />
+      </motion.button>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -542,15 +552,28 @@ export default function ManagePeople() {
           </div>
         </motion.div>
 
-        <div className="mb-6 text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-6 text-center"
+        >
           <p className="text-gray-600">
             Showing{" "}
-            <span className="font-bold text-orange-600">
+            <span className={`font-bold ${viewMode === "active" ? "text-green-600" :
+                viewMode === "disabled" ? "text-red-600" :
+                  "text-blue-600"
+              }`}>
               {filteredPeople.length}
             </span>{" "}
-            people
+            {viewMode === "active" ? "active" :
+              viewMode === "disabled" ? "disabled" :
+                "total"} {filteredPeople.length === 1 ? "person" : "people"}
+            <span className="text-gray-400 mx-2">•</span>
+            <span className="text-gray-500">
+              Total: {totalPeople} ({activePeople} active, {disabledPeople} disabled)
+            </span>
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPeople.map((person, index) => (
