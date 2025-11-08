@@ -162,7 +162,7 @@ export default function CategoryOverview() {
   return (
     <div className="space-y-6">
       {/* Templates Management Button */}
-      {/* <motion.div
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -178,7 +178,7 @@ export default function CategoryOverview() {
           <span>Manage Templates</span>
           <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-300" />
         </motion.button>
-      </motion.div> */}
+      </motion.div>
 
       {/* Category Cards Grid */}
       <motion.div

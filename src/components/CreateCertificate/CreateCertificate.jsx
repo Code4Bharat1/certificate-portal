@@ -1,17 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Loader2, Award, Calendar, User, BookOpen, Tag,
-  CheckCircle, ArrowLeft, Shield, X, Upload, FileSpreadsheet, ArrowRight
-} from 'lucide-react';
-import { FaWhatsapp } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
+  Loader2,
+  Award,
+  Calendar,
+  User,
+  BookOpen,
+  Tag,
+  CheckCircle,
+  ArrowLeft,
+  Shield,
+  X,
+  Upload,
+  FileSpreadsheet,
+  ArrowRight,
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import TemplateSelector from "../template/TemplateSelector";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateCertificate() {
   const router = useRouter();
@@ -25,12 +36,13 @@ export default function CreateCertificate() {
 
   // Form States
   const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    issueDate: '',
-    course: '',
-    batch: '',
+    name: "",
+    category: "",
+    issueDate: "",
+    course: "",
+    batch: "",
     description: "",
+    templateId: "",
   });
 
   // Data Lists
@@ -40,7 +52,7 @@ export default function CreateCertificate() {
 
   // OTP States
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [otpVerified, setOtpVerified] = useState(false);
@@ -50,12 +62,16 @@ export default function CreateCertificate() {
   const [showPreview, setShowPreview] = useState(false);
 
   const categoryConfig = {
-    'code4bharat': { label: 'Code4Bharat', batches: [] },
-    'marketing-junction': { label: 'Marketing Junction', batches: [] },
-    'FSD': { label: 'FSD', batches: batches.FSD || [] },
+    code4bharat: { label: "Code4Bharat", batches: [] },
+    "marketing-junction": { label: "Marketing Junction", batches: [] },
+    FSD: { label: "FSD", batches: batches.FSD || [] },
     // 'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
     // 'BOOTCAMP': { label: 'BOOTCAMP', batches: [] },
     // 'HR': { label: 'HR', batches: [] }
+  };
+  const handleTemplateSelect = (template) => {
+    setFormData((prev) => ({ ...prev, templateId: template.id }));
+    // Optional: You could show a preview of the certificate with this template
   };
 
   useEffect(() => {
@@ -66,8 +82,8 @@ export default function CreateCertificate() {
           setBatches(response.data.batches);
         }
       } catch (error) {
-        console.error('Error fetching batches:', error);
-        toast.error('Failed to load batches');
+        console.error("Error fetching batches:", error);
+        toast.error("Failed to load batches");
       }
     };
     fetchBatches();
@@ -83,16 +99,16 @@ export default function CreateCertificate() {
 
   // Fetch names when category/batch is selected
   useEffect(() => {
-    const shouldFetchNames = formData.category && (
-      categoryConfig[formData.category]?.batches?.length === 0 ||
-      formData.batch
-    );
+    const shouldFetchNames =
+      formData.category &&
+      (categoryConfig[formData.category]?.batches?.length === 0 ||
+        formData.batch);
 
     if (shouldFetchNames) {
       fetchNames();
     } else {
       setNamesList([]);
-      setFormData(prev => ({ ...prev, name: '', course: '' }));
+      setFormData((prev) => ({ ...prev, name: "", course: "" }));
     }
   }, [formData.category, formData.batch]);
 
@@ -102,20 +118,29 @@ export default function CreateCertificate() {
       fetchCourses();
     } else {
       setCoursesList([]);
-      setFormData(prev => ({ ...prev, course: '' }));
+      setFormData((prev) => ({ ...prev, course: "" }));
     }
   }, [formData.name]);
 
   // Generate preview after OTP verification
   useEffect(() => {
-    if (otpVerified && formData.name && formData.category && formData.course && formData.issueDate) {
+    if (
+      otpVerified &&
+      formData.name &&
+      formData.category &&
+      formData.course &&
+      formData.issueDate
+    ) {
       generatePreview();
     }
   }, [otpVerified]);
 
   const getAuthHeaders = () => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
-    return { 'Authorization': `Bearer ${token}` };
+    const token =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("authToken")
+        : null;
+    return { Authorization: `Bearer ${token}` };
   };
 
   const fetchNames = async () => {
@@ -123,45 +148,51 @@ export default function CreateCertificate() {
     try {
       let response;
 
-      if (formData.category === "code4bharat" || formData.category === "marketing-junction") {
+      if (
+        formData.category === "code4bharat" ||
+        formData.category === "marketing-junction"
+      ) {
         response = await axios.get(`${API_URL}/api/people/`, {
           headers: getAuthHeaders(),
-          params: { category: formData.category }
+          params: { category: formData.category },
         });
       } else {
         response = await axios.get(`${API_URL}/api/people/`, {
           headers: getAuthHeaders(),
-          params: { category: formData.category, batch: formData.batch }
+          params: { category: formData.category, batch: formData.batch },
         });
       }
 
       if (response.data.success && response.data.names?.length > 0) {
         // ✅ Filter out disabled people
-        const enabledNames = response.data.names.filter(person => !person.disabled);
+        const enabledNames = response.data.names.filter(
+          (person) => !person.disabled
+        );
         setNamesList(enabledNames);
       } else {
         setNamesList([]);
       }
-
     } catch (error) {
-      console.error('Fetch names error:', error);
-      toast.error('Failed to load names (using mock data)');
+      console.error("Fetch names error:", error);
+      toast.error("Failed to load names (using mock data)");
     } finally {
       setLoadingNames(false);
     }
   };
 
-
   const fetchCourses = async () => {
     setLoadingCourses(true);
     try {
-      const response = await axios.get(`${API_URL}/api/certificates/available-courses`, {
-        headers: getAuthHeaders(),
-        params: {
-          category: formData.category,
-          name: formData.name  // Pass the selected name
+      const response = await axios.get(
+        `${API_URL}/api/certificates/available-courses`,
+        {
+          headers: getAuthHeaders(),
+          params: {
+            category: formData.category,
+            name: formData.name, // Pass the selected name
+          },
         }
-      });
+      );
 
       if (response.data.success) {
         // Combine all courses (available + completed) for display
@@ -174,73 +205,83 @@ export default function CreateCertificate() {
         // Optional: Show info about completed courses
         if (response.data.createdCertificates?.length > 0) {
           toast.success(
-            `${response.data.createdCertificates.length} course(s) already completed`,
+            `${response.data.createdCertificates.length} course(s) already completed`
             // { icon: '✅', duration: 3000 }
           );
         }
       }
     } catch (error) {
-      console.error('Fetch courses error:', error);
-      toast.error('Failed to load courses');
+      console.error("Fetch courses error:", error);
+      toast.error("Failed to load courses");
     } finally {
       setLoadingCourses(false);
     }
   };
 
-
   const handleInputChange = (field, value) => {
-    if (field === 'category') {
-      setFormData(prev => ({ ...prev, category: value, batch: '', name: '', course: '' }));
+    if (field === "category") {
+      setFormData((prev) => ({
+        ...prev,
+        category: value,
+        batch: "",
+        name: "",
+        course: "",
+      }));
       setPreviewImage(null);
       setOtpVerified(false);
-    } else if (field === 'batch') {
-      setFormData(prev => ({ ...prev, batch: value, name: '', course: '' }));
+    } else if (field === "batch") {
+      setFormData((prev) => ({ ...prev, batch: value, name: "", course: "" }));
       setPreviewImage(null);
       setOtpVerified(false);
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-      if (field === 'course' || field === 'issueDate') {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      if (field === "course" || field === "issueDate") {
         setPreviewImage(null);
         setOtpVerified(false);
       }
     }
   };
 
-
   const validateForm = () => {
     if (!formData.category) {
-      toast.error('Please select a category');
+      toast.error("Please select a category");
       return false;
     }
-    if (categoryConfig[formData.category]?.batches?.length > 0 && !formData.batch) {
-      toast.error('Please select a batch');
+    if (
+      categoryConfig[formData.category]?.batches?.length > 0 &&
+      !formData.batch
+    ) {
+      toast.error("Please select a batch");
       return false;
     }
     if (!formData.name) {
-      toast.error('Please select a name');
+      toast.error("Please select a name");
       return false;
     }
     if (!formData.course) {
-      toast.error('Please select a course');
+      toast.error("Please select a course");
       return false;
     }
     if (formData.course === "custom" && !formData.customCourse?.trim()) {
-      toast.error('Please enter the custom course name');
+      toast.error("Please enter the custom course name");
       return false;
     }
-    if (formData.course === "Certificate of Appreciation" && !formData.description.trim()) {
-      toast.error('Please enter the description');
+    if (
+      formData.course === "Certificate of Appreciation" &&
+      !formData.description.trim()
+    ) {
+      toast.error("Please enter the description");
       return false;
     }
     if (!formData.issueDate) {
-      toast.error('Please select issue date');
+      toast.error("Please select issue date");
       return false;
     }
     return true;
   };
 
   const isDescriptionInvalid =
-    formData.course === 'Certificate of Appreciation' &&
+    formData.course === "Certificate of Appreciation" &&
     (formData.description.trim().length < 100 ||
       formData.description.trim().length > 1000);
 
@@ -254,19 +295,19 @@ export default function CreateCertificate() {
     try {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' },
+        { phone: "919321488422", name: "HR-NEXCORE ALLIANCE" },
         { headers: getAuthHeaders() }
       );
 
       if (response.data.success) {
-        toast.success('OTP sent to your WhatsApp! 📱');
+        toast.success("OTP sent to your WhatsApp! 📱");
         setOtpSent(true);
         setResendTimer(60);
       } else {
-        toast.error(response.data.message || 'Failed to send OTP');
+        toast.error(response.data.message || "Failed to send OTP");
       }
     } catch (error) {
-      toast.error('Failed to send OTP');
+      toast.error("Failed to send OTP");
     }
   };
 
@@ -283,16 +324,16 @@ export default function CreateCertificate() {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       document.getElementById(`otp-${index - 1}`)?.focus();
     }
   };
 
   const verifyOTP = async () => {
     try {
-      const otpCode = otp.join('');
+      const otpCode = otp.join("");
       if (otpCode.length !== 6) {
-        toast.error('Please enter complete OTP');
+        toast.error("Please enter complete OTP");
         return;
       }
 
@@ -300,28 +341,27 @@ export default function CreateCertificate() {
         `${API_URL}/api/certificates/otp/verify`,
         {
           phone: "919321488422",
-          otp: otpCode
+          otp: otpCode,
         },
         { headers: getAuthHeaders() }
       );
 
       console.log(response);
 
-
       if (response.data.success) {
-        toast.success('✅ OTP Verified Successfully!');
+        toast.success("✅ OTP Verified Successfully!");
         setOtpVerified(true);
         setShowOtpModal(false);
         setShowPreview(true);
         generatePreview();
       } else {
-        toast.error('Invalid OTP');
-        setOtp(['', '', '', '', '', '']);
+        toast.error("Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
       }
     } catch (error) {
-      console.error('Verify OTP error:', error);
-      toast.error('OTP verification failed');
-      setOtp(['', '', '', '', '', '']);
+      console.error("Verify OTP error:", error);
+      toast.error("OTP verification failed");
+      setOtp(["", "", "", "", "", ""]);
     }
   };
 
@@ -330,7 +370,10 @@ export default function CreateCertificate() {
     try {
       const payload = {
         ...formData,
-        course: formData.course === "custom" ? formData.customCourse : formData.course,
+        course:
+          formData.course === "custom"
+            ? formData.customCourse
+            : formData.course,
       };
 
       const response = await axios.post(
@@ -338,17 +381,16 @@ export default function CreateCertificate() {
         payload,
         {
           headers: getAuthHeaders(),
-          responseType: 'blob' // Important: Tell axios to expect binary data
+          responseType: "blob", // Important: Tell axios to expect binary data
         }
       );
 
       // Create a local URL from the blob
       const imageUrl = URL.createObjectURL(response.data);
       setPreviewImage(imageUrl);
-
     } catch (error) {
-      console.error('Preview error:', error);
-      toast.error('Failed to generate preview');
+      console.error("Preview error:", error);
+      toast.error("Failed to generate preview");
     } finally {
       setLoadingPreview(false);
     }
@@ -356,7 +398,7 @@ export default function CreateCertificate() {
 
   const handleSubmit = async () => {
     if (!otpVerified) {
-      toast.error('Please verify OTP first');
+      toast.error("Please verify OTP first");
       return;
     }
 
@@ -364,7 +406,10 @@ export default function CreateCertificate() {
     try {
       const payload = {
         ...formData,
-        course: formData.course === "custom" ? formData.customCourse : formData.course,
+        course:
+          formData.course === "custom"
+            ? formData.customCourse
+            : formData.course,
       };
 
       const response = await axios.post(
@@ -381,7 +426,7 @@ export default function CreateCertificate() {
         }, 2000);
       }
     } catch (error) {
-      toast.error('Failed to create certificate');
+      toast.error("Failed to create certificate");
     } finally {
       setIsCreating(false);
     }
@@ -412,7 +457,9 @@ export default function CreateCertificate() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Create Certificate
               </h1>
-              <p className="text-gray-600 mt-2">Generate professional certificates with OTP verification</p>
+              <p className="text-gray-600 mt-2">
+                Generate professional certificates with OTP verification
+              </p>
             </div>
 
             {/* Bulk Create Button */}
@@ -421,7 +468,7 @@ export default function CreateCertificate() {
               animate={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/bulkcreate-certificate')}
+              onClick={() => router.push("/bulkcreate-certificate")}
               className="group relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300"
             >
               {/* Animated Background */}
@@ -465,35 +512,46 @@ export default function CreateCertificate() {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("category", e.target.value)
+                    }
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
                     {Object.entries(categoryConfig).map(([key, config]) => (
-                      <option key={key} value={key}>{config.label}</option>
+                      <option key={key} value={key}>
+                        {config.label}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 {/* Batch Selection (if applicable) */}
-                {formData.category && categoryConfig[formData.category]?.batches?.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <BookOpen className="w-4 h-4 inline mr-2" />
-                      Batch *
-                    </label>
-                    <select
-                      value={formData.batch}
-                      onChange={(e) => handleInputChange('batch', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    >
-                      <option value="">Select Batch</option>
-                      {categoryConfig[formData.category].batches.map(batch => (
-                        <option key={batch} value={batch}>{batch}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {formData.category &&
+                  categoryConfig[formData.category]?.batches?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <BookOpen className="w-4 h-4 inline mr-2" />
+                        Batch *
+                      </label>
+                      <select
+                        value={formData.batch}
+                        onChange={(e) =>
+                          handleInputChange("batch", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      >
+                        <option value="">Select Batch</option>
+                        {categoryConfig[formData.category].batches.map(
+                          (batch) => (
+                            <option key={batch} value={batch}>
+                              {batch}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  )}
 
                 {/* Name Selection */}
                 <div>
@@ -508,7 +566,9 @@ export default function CreateCertificate() {
                   ) : (
                     <select
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       disabled={!namesList.length}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
                     >
@@ -519,7 +579,6 @@ export default function CreateCertificate() {
                         </option>
                       ))}
                     </select>
-
                   )}
                 </div>
 
@@ -538,26 +597,34 @@ export default function CreateCertificate() {
                     <>
                       <select
                         value={formData.course}
-                        onChange={(e) => handleInputChange('course', e.target.value)}
-                        disabled={!coursesList.length && formData.category !== ""}
+                        onChange={(e) =>
+                          handleInputChange("course", e.target.value)
+                        }
+                        disabled={
+                          !coursesList.length && formData.category !== ""
+                        }
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
                    focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
                    outline-none transition-all disabled:bg-gray-50"
                       >
                         <option value="">Select Course</option>
                         {coursesList.map((course, index) => {
-                          const isCompleted = createdCertificates.includes(course);
+                          const isCompleted =
+                            createdCertificates.includes(course);
                           return (
                             <option
                               key={index}
                               value={course}
                               style={{
-                                color: isCompleted ? '#16a34a' : '#000000',
-                                fontWeight: isCompleted ? '600' : '400',
-                                backgroundColor: isCompleted ? '#f0fdf4' : 'transparent'
+                                color: isCompleted ? "#16a34a" : "#000000",
+                                fontWeight: isCompleted ? "600" : "400",
+                                backgroundColor: isCompleted
+                                  ? "#f0fdf4"
+                                  : "transparent",
                               }}
                             >
-                              {course}{isCompleted ? ' (Already Created)' : ''}
+                              {course}
+                              {isCompleted ? " (Already Created)" : ""}
                             </option>
                           );
                         })}
@@ -576,7 +643,9 @@ export default function CreateCertificate() {
                             type="text"
                             placeholder="Enter custom course name"
                             value={formData.customCourse || ""}
-                            onChange={(e) => handleInputChange("customCourse", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("customCourse", e.target.value)
+                            }
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
                        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
                        outline-none transition-all"
@@ -594,18 +663,25 @@ export default function CreateCertificate() {
                   )}
                 </div>
 
-
                 {formData.course === "Certificate of Appreciation" && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Description *
                     </label>
-                    <p className={`text-xs mt-1 ${formData.description.length > 1000 ? 'text-red-500' : 'text-gray-500'}`}>
+                    <p
+                      className={`text-xs mt-1 ${
+                        formData.description.length > 1000
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {formData.description.length}/1000 characters
                     </p>
                     <textarea
                       value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
                       placeholder="Enter certificate description"
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
                  focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
@@ -615,8 +691,12 @@ export default function CreateCertificate() {
                     />
                   </div>
                 )}
-
-
+                <div className="mt-6">
+                  <TemplateSelector
+                    onSelect={handleTemplateSelect}
+                    selectedTemplateId={formData.templateId}
+                  />
+                </div>
 
                 {/* Issue Date */}
                 <div>
@@ -627,8 +707,10 @@ export default function CreateCertificate() {
                   <input
                     type="date"
                     value={formData.issueDate}
-                    onChange={(e) => handleInputChange('issueDate', e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) =>
+                      handleInputChange("issueDate", e.target.value)
+                    }
+                    max={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
@@ -642,9 +724,11 @@ export default function CreateCertificate() {
                   className={`w-full text-white py-4
                   rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center
                   justify-center gap-2
-                  ${isDescriptionInvalid
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-600 to-indigo-600'}
+                  ${
+                    isDescriptionInvalid
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                  }
                   `}
                 >
                   <Shield className="w-5 h-5" />
@@ -660,7 +744,9 @@ export default function CreateCertificate() {
               className="space-y-6"
             >
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Instructions</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  📋 Instructions
+                </h3>
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">1.</span>
@@ -693,9 +779,12 @@ export default function CreateCertificate() {
                 <div className="flex items-start gap-3">
                   <FaWhatsapp className="w-6 h-6 text-green-600 mt-1" />
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h4>
+                    <h4 className="font-bold text-gray-900 mb-2">
+                      WhatsApp OTP Verification
+                    </h4>
                     <p className="text-sm text-gray-700">
-                      For security, you'll receive a 6-digit OTP via WhatsApp before creating the certificate.
+                      For security, you'll receive a 6-digit OTP via WhatsApp
+                      before creating the certificate.
                     </p>
                   </div>
                 </div>
@@ -706,12 +795,15 @@ export default function CreateCertificate() {
                 <div className="flex items-start gap-3">
                   <FileSpreadsheet className="w-6 h-6 text-purple-600 mt-1" />
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-2">Need to Create Multiple Certificates?</h4>
+                    <h4 className="font-bold text-gray-900 mb-2">
+                      Need to Create Multiple Certificates?
+                    </h4>
                     <p className="text-sm text-gray-700 mb-3">
-                      Use our bulk upload feature to create certificates for multiple students at once using a CSV file.
+                      Use our bulk upload feature to create certificates for
+                      multiple students at once using a CSV file.
                     </p>
                     <button
-                      onClick={() => router.push('/bulkcreate-certificate')}
+                      onClick={() => router.push("/bulkcreate-certificate")}
                       className="text-purple-600 font-semibold hover:text-purple-700 flex items-center gap-1 text-sm"
                     >
                       Try Bulk Upload
@@ -760,7 +852,9 @@ export default function CreateCertificate() {
               {loadingPreview ? (
                 <div className="flex flex-col items-center justify-center h-64">
                   <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
-                  <p className="text-gray-600 font-medium">Generating preview...</p>
+                  <p className="text-gray-600 font-medium">
+                    Generating preview...
+                  </p>
                 </div>
               ) : previewImage ? (
                 <img
@@ -771,25 +865,34 @@ export default function CreateCertificate() {
               ) : null}
 
               <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200">
-                <h3 className="font-semibold text-gray-900 mb-3 text-lg">Certificate Details</h3>
+                <h3 className="font-semibold text-gray-900 mb-3 text-lg">
+                  Certificate Details
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Name:</span>
-                    <span className="font-semibold text-gray-900">{formData.name}</span>
+                    <span className="font-semibold text-gray-900">
+                      {formData.name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Course:</span>
                     {/* <span className="font-semibold text-gray-900">{formData.course}</span> */}
-                    {formData.course === "custom" ? formData.customCourse : formData.course}
+                    {formData.course === "custom"
+                      ? formData.customCourse
+                      : formData.course}
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
-                      {new Date(formData.issueDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {new Date(formData.issueDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )}
                     </span>
                   </div>
                 </div>
@@ -825,11 +928,13 @@ export default function CreateCertificate() {
                   <div className="inline-block p-4 bg-green-100 rounded-full mb-4">
                     <FaWhatsapp className="w-12 h-12 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">WhatsApp OTP Verification</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    WhatsApp OTP Verification
+                  </h2>
                   <p className="text-gray-600">
                     {otpSent
-                      ? 'Enter the 6-digit code sent to your WhatsApp'
-                      : 'We will send an OTP to verify this action'}
+                      ? "Enter the 6-digit code sent to your WhatsApp"
+                      : "We will send an OTP to verify this action"}
                   </p>
                 </div>
 
@@ -843,7 +948,9 @@ export default function CreateCertificate() {
                           type="text"
                           maxLength={1}
                           value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onChange={(e) =>
+                            handleOtpChange(index, e.target.value)
+                          }
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
                           className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
                         />
@@ -865,7 +972,9 @@ export default function CreateCertificate() {
                       disabled={resendTimer > 0}
                       className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
                     >
-                      {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
+                      {resendTimer > 0
+                        ? `Resend OTP in ${resendTimer}s`
+                        : "Resend OTP"}
                     </button>
                   </>
                 ) : (
@@ -908,9 +1017,12 @@ export default function CreateCertificate() {
                     <CheckCircle className="w-16 h-16 text-white" />
                   </div>
                 </motion.div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Success!
+                </h3>
                 <p className="text-gray-600">
-                  Certificate created successfully! WhatsApp notification sent to the user.
+                  Certificate created successfully! WhatsApp notification sent
+                  to the user.
                 </p>
               </motion.div>
             </motion.div>
