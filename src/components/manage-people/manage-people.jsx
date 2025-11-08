@@ -482,7 +482,7 @@ const handleUpdateBatch = async () => {
   const disabledPeople = people.filter((p) => p.disabled).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 py-8 px-4">
+    <div className="min-h-screen text-black bg-gradient-to-br from-orange-50 via-white to-red-50 py-8 px-4">
       <Toaster position="top-right" />
 
       <motion.button

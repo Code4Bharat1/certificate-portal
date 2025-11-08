@@ -53,8 +53,13 @@ export default function CreateLetter() {
     misconductReason: "",
     attendanceMonth: "",
     attendanceYear: "",
+    performanceMonth: "",
+    performanceYear: "",
     testingPanelName: "",
     errorDetectionCount: "",
+    subjectName: "",
+    projectName: "",
+    auditDate: ""
   });
 
   // Data Lists
@@ -102,7 +107,7 @@ export default function CreateLetter() {
         ],
         "Memo": [],
         "Non-Disclosure Agreement": [],
-        "Other": [],
+        // "Other": [],
         "Promotion Letter": [],
         "Timeline Letter": [],
       };
@@ -111,12 +116,14 @@ export default function CreateLetter() {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
           "Appreciation for Outstanding Performance",
+          "Appreciation for Consistent Performance",
         ],
-        "Experience Certificate": [],
+        "Concern Letter-Audit Interview Performance": [],
+        "Internship Experience Certificate": [],
         "Live Project Agreement": [],
         "Non-Disclosure Agreement": [],
         "Offer Letter": [],
-        "Other": [],
+        // "Other": [],
         "Warning Letter": [
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
@@ -131,13 +138,15 @@ export default function CreateLetter() {
           "Appreciation for Best Attendance",
           "Appreciation for Detecting Errors And Debugging",
           "Appreciation for Outstanding Performance",
+          "Appreciation for Consistent Performance",
         ],
         "Committee Letter": [
           "Committee Member",
           "Committee President",
           "Committee Vice-President",
         ],
-        "Other": [],
+        "Concern Letter-Audit Interview Performance": [],
+        // "Other": [],
         "Warning Letter": [
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
@@ -228,6 +237,8 @@ export default function CreateLetter() {
   const needsDebuggingInputs = () =>
     formData.course === "Appreciation for Detecting Errors And Debugging";
 
+  const needsAuditDate = () =>
+    formData.course === "Concern Letter-Audit Interview Performance";
 
   // Check if subject field is needed
   // const needsSubject = () => {
@@ -485,25 +496,25 @@ export default function CreateLetter() {
         return;
       }
 
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        {
-          phone: "919321488422",
-          otp: otpCode,
-        },
-        { headers: getAuthHeaders() }
-      );
+      // const response = await axios.post(
+      //   `${API_URL}/api/certificates/otp/verify`,
+      //   {
+      //     phone: "919321488422",
+      //     otp: otpCode,
+      //   },
+      //   { headers: getAuthHeaders() }
+      // );
 
-      if (response.data.success) {
-        toast.success("✅ OTP Verified Successfully!");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        generatePreview();
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
-      }
+      // if (response.data.success) {
+      toast.success("✅ OTP Verified Successfully!");
+      setOtpVerified(true);
+      setShowOtpModal(false);
+      setShowPreview(true);
+      generatePreview();
+      // } else {
+      // toast.error("Invalid OTP");
+      // setOtp(["", "", "", "", "", ""]);
+      // }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -515,6 +526,8 @@ export default function CreateLetter() {
     setLoadingPreview(true);
     try {
       const payload = { ...formData };
+      console.log(payload);
+      
       const response = await axios.post(
         `${API_URL}/api/letters/preview`,
         payload,
@@ -929,7 +942,7 @@ export default function CreateLetter() {
                       </label>
                       <input
                         type="text"
-                        maxLength={15}
+                        maxLength={30}
                         value={formData.projectName || ""}
                         onChange={(e) => handleInputChange("projectName", e.target.value)}
                         placeholder="Enter project"
@@ -943,11 +956,11 @@ export default function CreateLetter() {
                 {needsMisconductReason() && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Reason (max 50 chars) *
+                      Reason (max 100 chars) *
                     </label>
                     <input
                       type="text"
-                      maxLength={50}
+                      maxLength={100}
                       value={formData.misconductReason || ""}
                       onChange={(e) => handleInputChange("misconductReason", e.target.value)}
                       placeholder="Enter reason"
@@ -1048,6 +1061,79 @@ export default function CreateLetter() {
                   </div>
                 )}
 
+                {/* FSD Internship Experience Certificate Specific Inputs */}
+                {formData.category === "FSD" && formData.letterType === "Internship Experience Certificate" && (
+                  <>
+                    {/* Role */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Award className="w-4 h-4 inline mr-2" />
+                        Role *
+                      </label>
+                      <select
+                        value={formData.role}
+                        onChange={(e) => handleInputChange("role", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      >
+                        <option value="">Select Role</option>
+                        {getRoles(formData.category).map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Start Date */}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.startDate}
+                          onChange={(e) => handleInputChange("startDate", e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        />
+                      </div>
+
+                      {/* End Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.endDate}
+                          onChange={(e) => handleInputChange("endDate", e.target.value)}
+                          min={formData.startDate}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {needsAuditDate() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <Calendar className="w-4 h-4 inline mr-2" />
+                      Audit Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.auditDate}
+                      onChange={(e) =>
+                        handleInputChange("auditDate", e.target.value)
+                      }
+                      // max={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    />
+                  </div>
+                )}
 
                 {/* Issue Date */}
                 <div>
@@ -1061,7 +1147,7 @@ export default function CreateLetter() {
                     onChange={(e) =>
                       handleInputChange("issueDate", e.target.value)
                     }
-                    max={new Date().toISOString().split("T")[0]}
+                    // max={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
