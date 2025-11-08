@@ -106,7 +106,7 @@ export default function CategoryOverview() {
       key: 'BootCamp',
       gradient: 'from-orange-500 via-red-500 to-pink-600',
       buttonTextColor: 'text-orange-600',
-      route: '/certificates/bootchamp',
+      route: '/certificates/bootcamp',
       icon: Rocket
     },
     {
