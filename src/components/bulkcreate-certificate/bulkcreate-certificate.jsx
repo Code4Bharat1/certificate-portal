@@ -121,7 +121,7 @@ export default function BulkCreateCertificate() {
     try {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919321488422", name: 'HR-NEXCORE ALLIANCE' },
+        { phone: "919892398976", name: 'HR-NEXCORE ALLIANCE' },
         { headers: getAuthHeaders() }
       );
 
@@ -150,7 +150,7 @@ export default function BulkCreateCertificate() {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/verify`,
         {
-          phone: "919321488422",
+          phone: "919892398976",
           otp: otpCode
         },
         { headers: getAuthHeaders() }
@@ -210,7 +210,7 @@ export default function BulkCreateCertificate() {
         `${API_URL}/api/certificates/bulk`,
         {
           certificates: csvData,
-          adminPhone: "919321488422",
+          adminPhone: "919892398976",
           adminName: 'Admin'
         },
         {

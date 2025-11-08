@@ -295,7 +295,7 @@ export default function CreateCertificate() {
     try {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919321488422", name: "HR-NEXCORE ALLIANCE" },
+        { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
         { headers: getAuthHeaders() }
       );
 
@@ -340,7 +340,7 @@ export default function CreateCertificate() {
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/verify`,
         {
-          phone: "919321488422",
+          phone: "919892398976",
           otp: otpCode,
         },
         { headers: getAuthHeaders() }
