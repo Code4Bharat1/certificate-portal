@@ -111,7 +111,7 @@ export default function Code4BharatPage() {
 
       let url;
       if (item.type === 'letter') {
-        url = `${API_URL}/api/letters/download/${item._id}`;
+        url = `${API_URL}/api/letters/${item._id}/download.pdf`;
       } else {
         url = `${API_URL}/api/certificates/download/${item._id}`;
       }
