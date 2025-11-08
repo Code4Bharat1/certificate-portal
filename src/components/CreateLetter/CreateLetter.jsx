@@ -527,7 +527,7 @@ export default function CreateLetter() {
     try {
       const payload = { ...formData };
       console.log(payload);
-      
+
       const response = await axios.post(
         `${API_URL}/api/letters/preview`,
         payload,
@@ -1135,6 +1135,49 @@ export default function CreateLetter() {
                   </div>
                 )}
 
+                {/* ✅✅✅ Description for FSD Internship Experience Certificate ✅✅✅ */}
+                {formData.category === "FSD" &&
+                  formData.course === "Internship Experience Certificate" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <FileText className="w-4 h-4 inline mr-2" />
+                        Description (2 Paragraphs) *
+                      </label>
+                      <p className={`text-xs mb-2 ${formData.description.length > 1000
+                        ? "text-red-500 font-semibold"
+                        : "text-gray-500"
+                        }`}>
+                        {formData.description.length}/1000 characters
+                        {formData.description.length > 1000 && " - Exceeds limit!"}
+                      </p>
+                      <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
+                        💡 Write 2 paragraphs separated by a blank line (press Enter twice).
+                        This will appear in the certificate's content area.
+                      </p>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => handleInputChange("description", e.target.value)}
+                        placeholder="Enter Description"
+                        maxLength={1000}
+                        rows={8}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${formData.description.length > 1000
+                          ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                          : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                          }`}
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xs text-gray-500">
+                          📝 Tip: Press <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> twice to create a new paragraph
+                        </p>
+                        {/* {formData.description.trim() && (
+                          <p className="text-xs text-green-600 font-medium">
+                            ✓ {formData.description.split(/\n\s*\n/).filter(p => p.trim()).length} paragraph(s)
+                          </p>
+                        )} */}
+                      </div>
+                    </div>
+                  )}
+
                 {/* Issue Date */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1383,6 +1426,24 @@ export default function CreateLetter() {
                       )}
                     </>
                   )}
+                  {/* ✅ Show description for Internship Experience Certificate */}
+                  {formData.description &&
+                    formData.category === "FSD" &&
+                    formData.course === "Internship Experience Certificate" && (
+                      <div className="pt-2 border-t border-indigo-200">
+                        <span className="text-gray-600 block mb-1">Description:</span>
+                        <div className="text-gray-800 text-xs leading-relaxed bg-white p-3 rounded border border-indigo-100 max-h-32 overflow-y-auto">
+                          {formData.description.split(/\n\s*\n/).map((para, idx) => (
+                            <p key={idx} className={idx > 0 ? "mt-2" : ""}>
+                              {para.trim()}
+                            </p>
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500 mt-1 block">
+                          {formData.description.length}/1000 characters
+                        </span>
+                      </div>
+                    )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
