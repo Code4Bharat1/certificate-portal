@@ -17,18 +17,18 @@ import { useRouter } from 'next/navigation';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
 // Fixed Admin Data
-// const FIXED_ADMIN_DATA = {
-//   name: 'Admin',
-//   email: 'hr@nexcorealliance.com',
-//   phone: '9892398976',
-//   whatsappNumber: '9892398976',
-//   organization: 'Nexcore Alliance & Code 4 Bharat',
-//   designation: 'HR',
-//   location: 'Mumbai, India',
-//   role: 'Admin',
-//   joinedDate: '2024-01-01T00:00:00.000Z',
-//   profileImage: ''
-// };
+const FIXED_ADMIN_DATA = {
+  name: 'Admin',
+  email: 'hr@nexcorealliance.com',
+  phone: '9892398976',
+  whatsappNumber: '9892398976',
+  organization: 'Nexcore Alliance & Code 4 Bharat',
+  designation: 'HR',
+  location: 'Mumbai, India',
+  role: 'Admin',
+  joinedDate: '2024-01-01T00:00:00.000Z',
+  profileImage: ''
+};
 
 // Available roles with their access permissions
 const AVAILABLE_ROLES = [
@@ -92,11 +92,11 @@ export default function ProfilePage() {
   const router = useRouter();
   
   // Profile States
-  // const [profile, setProfile] = useState(FIXED_ADMIN_DATA);
+  const [profile, setProfile] = useState(FIXED_ADMIN_DATA);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  // const [editedProfile, setEditedProfile] = useState(FIXED_ADMIN_DATA);
+  const [editedProfile, setEditedProfile] = useState(FIXED_ADMIN_DATA);
   
   // Change Password States
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -131,7 +131,6 @@ export default function ProfilePage() {
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [loadingAdmins, setLoadingAdmins] = useState(false);
-  
   
   // Check if current admin is super admin
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -177,7 +176,6 @@ export default function ProfilePage() {
   // Load Profile
   const loadProfile = () => {
     setLoading(true);
-    ProfilePage
     
     // Check if there are any saved changes in localStorage
     const savedProfile = localStorage.getItem('adminProfile');
@@ -194,9 +192,9 @@ export default function ProfilePage() {
       } catch (error) {
         console.error('Error parsing saved profile:', error);
         // Use fixed data if parsing fails
-        // setProfile(FIXED_ADMIN_DATA);
-        // setEditedProfile(FIXED_ADMIN_DATA);
-        // sessionStorage.setItem('adminData', JSON.stringify(FIXED_ADMIN_DATA));
+        setProfile(FIXED_ADMIN_DATA);
+        setEditedProfile(FIXED_ADMIN_DATA);
+        sessionStorage.setItem('adminData', JSON.stringify(FIXED_ADMIN_DATA));
       }
     } else {
       // No saved changes, use fixed data
