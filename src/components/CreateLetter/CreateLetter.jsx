@@ -253,8 +253,7 @@ export default function CreateLetter() {
   const needsRole = () => {
     return (
       formData.course === "Internship Joining Letter - Unpaid" ||
-      formData.course === "Internship Joining Letter - Paid" ||
-      formData.course === "Offer Letter"
+      formData.course === "Internship Joining Letter - Paid"
     );
   };
 
@@ -496,25 +495,25 @@ export default function CreateLetter() {
         return;
       }
 
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919892398976",
+          otp: otpCode,
+        },
+        { headers: getAuthHeaders() }
+      );
 
-      // if (response.data.success) {
+      if (response.data.success) {
       toast.success("OTP Verified Successfully!");
       setOtpVerified(true);
       setShowOtpModal(false);
       setShowPreview(true);
       generatePreview();
-      // } else {
-      // toast.error("Invalid OTP");
-      // setOtp(["", "", "", "", "", ""]);
-      // }
+      } else {
+      toast.error("Invalid OTP");
+      setOtp(["", "", "", "", "", ""]);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -844,7 +843,7 @@ export default function CreateLetter() {
                         />
                       </div>
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Duration (e.g., 3 months, 6 months)
                       </label>
@@ -857,7 +856,7 @@ export default function CreateLetter() {
                         placeholder="Enter duration"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
-                    </div>
+                    </div> */}
                   </>
                 )}
 
