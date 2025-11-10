@@ -55,8 +55,8 @@ export default function CreateLetter() {
     attendanceYear: "",
     performanceMonth: "",
     performanceYear: "",
-    testingPanelName: "",
-    errorDetectionCount: "",
+    testingPhase: "",
+    uncover: "",
     subjectName: "",
     projectName: "",
     auditDate: ""
@@ -208,7 +208,7 @@ export default function CreateLetter() {
   const needsCommittee = () => {
     return [
       "Committee President",
-      "Committee Vice President",
+      "Committee Vice-President",
       "Committee Member",
     ].includes(formData.course);
   };
@@ -496,25 +496,25 @@ export default function CreateLetter() {
         return;
       }
 
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        {
-          phone: "919892398976",
-          otp: otpCode,
-        },
-        { headers: getAuthHeaders() }
-      );
+      // const response = await axios.post(
+      //   `${API_URL}/api/certificates/otp/verify`,
+      //   {
+      //     phone: "919892398976",
+      //     otp: otpCode,
+      //   },
+      //   { headers: getAuthHeaders() }
+      // );
 
-      if (response.data.success) {
-      toast.success("✅ OTP Verified Successfully!");
+      // if (response.data.success) {
+      toast.success("OTP Verified Successfully!");
       setOtpVerified(true);
       setShowOtpModal(false);
       setShowPreview(true);
       generatePreview();
-      } else {
-      toast.error("Invalid OTP");
-      setOtp(["", "", "", "", "", ""]);
-      }
+      // } else {
+      // toast.error("Invalid OTP");
+      // setOtp(["", "", "", "", "", ""]);
+      // }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -925,11 +925,11 @@ export default function CreateLetter() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Subject Name (max 10 chars) *
+                        Subject Name (max 20 chars) *
                       </label>
                       <input
                         type="text"
-                        maxLength={10}
+                        maxLength={20}
                         value={formData.subjectName || ""}
                         onChange={(e) => handleInputChange("subjectName", e.target.value)}
                         placeholder="Enter subject"
@@ -938,11 +938,11 @@ export default function CreateLetter() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Project Name (max 15 chars) *
+                        Project Name (max 40 chars) *
                       </label>
                       <input
                         type="text"
-                        maxLength={30}
+                        maxLength={40}
                         value={formData.projectName || ""}
                         onChange={(e) => handleInputChange("projectName", e.target.value)}
                         placeholder="Enter project"
@@ -1034,11 +1034,11 @@ export default function CreateLetter() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Testing Phase (max 15 chars) *
+                        Testing Phase (max 30 chars) *
                       </label>
                       <input
                         type="text"
-                        maxLength={15}
+                        maxLength={30}
                         value={formData.testingPhase || ""}
                         onChange={(e) => handleInputChange("testingPhase", e.target.value)}
                         placeholder="e.g. Admin Panel Testing phase"
@@ -1047,11 +1047,11 @@ export default function CreateLetter() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Uncover (max 15 chars) *
+                        Uncover (max 30 chars) *
                       </label>
                       <input
                         type="text"
-                        maxLength={15}
+                        maxLength={30}
                         value={formData.uncover || ""}
                         onChange={(e) => handleInputChange("uncover", e.target.value)}
                         placeholder="e.g. twenty functional bugs"

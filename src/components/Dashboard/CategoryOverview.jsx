@@ -33,7 +33,7 @@ export default function CategoryOverview() {
       downloaded: 0,
       pending: 0
     },
-    'Bvoc': {
+    'BVOC': {
       total: 0,
       downloaded: 0,
       pending: 0
@@ -111,7 +111,7 @@ export default function CategoryOverview() {
     },
     {
       title: 'BVOC',
-      key: 'Bvoc',
+      key: 'BVOC',
       gradient: 'from-violet-500 via-purple-600 to-indigo-600',
       buttonTextColor: 'text-violet-600',
       route: '/certificates/bvoc',

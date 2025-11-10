@@ -222,14 +222,14 @@ export default function Code4BharatPage() {
       const item = items.find((item) => item._id === id);
       if (!item) return;
 
-      let endpoint = '';
-      if (item.type === 'letter') {
-        endpoint = `${API_URL}/api/letters/${id}`;
-      } else {
-        endpoint = `${API_URL}/api/certificates/${id}`;
-      }
+      // let endpoint = '';
+      // if (item.type === 'letter') {
+      //   endpoint = `${API_URL}/api/letters/${id}`;
+      // } else {
+      //   endpoint = `${API_URL}/api/certificates/${id}`;
+      // }
 
-      const response = await axios.delete(endpoint, {
+      const response = await axios.delete(`${API_URL}/api/certificates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
