@@ -361,6 +361,9 @@ export default function ManagePeople() {
       FSD: "bg-purple-100 text-purple-700 border-purple-200",
       BVOC: "bg-green-100 text-green-700 border-green-200",
       HR: "bg-orange-100 text-orange-700 border-orange-200",
+      DM: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      "OPERTIONS DEPARTMENT": "bg-teal-100 text-teal-700 border-teal-200",
+
     };
     return colors[category] || "bg-gray-100 text-gray-700 border-gray-200";
   };
@@ -803,190 +806,193 @@ const handleEdit = (person) => {
       </div>
 
       {/* Add/Edit Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+     <AnimatePresence>
+  {isModalOpen && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      onClick={closeModal}
+    >
+      <motion.div
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.9 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">
+            {isEditMode ? "Edit Person" : "Add Person"}
+          </h2>
+          <button
             onClick={closeModal}
+            className="text-gray-400 hover:text-gray-600"
           >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter full name"
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+              maxLength={MAX_NAME_LENGTH}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Category *
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+              required
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
-                  {isEditMode ? "Edit Person" : "Add Person"}
-                </h2>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+              <option value="">Select category</option>
+              <option value="code4bharat">Code4Bharat</option>
+              <option value="marketing-junction">Marketing Junction</option>
+              <option value="FSD">FSD</option>
+              <option value="BVOC">BVOC</option>
+              <option value="HR">HR</option>
+              <option value="DM">Digital Marketing</option>
+              <option value="OPERTIONS DEPARTMENT">OPERTIONS DEPARTMENT</option>
+            </select>
+          </div>
+
+          {getBatchOptions().length > 0 && (
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Batch *
+              </label>
+              <select
+                name="batch"
+                value={formData.batch}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                required
+              >
+                <option value="">Select batch</option>
+                {getBatchOptions().map((batch) => (
+                  <option key={batch} value={batch}>
+                    {batch}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Phone *{" "}
+              <span className="text-sm text-gray-500">(10 digits)</span>
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+              maxLength={10}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Aadhaar{" "}
+              <span className="text-sm text-gray-500">(12 digits)</span>
+            </label>
+            <input
+              type="tel"
+              name="aadhaarCard"
+              value={formData.aadhaarCard}
+              onChange={handleChange}
+              placeholder="Enter Aadhaar number"
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+              maxLength={12}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Address{" "}
+              <span className="text-sm text-gray-500">(max 100 characters)</span>
+            </label>
+            <textarea
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="Enter complete address"
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+              maxLength={MAX_ADDRESS_LENGTH}
+              rows={3}
+            />
+          </div>
+
+          {formData.category === "BVOC" && (
+            <>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Parent 1 Phone{" "}
+                  <span className="text-sm text-gray-500">(10 digits)</span>
+                </label>
+                <input
+                  type="tel"
+                  name="parentPhone1"
+                  value={formData.parentPhone1}
+                  onChange={handleChange}
+                  placeholder="Enter parent 1 phone number"
+                  className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none"
+                  maxLength={10}
+                />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    maxLength={MAX_NAME_LENGTH}
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Parent 2 Phone{" "}
+                  <span className="text-sm text-gray-500">(10 digits)</span>
+                </label>
+                <input
+                  type="tel"
+                  name="parentPhone2"
+                  value={formData.parentPhone2}
+                  onChange={handleChange}
+                  placeholder="Enter parent 2 phone number"
+                  className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                  maxLength={10}
+                />
+              </div>
+            </>
+          )}
 
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    required
-                  >
-                    <option value="">Select</option>
-                    <option value="code4bharat">Code4Bharat</option>
-                    <option value="marketing-junction">
-                      Marketing Junction
-                    </option>
-                    <option value="FSD">FSD</option>
-                    <option value="BVOC">BVOC</option>
-                    <option value="HR">HR</option>
-                  </select>
-                </div>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <CheckCircle className="w-6 h-6" />
+            {isEditMode ? "Update" : "Add"} Person
+          </button>
+        </form>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
-                {getBatchOptions().length > 0 && (
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-1">
-                      Batch *
-                    </label>
-                    <select
-                      name="batch"
-                      value={formData.batch}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                      required
-                    >
-                      <option value="">Select batch</option>
-                      {getBatchOptions().map((batch) => (
-                        <option key={batch} value={batch}>
-                          {batch}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Phone *{" "}
-                    <span className="text-sm text-gray-500">(10 digits)</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Aadhaar{" "}
-                    <span className="text-sm text-gray-500">(12 digits)</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="aadhaarCard"
-                    value={formData.aadhaarCard}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                    maxLength={12}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Address{" "}
-                    <span className="text-sm text-gray-500">(max 100)</span>
-                  </label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none"
-                    maxLength={MAX_ADDRESS_LENGTH}
-                    rows={3}
-                  />
-                </div>
-
-                {formData.category === "BVOC" && (
-                  <>
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-1">
-                        Parent 1 Phone{" "}
-                        <span className="text-sm text-gray-500">
-                          (10 digits)
-                        </span>
-                      </label>
-                      <input
-                        type="tel"
-                        name="parentPhone1"
-                        value={formData.parentPhone1}
-                        onChange={handleChange}
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none"
-                        maxLength={10}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-1">
-                        Parent 2 Phone{" "}
-                        <span className="text-sm text-gray-500">
-                          (10 digits)
-                        </span>
-                      </label>
-                      <input
-                        type="tel"
-                        name="parentPhone2"
-                        value={formData.parentPhone2}
-                        onChange={handleChange}
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                        maxLength={10}
-                      />
-                    </div>
-                  </>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  <CheckCircle className="w-6 h-6" />
-                  {isEditMode ? "Update" : "Add"} Person
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
       {isBatchModalOpen && (
