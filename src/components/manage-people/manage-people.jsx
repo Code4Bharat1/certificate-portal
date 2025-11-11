@@ -81,6 +81,7 @@ export default function ManagePeople() {
     { value: "BVOC", label: "BVOC" },
     { value: "HR", label: "HR" },
     {value:"DM",label:"Digital Marketing"},
+    {value:"OPERTIONS DEPARTMENT",label:"OPERTIONS DEPARTMENT"}
   ];
 
   const closeBulkUpload = () => {
