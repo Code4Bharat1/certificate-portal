@@ -80,6 +80,7 @@ export default function ManagePeople() {
     { value: "FSD", label: "FSD" },
     { value: "BVOC", label: "BVOC" },
     { value: "HR", label: "HR" },
+    {value:"DM",label:"Digital Marketing"},
   ];
 
   const closeBulkUpload = () => {
@@ -476,6 +477,22 @@ const handleUpdateBatch = async () => {
   } finally {
     setBatchLoading(false);
   }
+};
+const handleEdit = (person) => {
+  setFormData({
+    originalName: person.name,
+    originalPhone: person.phone,
+    name: person.name,
+    category: person.category,
+    batch: person.batch || "",
+    phone: person.phone,
+    parentPhone1: person.parentPhone1 || "",
+    parentPhone2: person.parentPhone2 || "",
+    aadhaarCard: person.aadhaarCard || "",
+    address: person.address || "",
+  });
+  setIsEditMode(true);
+  setIsModalOpen(true);
 };
   const totalPeople = people.length;
   const activePeople = people.filter((p) => !p.disabled).length;
