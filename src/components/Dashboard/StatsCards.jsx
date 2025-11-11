@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
+  Megaphone,
+  Settings,
   Calendar, 
   TrendingUp, 
   Download, 
@@ -57,6 +59,9 @@ const StatCard = ({
   hr,
   bc,
   bvoc,
+  dm ,
+  operations,
+  monthlyReport,
   gradient,
   bg,
   iconBg,
@@ -120,6 +125,9 @@ const StatCard = ({
           {createCategoryRow("HR", hr, "hr", "from-rose-500 to-fuchsia-600")}
           {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-orange-500 to-pink-600")}
           {createCategoryRow("BVOC", bvoc, "bvoc", "from-violet-500 to-indigo-600")}
+          {createCategoryRow("DM", dm, "dm", "from-sky-500 to-blue-600")}
+          {/* {createCategoryRow("Monthly Report", monthlyReport, "monthlyreport", "from-teal-500 to-green-600")} */}
+          {createCategoryRow("Operations", operations, "operations", "from-gray-500 to-gray-700")}
         </div>
       </div>
     </motion.div>
@@ -325,7 +333,7 @@ export default function StatsCards() {
   const [error, setError] = useState(null);
   
   const categories = [
-    {
+     {
       title: 'Marketing Junction',
       key: 'marketing-junction',
       gradient: 'from-blue-500 via-blue-600 to-purple-600',
@@ -343,7 +351,7 @@ export default function StatsCards() {
     },
     {
       title: 'BootCamp',
-      key: 'bootcamp',
+      key: 'BootCamp',
       gradient: 'from-orange-500 via-red-500 to-pink-600',
       buttonTextColor: 'text-orange-600',
       route: '/certificates/bootcamp',
@@ -351,7 +359,7 @@ export default function StatsCards() {
     },
     {
       title: 'BVOC',
-      key: 'bvoc',
+      key: 'BVOC',
       gradient: 'from-violet-500 via-purple-600 to-indigo-600',
       buttonTextColor: 'text-violet-600',
       route: '/certificates/bvoc',
@@ -359,7 +367,7 @@ export default function StatsCards() {
     },
     {
       title: 'FSD',
-      key: 'fsd',
+      key: 'FSD',
       gradient: 'from-amber-500 via-yellow-600 to-orange-500',
       buttonTextColor: 'text-amber-600',
       route: '/certificates/fsd',
@@ -367,11 +375,35 @@ export default function StatsCards() {
     },
     {
       title: 'HR',
-      key: 'hr',
+      key: 'HR',
       gradient: 'from-rose-500 via-pink-600 to-fuchsia-600',
       buttonTextColor: 'text-rose-600',
       route: '/certificates/hr',
       icon: Users
+    },
+    {
+      title: 'Digital Marketing',
+      key: 'DM',
+      gradient: 'from-sky-500 via-cyan-600 to-blue-600',
+      buttonTextColor: 'text-sky-600',
+      route: '/certificates/dm',
+      icon: Megaphone
+    },
+    {
+      title: 'Operations Department',
+      key: 'Operations',
+      gradient: 'from-gray-500 via-slate-600 to-gray-700',
+      buttonTextColor: 'text-gray-600',
+      route: '/certificates/operations',
+      icon: Settings
+    },
+    {
+      title: 'Monthly Report',
+      key: 'MonthlyReport',
+      gradient: 'from-teal-500 via-emerald-600 to-green-600',
+      buttonTextColor: 'text-teal-600',
+      route: '/certificates/monthly-report',
+      icon: Calendar
     }
   ];
 
@@ -406,6 +438,9 @@ export default function StatsCards() {
           hr: data.last7Days?.HR || 0,
           bc: data.last7Days?.BOOTCAMP || 0,
           bvoc: data.last7Days?.BVOC || 0,
+          dm: data.last7Days?.DM || 0,
+          operations: data.last7Days?.Operations || 0,
+          monthlyReport: data.last7Days?.MonthlyReport || 0,
           gradient: 'from-blue-500 via-blue-600 to-indigo-600',
           bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950 dark:via-indigo-950 dark:to-blue-900',
           iconBg: 'bg-blue-100 dark:bg-blue-900/50',
@@ -421,6 +456,9 @@ export default function StatsCards() {
           hr: data.lastMonth?.HR || 0,
           bc: data.lastMonth?.BOOTCAMP || 0,
           bvoc: data.lastMonth?.BVOC || 0,
+          dm: data.lastMonth?.DM || 0,
+          operations: data.lastMonth?.Operations || 0,
+          monthlyReport: data.lastMonth?.MonthlyReport || 0,
           gradient: 'from-purple-500 via-fuchsia-600 to-pink-600',
           bg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-100 dark:from-purple-950 dark:via-fuchsia-950 dark:to-pink-900',
           iconBg: 'bg-purple-100 dark:bg-purple-900/50',
@@ -436,6 +474,9 @@ export default function StatsCards() {
           hr: data.downloaded?.HR || 0,
           bc: data.downloaded?.BOOTCAMP || 0,
           bvoc: data.downloaded?.BVOC || 0,
+          dm: data.downloaded?.DM || 0,
+          operations: data.downloaded?.Operations || 0,
+          monthlyReport: data.downloaded?.MonthlyReport || 0,
           gradient: 'from-emerald-500 via-green-600 to-teal-600',
           bg: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 dark:from-emerald-950 dark:via-green-950 dark:to-teal-900',
           iconBg: 'bg-green-100 dark:bg-green-900/50',
@@ -451,6 +492,9 @@ export default function StatsCards() {
           hr: data.pending?.HR || 0,
           bc: data.pending?.BOOTCAMP || 0,
           bvoc: data.pending?.BVOC || 0,
+          dm: data.pending?.DM || 0,
+          operations: data.pending?.Operations || 0,
+          monthlyReport: data.pending?.MonthlyReport || 0,
           gradient: 'from-amber-500 via-orange-600 to-red-600',
           bg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-red-100 dark:from-amber-950 dark:via-orange-950 dark:to-red-900',
           iconBg: 'bg-amber-100 dark:bg-amber-900/50',

@@ -12,7 +12,10 @@ import {
   Users,
   AlertCircle,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Megaphone,
+  Settings,
+  Calendar
 } from 'lucide-react';
 
 export default function CategoryOverview() {
@@ -44,6 +47,21 @@ export default function CategoryOverview() {
       pending: 0
     },
     'HR': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },
+    'DM': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },
+    'Operations': {
+      total: 0,
+      downloaded: 0,
+      pending: 0
+    },
+    'MonthlyReport': {
       total: 0,
       downloaded: 0,
       pending: 0
@@ -132,13 +150,37 @@ export default function CategoryOverview() {
       buttonTextColor: 'text-rose-600',
       route: '/certificates/hr',
       icon: Users
-    }
+    },
+    {
+      title: 'Digital Marketing',
+      key: 'DM',
+      gradient: 'from-sky-500 via-cyan-600 to-blue-600',
+      buttonTextColor: 'text-sky-600',
+      route: '/certificates/dm',
+      icon: Megaphone
+    },
+    {
+      title: 'Operations Department',
+      key: 'Operations',
+      gradient: 'from-gray-500 via-slate-600 to-gray-700',
+      buttonTextColor: 'text-gray-600',
+      route: '/certificates/operations',
+      icon: Settings
+    },
+    // {
+    //   title: 'Monthly Report',
+    //   key: 'MonthlyReport',
+    //   gradient: 'from-teal-500 via-emerald-600 to-green-600',
+    //   buttonTextColor: 'text-teal-600',
+    //   route: '/certificates/monthly-report',
+    //   icon: Calendar
+    // }
   ];
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
           <div key={i} className="bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-3xl h-72 shadow-lg"></div>
         ))}
       </div>
