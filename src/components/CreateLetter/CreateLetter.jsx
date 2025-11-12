@@ -84,15 +84,13 @@ export default function CreateLetter() {
     FSD: { label: "FSD", batches: batches.FSD || [] },
     HR: { label: "HR", batches: [] },
     BVOC: { label: "BVOC", batches: batches.BVOC || [] },
+    DM: { label: "Digital Marketing", batches: [] },
+    OD: { label: "Operations Department", batches: [] },
   };
 
   // Letter types and subtypes configuration
   const getLetterTypesConfig = (category) => {
-    if (
-      category === "code4bharat" ||
-      category === "marketing-junction" ||
-      category === "HR"
-    ) {
+    if (category === "code4bharat") {
       return {
         "Appreciation Letter": [
           "Appreciation for Best Performance",
@@ -100,12 +98,38 @@ export default function CreateLetter() {
           "Appreciation for Detecting Errors and Debugging",
           "Appreciation for Outstanding Performance",
         ],
-        "Experience Certificate": [],
+        "Experience Certificate": [
+          "Experience Certificate - Junior Software Developer",
+          "Experience Certificate - Junior Cyber Security Analyst",
+        ],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        "Memo": [],
+        // "Memo": [],
+        "Non-Disclosure Agreement": [],
+        // "Other": [],
+        "Promotion Letter": [],
+        "Timeline Letter": [],
+      };
+    } else if (category === "marketing-junction") {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Performance",
+          "Appreciation for Consistent Performance",
+          "Appreciation for Detecting Errors and Debugging",
+          "Appreciation for Outstanding Performance",
+        ],
+        "Experience Certificate": [
+          "Experience Certificate - Video Editing",
+          "Experience Certificate - Video Graphics",
+          "Experience Certificate - Graphic Desigining",
+        ],
+        "Internship Joining Letter": [
+          "Internship Joining Letter - Paid",
+          "Internship Joining Letter - Unpaid",
+        ],
+        // "Memo": [],
         "Non-Disclosure Agreement": [],
         // "Other": [],
         "Promotion Letter": [],
@@ -155,6 +179,44 @@ export default function CreateLetter() {
           "Warning for Unauthorized Absence from Sessions",
         ],
       };
+    } else if (category === "DM") {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Attendance",
+          "Appreciation for Outstanding Performance",
+          "Appreciation for Consistent Performance",
+        ],
+        "Concern Letter-Audit Interview Performance": [],
+        "Internship Experience Certificate": [],
+        // "Live Project Agreement": [],
+        // "Non-Disclosure Agreement": [],
+        "Offer Letter": [],
+        // "Other": [],
+        "Warning Letter": [
+          "Warning for Incomplete Assignment/Project Submissions",
+          "Warning for Low Attendance",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Unauthorized Absence from Training Sessions",
+          "Warning Regarding Punctuality and Professional Discipline",
+        ],
+      };
+    } else if (category === "HR" || category === "OD") {
+      return {
+        "Appreciation Letter": [
+          "Appreciation for Best Attendance",
+          "Appreciation for Outstanding Performance",
+          "Appreciation for Consistent Performance",
+        ],
+        "Internship Experience Certificate": [],
+        // "Live Project Agreement": [],
+        "Non-Disclosure Agreement": [],
+        "Internship Joining Letter": [
+          "Internship Joining Letter - Paid",
+          "Internship Joining Letter - Unpaid",
+        ],
+        "Promotion Letter": [],
+        "Timeline Letter": [],
+      };
     }
     return {};
   };
@@ -183,11 +245,14 @@ export default function CreateLetter() {
       return ["Cyber Security Analyst", "Junior Software Developer"];
     } else if (category === "marketing-junction") {
       return [
-        "Content Writer Intern",
-        "Digital Marketing Intern",
-        "Graphic Designer Intern",
-        "SEO Specialist Intern",
-        "Social Media Manager Intern",
+        // "Content Writer Intern",
+        // "Digital Marketing Intern",
+        // "Graphic Designer Intern",
+        // "SEO Specialist Intern",
+        // "Social Media Manager Intern",
+        "Video Editing",
+        "Video Graphics",
+        "Graphic Desigining",
       ];
     } else if (category === "HR") {
       return [

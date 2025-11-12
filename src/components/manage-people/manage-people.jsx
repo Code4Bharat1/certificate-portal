@@ -83,7 +83,7 @@ export default function ManagePeople() {
     { value: "BVOC", label: "BVOC" },
     { value: "HR", label: "HR" },
     {value:"DM",label:"Digital Marketing"},
-    {value:"Operations Department",label:"Operations"}
+    {value:"OD",label:"Operations Department"}
   ];
 
   const closeBulkUpload = () => {
@@ -364,7 +364,7 @@ export default function ManagePeople() {
       BVOC: "bg-green-100 text-green-700 border-green-200",
       HR: "bg-orange-100 text-orange-700 border-orange-200",
       DM: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      "Operations Department": "bg-teal-100 text-teal-700 border-teal-200",
+      OD: "bg-teal-100 text-teal-700 border-teal-200",
     };
     return colors[category] || "bg-gray-100 text-gray-700 border-gray-200";
   };
@@ -877,7 +877,7 @@ const handleEdit = (person) => {
               <option value="BVOC">BVOC</option>
               <option value="HR">HR</option>
               <option value="DM">Digital Marketing</option>
-              <option value="Operations Department">Operations Department</option>
+              <option value="OD">Operations Department</option>
             </select>
           </div>
 
