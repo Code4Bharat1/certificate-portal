@@ -152,10 +152,10 @@ export default function VerifyCertificate() {
           )}
         <div className="flex-1 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-            Certificate Verification Portal
+            Verification Portal
           </h1>
           <p className="text-gray-600 mt-3 text-sm sm:text-base md:text-lg">
-            Verify certificates issued by <strong>Code4Bharat</strong> under{" "}
+            Verify certificates and letters issued by <strong>Code4Bharat</strong> under{" "}
             <strong className="text-emerald-600">Nexcore Alliance</strong>.
           </p>
         </div>
