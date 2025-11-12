@@ -55,19 +55,21 @@ export default function ManagePeople() {
     year: "2025",
   });
 
-  const [formData, setFormData] = useState({
-    originalName: "",
-    originalPhone: "",
-    name: "",
-    category: "",
-    batch: "",
-    phone: "",
-    parentPhone1: "",
-    parentPhone2: "",
-    aadhaarCard: "",
-    address: "",
-  });
-
+ const [formData, setFormData] = useState({
+  originalName: "",
+  originalPhone: "",
+  name: "",
+  category: "",
+  batch: "",
+  phone: "",
+  email: "",
+  parentPhone1: "",
+  parentPhone2: "",
+  fatherEmail: "",
+  motherEmail: "",
+  aadhaarCard: "",
+  address: "",
+});
   const [viewMode, setViewMode] = useState("active");
 
   const MAX_NAME_LENGTH = 50;
@@ -80,8 +82,8 @@ export default function ManagePeople() {
     { value: "FSD", label: "FSD" },
     { value: "BVOC", label: "BVOC" },
     { value: "HR", label: "HR" },
-    {value:"DM",label:"Digital Marketing"},
-    {value:"OPERTIONS DEPARTMENT",label:"OPERTIONS DEPARTMENT"}
+    { value: "DM", label: "Digital Marketing" },
+    { value: "OPERTIONS DEPARTMENT", label: "OPERTIONS DEPARTMENT" },
   ];
 
   const closeBulkUpload = () => {
@@ -202,58 +204,64 @@ export default function ManagePeople() {
 
   /* --------------------- CRUD Handlers --------------------- */
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const {
-      name,
-      category,
-      batch,
-      phone,
-      parentPhone1,
-      parentPhone2,
-      aadhaarCard,
-      address,
-    } = formData;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const {
+    name,
+    category,
+    batch,
+    phone,
+    email,
+    parentPhone1,
+    parentPhone2,
+    fatherEmail,
+    motherEmail,
+    aadhaarCard,
+    address,
+  } = formData;
 
-    if (!name || !category || !phone)
-      return toast.error("Missing required fields");
-    if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
+  if (!name || !category || !phone)
+    return toast.error("Missing required fields");
+  if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
 
-    if ((category === "FSD" || category === "BVOC") && !batch)
-      return toast.error("Select a batch for this category");
+  if ((category === "FSD" || category === "BVOC") && !batch)
+    return toast.error("Select a batch for this category");
 
-    const payload = {
-      name: name.trim(),
-      category,
-      batch: batch || null,
-      phone,
-      parentPhone1: parentPhone1 || null,
-      parentPhone2: parentPhone2 || null,
-      aadhaarCard: aadhaarCard || null,
-      address: address?.trim() || null,
-    };
-
-    try {
-      setLoading(true);
-      if (isEditMode) {
-        const res = await axios.put(`${API_URL}/api/people/update-by-name`, {
-          originalName: formData.originalName,
-          originalPhone: formData.originalPhone,
-          ...payload,
-        });
-        if (res.data.success) toast.success(`${name} updated`);
-      } else {
-        const res = await axios.post(`${API_URL}/api/people`, payload);
-        if (res.data.success) toast.success(`${name} added`);
-      }
-      fetchPeople();
-      closeModal();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save data");
-    } finally {
-      setLoading(false);
-    }
+  const payload = {
+    name: name.trim(),
+    category,
+    batch: batch || null,
+    phone: `91${phone}`, // Add 91 prefix
+    email: email?.trim() || null,
+    parentPhone1: parentPhone1 || null,
+    parentPhone2: parentPhone2 || null,
+    fatherEmail: fatherEmail?.trim() || null,
+    motherEmail: motherEmail?.trim() || null,
+    aadhaarCard: aadhaarCard || null,
+    address: address?.trim() || null,
   };
+
+  try {
+    setLoading(true);
+    if (isEditMode) {
+      const res = await axios.put(`${API_URL}/api/people/update-by-name`, {
+        originalName: formData.originalName,
+        originalPhone: `91${formData.originalPhone}`, // Add 91 prefix to original phone too
+        ...payload,
+      });
+      if (res.data.success) toast.success(`${name} updated`);
+    } else {
+      const res = await axios.post(`${API_URL}/api/people`, payload);
+      if (res.data.success) toast.success(`${name} added`);
+    }
+    fetchPeople();
+    closeModal();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed to save data");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete ${name}?`)) return;
@@ -331,22 +339,25 @@ export default function ManagePeople() {
 
   /* --------------------- Misc --------------------- */
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setFormData({
-      originalName: "",
-      originalPhone: "",
-      name: "",
-      category: "",
-      batch: "",
-      phone: "",
-      parentPhone1: "",
-      parentPhone2: "",
-      aadhaarCard: "",
-      address: "",
-    });
-  };
+ const closeModal = () => {
+  setIsModalOpen(false);
+  setIsEditMode(false);
+  setFormData({
+    originalName: "",
+    originalPhone: "",
+    name: "",
+    category: "",
+    batch: "",
+    phone: "",
+    email: "",
+    parentPhone1: "",
+    parentPhone2: "",
+    fatherEmail: "",
+    motherEmail: "",
+    aadhaarCard: "",
+    address: "",
+  });
+};
 
   const getBatchOptions = () => {
     if (formData.category === "FSD") return batches.FSD || [];
@@ -363,14 +374,17 @@ export default function ManagePeople() {
       HR: "bg-orange-100 text-orange-700 border-orange-200",
       DM: "bg-yellow-100 text-yellow-700 border-yellow-200",
       "OPERTIONS DEPARTMENT": "bg-teal-100 text-teal-700 border-teal-200",
-
     };
     return colors[category] || "bg-gray-100 text-gray-700 border-gray-200";
   };
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "phone" || name === "parentPhone1" || name === "parentPhone2") {
+    if (
+      name === "phone" ||
+      name === "parentPhone1" ||
+      name === "parentPhone2"
+    ) {
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
     } else if (name === "aadhaarCard") {
@@ -383,115 +397,122 @@ export default function ManagePeople() {
     }
   };
   const [isEditingBatch, setIsEditingBatch] = useState(false);
-const [editingBatchData, setEditingBatchData] = useState({
-  category: "",
-  oldBatchName: "",
-  newBatchName: "",
-  month: "June",
-  year: "2025"
-});
-
-/* Add this handler for editing batch */
-const handleEditBatch = (category, batchName) => {
-  // Extract month and year from batch name if FSD
-  let month = "June";
-  let year = "2025";
-  let batchNumber = "";
-
-  if (category === "FSD") {
-    // Extract from format: "B-1 (June-2025)"
-    const match = batchName.match(/^(B-\d+)\s+\(([A-Za-z]+)-(\d{4})\)$/);
-    if (match) {
-      batchNumber = match[1];
-      month = match[2];
-      year = match[3];
-    }
-  } else if (category === "BVOC") {
-    // Extract from format: "B-1 2025"
-    const match = batchName.match(/^(B-\d+)\s+(\d{4})$/);
-    if (match) {
-      batchNumber = match[1];
-      year = match[2];
-    }
-  }
-
-  setEditingBatchData({
-    category,
-    oldBatchName: batchName,
-    newBatchName: batchNumber,
-    month,
-    year
+  const [editingBatchData, setEditingBatchData] = useState({
+    category: "",
+    oldBatchName: "",
+    newBatchName: "",
+    month: "June",
+    year: "2025",
   });
-  setIsEditingBatch(true);
-};
 
-/* Add this handler for updating batch */
-const handleUpdateBatch = async () => {
-  const { category, oldBatchName, newBatchName, month, year } = editingBatchData;
+  /* Add this handler for editing batch */
+  const handleEditBatch = (category, batchName) => {
+    // Extract month and year from batch name if FSD
+    let month = "June";
+    let year = "2025";
+    let batchNumber = "";
 
-  if (!newBatchName.trim()) return toast.error("Enter a batch name");
-  if (!/^B-\d+$/.test(newBatchName.trim()))
-    return toast.error("Batch must be in format: B-1, B-2");
-
-  const fullNewName =
-    category === "FSD"
-      ? `${newBatchName.trim()} (${month}-${year})`
-      : `${newBatchName.trim()} ${year}`;
-
-  // Check if new name already exists (and is different from old name)
-  if (fullNewName !== oldBatchName && batches[category]?.includes(fullNewName)) {
-    return toast.error(`Batch ${fullNewName} already exists`);
-  }
-
-  try {
-    setBatchLoading(true);
-    const res = await axios.put(`${API_URL}/api/batches/update-by-name`, {
-      category,
-      oldBatchName,
-      newBatchName: fullNewName,
-    });
-    
-    if (res.data.success) {
-      toast.success(`Batch updated: ${oldBatchName} → ${fullNewName}`);
-      
-      // Update local state
-      setBatches({
-        ...batches,
-        [category]: batches[category].map((b) =>
-          b === oldBatchName ? fullNewName : b
-        ),
-      });
-      
-      // Refresh people list to show updated batch names
-      fetchPeople();
-      
-      // Close edit modal
-      setIsEditingBatch(false);
-      setEditingBatchData({
-        category: "",
-        oldBatchName: "",
-        newBatchName: "",
-        month: "June",
-        year: "2025"
-      });
+    if (category === "FSD") {
+      // Extract from format: "B-1 (June-2025)"
+      const match = batchName.match(/^(B-\d+)\s+\(([A-Za-z]+)-(\d{4})\)$/);
+      if (match) {
+        batchNumber = match[1];
+        month = match[2];
+        year = match[3];
+      }
+    } else if (category === "BVOC") {
+      // Extract from format: "B-1 2025"
+      const match = batchName.match(/^(B-\d+)\s+(\d{4})$/);
+      if (match) {
+        batchNumber = match[1];
+        year = match[2];
+      }
     }
-  } catch (err) {
-    console.error("❌ Error updating batch:", err);
-    toast.error(err.response?.data?.message || "Failed to update batch");
-  } finally {
-    setBatchLoading(false);
-  }
-};
-const handleEdit = (person) => {
+
+    setEditingBatchData({
+      category,
+      oldBatchName: batchName,
+      newBatchName: batchNumber,
+      month,
+      year,
+    });
+    setIsEditingBatch(true);
+  };
+
+  /* Add this handler for updating batch */
+  const handleUpdateBatch = async () => {
+    const { category, oldBatchName, newBatchName, month, year } =
+      editingBatchData;
+
+    if (!newBatchName.trim()) return toast.error("Enter a batch name");
+    if (!/^B-\d+$/.test(newBatchName.trim()))
+      return toast.error("Batch must be in format: B-1, B-2");
+
+    const fullNewName =
+      category === "FSD"
+        ? `${newBatchName.trim()} (${month}-${year})`
+        : `${newBatchName.trim()} ${year}`;
+
+    // Check if new name already exists (and is different from old name)
+    if (
+      fullNewName !== oldBatchName &&
+      batches[category]?.includes(fullNewName)
+    ) {
+      return toast.error(`Batch ${fullNewName} already exists`);
+    }
+
+    try {
+      setBatchLoading(true);
+      const res = await axios.put(`${API_URL}/api/batches/update-by-name`, {
+        category,
+        oldBatchName,
+        newBatchName: fullNewName,
+      });
+
+      if (res.data.success) {
+        toast.success(`Batch updated: ${oldBatchName} → ${fullNewName}`);
+
+        // Update local state
+        setBatches({
+          ...batches,
+          [category]: batches[category].map((b) =>
+            b === oldBatchName ? fullNewName : b
+          ),
+        });
+
+        // Refresh people list to show updated batch names
+        fetchPeople();
+
+        // Close edit modal
+        setIsEditingBatch(false);
+        setEditingBatchData({
+          category: "",
+          oldBatchName: "",
+          newBatchName: "",
+          month: "June",
+          year: "2025",
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error updating batch:", err);
+      toast.error(err.response?.data?.message || "Failed to update batch");
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+ const handleEdit = (person) => {
   setFormData({
     originalName: person.name,
-    originalPhone: person.phone,
+    originalPhone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone, // Remove 91 prefix for display
     name: person.name,
     category: person.category,
     batch: person.batch || "",
-    phone: person.phone,
-    parentPhone1: person.parentPhone1 || "",
-    parentPhone2: person.parentPhone2 || "",
+    phone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone, // Remove 91 prefix for display
+    email: person.email || "",
+    parentPhone1: person.parentPhone1 ? person.parentPhone1.slice(2) : "", // Remove 91 if exists
+    parentPhone2: person.parentPhone2 ? person.parentPhone2.slice(2) : "", // Remove 91 if exists
+    fatherEmail: person.fatherEmail || "",
+    motherEmail: person.motherEmail || "",
     aadhaarCard: person.aadhaarCard || "",
     address: person.address || "",
   });
@@ -680,18 +701,27 @@ const handleEdit = (person) => {
         >
           <p className="text-gray-600">
             Showing{" "}
-            <span className={`font-bold ${viewMode === "active" ? "text-green-600" :
-                viewMode === "disabled" ? "text-red-600" :
-                  "text-blue-600"
-              }`}>
+            <span
+              className={`font-bold ${
+                viewMode === "active"
+                  ? "text-green-600"
+                  : viewMode === "disabled"
+                  ? "text-red-600"
+                  : "text-blue-600"
+              }`}
+            >
               {filteredPeople.length}
             </span>{" "}
-            {viewMode === "active" ? "active" :
-              viewMode === "disabled" ? "disabled" :
-                "total"} {filteredPeople.length === 1 ? "person" : "people"}
+            {viewMode === "active"
+              ? "active"
+              : viewMode === "disabled"
+              ? "disabled"
+              : "total"}{" "}
+            {filteredPeople.length === 1 ? "person" : "people"}
             <span className="text-gray-400 mx-2">•</span>
             <span className="text-gray-500">
-              Total: {totalPeople} ({activePeople} active, {disabledPeople} disabled)
+              Total: {totalPeople} ({activePeople} active, {disabledPeople}{" "}
+              disabled)
             </span>
           </p>
         </motion.div>
@@ -806,243 +836,553 @@ const handleEdit = (person) => {
       </div>
 
       {/* Add/Edit Modal */}
-     <AnimatePresence>
-  {isModalOpen && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      onClick={closeModal}
-    >
-      <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">
-            {isEditMode ? "Edit Person" : "Add Person"}
-          </h2>
-          <button
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
             onClick={closeModal}
-            className="text-gray-400 hover:text-gray-600"
           >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter full name"
-              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-              maxLength={MAX_NAME_LENGTH}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Category *
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-              required
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
             >
-              <option value="">Select category</option>
-              <option value="code4bharat">Code4Bharat</option>
-              <option value="marketing-junction">Marketing Junction</option>
-              <option value="FSD">FSD</option>
-              <option value="BVOC">BVOC</option>
-              <option value="HR">HR</option>
-              <option value="DM">Digital Marketing</option>
-              <option value="OPERTIONS DEPARTMENT">OPERTIONS DEPARTMENT</option>
-            </select>
-          </div>
-
-          {getBatchOptions().length > 0 && (
-            <div>
-              <label className="block text-gray-700 font-semibold mb-1">
-                Batch *
-              </label>
-              <select
-                name="batch"
-                value={formData.batch}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                required
-              >
-                <option value="">Select batch</option>
-                {getBatchOptions().map((batch) => (
-                  <option key={batch} value={batch}>
-                    {batch}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Phone *{" "}
-              <span className="text-sm text-gray-500">(10 digits)</span>
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter phone number"
-              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-              maxLength={10}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Aadhaar{" "}
-              <span className="text-sm text-gray-500">(12 digits)</span>
-            </label>
-            <input
-              type="tel"
-              name="aadhaarCard"
-              value={formData.aadhaarCard}
-              onChange={handleChange}
-              placeholder="Enter Aadhaar number"
-              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-              maxLength={12}
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Address{" "}
-              <span className="text-sm text-gray-500">(max 100 characters)</span>
-            </label>
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Enter complete address"
-              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none"
-              maxLength={MAX_ADDRESS_LENGTH}
-              rows={3}
-            />
-          </div>
-
-          {formData.category === "BVOC" && (
-            <>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-1">
-                  Parent 1 Phone{" "}
-                  <span className="text-sm text-gray-500">(10 digits)</span>
-                </label>
-                <input
-                  type="tel"
-                  name="parentPhone1"
-                  value={formData.parentPhone1}
-                  onChange={handleChange}
-                  placeholder="Enter parent 1 phone number"
-                  className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none"
-                  maxLength={10}
-                />
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">
+                  {isEditMode ? "Edit Person" : "Add Person"}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-semibold mb-1">
-                  Parent 2 Phone{" "}
-                  <span className="text-sm text-gray-500">(10 digits)</span>
-                </label>
-                <input
-                  type="tel"
-                  name="parentPhone2"
-                  value={formData.parentPhone2}
-                  onChange={handleChange}
-                  placeholder="Enter parent 2 phone number"
-                  className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                  maxLength={10}
-                />
-              </div>
-            </>
-          )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter full name"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                    maxLength={MAX_NAME_LENGTH}
+                    required
+                  />
+                </div>
 
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <CheckCircle className="w-6 h-6" />
-            {isEditMode ? "Update" : "Add"} Person
-          </button>
-        </form>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                {/* Category */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Category *
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                    required
+                  >
+                    <option value="">Select category</option>
+                    <option value="code4bharat">Code4Bharat</option>
+                    <option value="marketing-junction">
+                      Marketing Junction
+                    </option>
+                    <option value="FSD">FSD</option>
+                    <option value="BVOC">BVOC</option>
+                    <option value="HR">HR</option>
+                    <option value="DM">Digital Marketing</option>
+                    <option value="OPERTIONS DEPARTMENT">
+                      OPERTIONS DEPARTMENT
+                    </option>
+                  </select>
+                </div>
 
+                {/* Batch (conditional) */}
+                {getBatchOptions().length > 0 && (
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-1">
+                      Batch *
+                    </label>
+                    <select
+                      name="batch"
+                      value={formData.batch}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                      required
+                    >
+                      <option value="">Select batch</option>
+                      {getBatchOptions().map((batch) => (
+                        <option key={batch} value={batch}>
+                          {batch}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Phone *{" "}
+                    <span className="text-sm text-gray-500">(10 digits)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                    maxLength={10}
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Email{" "}
+                    <span className="text-sm text-gray-500">(optional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email address"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+
+                {/* Aadhaar */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Aadhaar{" "}
+                    <span className="text-sm text-gray-500">(12 digits)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="aadhaarCard"
+                    value={formData.aadhaarCard}
+                    onChange={handleChange}
+                    placeholder="Enter Aadhaar number"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    maxLength={12}
+                  />
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Address{" "}
+                    <span className="text-sm text-gray-500">
+                      (max 100 characters)
+                    </span>
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Enter complete address"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+                    maxLength={MAX_ADDRESS_LENGTH}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Parent fields (BVOC only) */}
+                {formData.category === "BVOC" && (
+                  <>
+                    {/* Father Phone */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Father Phone{" "}
+                        <span className="text-sm text-gray-500">
+                          (10 digits)
+                        </span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="parentPhone1"
+                        value={formData.parentPhone1}
+                        onChange={handleChange}
+                        placeholder="Enter father phone number"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none"
+                        maxLength={10}
+                      />
+                    </div>
+
+                    {/* Father Email */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Father Email{" "}
+                        <span className="text-sm text-gray-500">
+                          (optional)
+                        </span>
+                      </label>
+                      <input
+                        type="email"
+                        name="fatherEmail"
+                        value={formData.fatherEmail}
+                        onChange={handleChange}
+                        placeholder="Enter father email address"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none"
+                      />
+                    </div>
+
+                    {/* Mother Phone */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Mother Phone{" "}
+                        <span className="text-sm text-gray-500">
+                          (10 digits)
+                        </span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="parentPhone2"
+                        value={formData.parentPhone2}
+                        onChange={handleChange}
+                        placeholder="Enter mother phone number"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        maxLength={10}
+                      />
+                    </div>
+
+                    {/* Mother Email */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Mother Email{" "}
+                        <span className="text-sm text-gray-500">
+                          (optional)
+                        </span>
+                      </label>
+                      <input
+                        type="email"
+                        name="motherEmail"
+                        value={formData.motherEmail}
+                        onChange={handleChange}
+                        placeholder="Enter mother email address"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  <CheckCircle className="w-6 h-6" />
+                  {isEditMode ? "Update" : "Add"} Person
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
-      {isBatchModalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={closeBatchModal}
-        >
+        {isBatchModalOpen && (
           <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+            onClick={closeBatchModal}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-gray-800">
-                Manage Batches
-              </h2>
-              <button
-                onClick={closeBatchModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">
+                  Manage Batches
+                </h2>
+                <button
+                  onClick={closeBatchModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
 
-            <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Add New Batch
-              </h3>
+              <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Add New Batch
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={batchForm.category}
+                      onChange={(e) =>
+                        setBatchForm({ ...batchForm, category: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                    >
+                      <option value="FSD">FSD</option>
+                      <option value="BVOC">BVOC</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-1">
+                      Batch Number{" "}
+                      <span className="text-sm text-gray-500">
+                        (e.g., B-1, B-2)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={batchForm.batchName}
+                      onChange={(e) =>
+                        setBatchForm({
+                          ...batchForm,
+                          batchName: e.target.value,
+                        })
+                      }
+                      placeholder="B-1"
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+
+                  {batchForm.category === "FSD" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-1">
+                          Month
+                        </label>
+                        <select
+                          value={batchForm.month}
+                          onChange={(e) =>
+                            setBatchForm({
+                              ...batchForm,
+                              month: e.target.value,
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        >
+                          {[
+                            "January",
+                            "February",
+                            "March",
+                            "April",
+                            "May",
+                            "June",
+                            "July",
+                            "August",
+                            "September",
+                            "October",
+                            "November",
+                            "December",
+                          ].map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-1">
+                          Year
+                        </label>
+                        <input
+                          type="text"
+                          value={batchForm.year}
+                          onChange={(e) =>
+                            setBatchForm({ ...batchForm, year: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {batchForm.category === "BVOC" && (
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="text"
+                        value={batchForm.year}
+                        onChange={(e) =>
+                          setBatchForm({ ...batchForm, year: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleAddBatch}
+                    disabled={batchLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50"
+                  >
+                    {batchLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
+                    Add Batch
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-purple-600" />
+                    FSD Batches
+                  </h3>
+                  <div className="space-y-2">
+                    {batches.FSD?.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">
+                        No FSD batches yet
+                      </p>
+                    ) : (
+                      batches.FSD?.map((batch) => (
+                        <div
+                          key={batch}
+                          className="flex items-center justify-between bg-purple-50 rounded-xl p-4 border border-purple-200"
+                        >
+                          <span className="font-semibold text-gray-800">
+                            {batch}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditBatch("FSD", batch)}
+                              className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                              title="Edit Batch"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBatch("FSD", batch)}
+                              className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition-colors"
+                              title="Delete Batch"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-green-600" />
+                    BVOC Batches
+                  </h3>
+                  <div className="space-y-2">
+                    {batches.BVOC?.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">
+                        No BVOC batches yet
+                      </p>
+                    ) : (
+                      batches.BVOC?.map((batch) => (
+                        <div
+                          key={batch}
+                          className="flex items-center justify-between bg-green-50 rounded-xl p-4 border border-green-200"
+                        >
+                          <span className="font-semibold text-gray-800">
+                            {batch}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditBatch("BVOC", batch)}
+                              className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                              title="Edit Batch"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBatch("BVOC", batch)}
+                              className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition-colors"
+                              title="Delete Batch"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Batch Modal */}
+      <AnimatePresence>
+        {isEditingBatch && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]"
+            onClick={() => setIsEditingBatch(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Batch</h2>
+                <button
+                  onClick={() => setIsEditingBatch(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-4 bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">Current:</span>{" "}
+                  {editingBatchData.oldBatchName}
+                </p>
+              </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Category
                   </label>
-                  <select
-                    value={batchForm.category}
-                    onChange={(e) =>
-                      setBatchForm({ ...batchForm, category: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
-                  >
-                    <option value="FSD">FSD</option>
-                    <option value="BVOC">BVOC</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={editingBatchData.category}
+                    disabled
+                    className="w-full border border-gray-300 rounded-xl p-3 bg-gray-100 text-gray-600"
+                  />
                 </div>
 
                 <div>
@@ -1054,33 +1394,33 @@ const handleEdit = (person) => {
                   </label>
                   <input
                     type="text"
-                    value={batchForm.batchName}
+                    value={editingBatchData.newBatchName}
                     onChange={(e) =>
-                      setBatchForm({
-                        ...batchForm,
-                        batchName: e.target.value,
+                      setEditingBatchData({
+                        ...editingBatchData,
+                        newBatchName: e.target.value,
                       })
                     }
                     placeholder="B-1"
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
 
-                {batchForm.category === "FSD" && (
+                {editingBatchData.category === "FSD" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-gray-700 font-semibold mb-1">
                         Month
                       </label>
                       <select
-                        value={batchForm.month}
+                        value={editingBatchData.month}
                         onChange={(e) =>
-                          setBatchForm({
-                            ...batchForm,
+                          setEditingBatchData({
+                            ...editingBatchData,
                             month: e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                       >
                         {[
                           "January",
@@ -1108,236 +1448,20 @@ const handleEdit = (person) => {
                       </label>
                       <input
                         type="text"
-                        value={batchForm.year}
+                        value={editingBatchData.year}
                         onChange={(e) =>
-                          setBatchForm({ ...batchForm, year: e.target.value })
+                          setEditingBatchData({
+                            ...editingBatchData,
+                            year: e.target.value,
+                          })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                     </div>
                   </div>
                 )}
 
-                {batchForm.category === "BVOC" && (
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-1">
-                      Year
-                    </label>
-                    <input
-                      type="text"
-                      value={batchForm.year}
-                      onChange={(e) =>
-                        setBatchForm({ ...batchForm, year: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-                  </div>
-                )}
-
-                <button
-                  onClick={handleAddBatch}
-                  disabled={batchLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50"
-                >
-                  {batchLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Plus className="w-5 h-5" />
-                  )}
-                  Add Batch
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-purple-600" />
-                  FSD Batches
-                </h3>
-                <div className="space-y-2">
-                  {batches.FSD?.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">No FSD batches yet</p>
-                  ) : (
-                    batches.FSD?.map((batch) => (
-                      <div
-                        key={batch}
-                        className="flex items-center justify-between bg-purple-50 rounded-xl p-4 border border-purple-200"
-                      >
-                        <span className="font-semibold text-gray-800">
-                          {batch}
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditBatch("FSD", batch)}
-                            className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-colors"
-                            title="Edit Batch"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBatch("FSD", batch)}
-                            className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition-colors"
-                            title="Delete Batch"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-green-600" />
-                  BVOC Batches
-                </h3>
-                <div className="space-y-2">
-                  {batches.BVOC?.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">No BVOC batches yet</p>
-                  ) : (
-                    batches.BVOC?.map((batch) => (
-                      <div
-                        key={batch}
-                        className="flex items-center justify-between bg-green-50 rounded-xl p-4 border border-green-200"
-                      >
-                        <span className="font-semibold text-gray-800">
-                          {batch}
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditBatch("BVOC", batch)}
-                            className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-colors"
-                            title="Edit Batch"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBatch("BVOC", batch)}
-                            className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition-colors"
-                            title="Delete Batch"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-
-    {/* Edit Batch Modal */}
-    <AnimatePresence>
-      {isEditingBatch && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]"
-          onClick={() => setIsEditingBatch(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Edit Batch
-              </h2>
-              <button
-                onClick={() => setIsEditingBatch(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="mb-4 bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">Current:</span> {editingBatchData.oldBatchName}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-semibold mb-1">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  value={editingBatchData.category}
-                  disabled
-                  className="w-full border border-gray-300 rounded-xl p-3 bg-gray-100 text-gray-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-1">
-                  Batch Number{" "}
-                  <span className="text-sm text-gray-500">
-                    (e.g., B-1, B-2)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={editingBatchData.newBatchName}
-                  onChange={(e) =>
-                    setEditingBatchData({
-                      ...editingBatchData,
-                      newBatchName: e.target.value,
-                    })
-                  }
-                  placeholder="B-1"
-                  className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-
-              {editingBatchData.category === "FSD" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-1">
-                      Month
-                    </label>
-                    <select
-                      value={editingBatchData.month}
-                      onChange={(e) =>
-                        setEditingBatchData({
-                          ...editingBatchData,
-                          month: e.target.value,
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      {[
-                        "January",
-                        "February",
-                        "March",
-                        "April",
-                        "May",
-                        "June",
-                        "July",
-                        "August",
-                        "September",
-                        "October",
-                        "November",
-                        "December",
-                      ].map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {editingBatchData.category === "BVOC" && (
                   <div>
                     <label className="block text-gray-700 font-semibold mb-1">
                       Year
@@ -1354,60 +1478,43 @@ const handleEdit = (person) => {
                       className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
+                )}
+
+                <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                  <p className="text-sm text-yellow-800 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      This will update the batch name for all people assigned to
+                      this batch.
+                    </span>
+                  </p>
                 </div>
-              )}
 
-              {editingBatchData.category === "BVOC" && (
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-1">
-                    Year
-                  </label>
-                  <input
-                    type="text"
-                    value={editingBatchData.year}
-                    onChange={(e) =>
-                      setEditingBatchData({
-                        ...editingBatchData,
-                        year: e.target.value,
-                      })
-                    }
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsEditingBatch(false)}
+                    className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpdateBatch}
+                    disabled={batchLoading}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50"
+                  >
+                    {batchLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5" />
+                    )}
+                    Update Batch
+                  </button>
                 </div>
-              )}
-
-              <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-                <p className="text-sm text-yellow-800 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>This will update the batch name for all people assigned to this batch.</span>
-                </p>
               </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsEditingBatch(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdateBatch}
-                  disabled={batchLoading}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50"
-                >
-                  {batchLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-5 h-5" />
-                  )}
-                  Update Batch
-                </button>
-              </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
 
       {/* Bulk Upload Modal */}
       <AnimatePresence>
