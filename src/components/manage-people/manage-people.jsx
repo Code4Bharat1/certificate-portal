@@ -20,6 +20,8 @@ import {
   UserCheck,
   Upload,
   Download,
+  Phone,  // ✅ Add this
+  Mail   
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
@@ -220,33 +222,63 @@ const handleSubmit = async (e) => {
     address,
   } = formData;
 
-  if (!name || !category || !phone)
+  // Basic validation
+  if (!name || !category || !phone) {
     return toast.error("Missing required fields");
-  if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
+  }
 
-  if ((category === "FSD" || category === "BVOC") && !batch)
+  // Clean phone number (remove spaces/dashes)
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.length !== 10) {
+    return toast.error("Phone must be exactly 10 digits");
+  }
+
+  // Batch validation
+  if ((category === "FSD" || category === "BVOC") && !batch) {
     return toast.error("Select a batch for this category");
+  }
 
+  // Parent phone validation
+  let cleanParentPhone1 = null;
+  let cleanParentPhone2 = null;
+
+  if (parentPhone1) {
+    cleanParentPhone1 = parentPhone1.replace(/\D/g, '');
+    if (cleanParentPhone1.length !== 10) {
+      return toast.error("Father's phone must be 10 digits");
+    }
+  }
+
+  if (parentPhone2) {
+    cleanParentPhone2 = parentPhone2.replace(/\D/g, '');
+    if (cleanParentPhone2.length !== 10) {
+      return toast.error("Mother's phone must be 10 digits");
+    }
+  }
+
+  // Payload - Main phone WITH 91, parent phones WITHOUT 91
   const payload = {
     name: name.trim(),
     category,
-    batch: batch || null,
-    phone: `91${phone}`, // Add 91 prefix
+    batch: (category === "FSD" || category === "BVOC") ? batch : null,
+    phone: `91${cleanPhone}`, // ✅ Main phone WITH 91 prefix
     email: email?.trim() || null,
-    parentPhone1: parentPhone1 || null,
-    parentPhone2: parentPhone2 || null,
+    parentPhone1: cleanParentPhone1, // ✅ Parent phone WITHOUT 91 (backend adds it)
+    parentPhone2: cleanParentPhone2, // ✅ Parent phone WITHOUT 91 (backend adds it)
     fatherEmail: fatherEmail?.trim() || null,
     motherEmail: motherEmail?.trim() || null,
-    aadhaarCard: aadhaarCard || null,
+    aadhaarCard: aadhaarCard?.trim() || null,
     address: address?.trim() || null,
   };
+
+  console.log("🚀 Submitting payload:", payload);
 
   try {
     setLoading(true);
     if (isEditMode) {
       const res = await axios.put(`${API_URL}/api/people/update-by-name`, {
         originalName: formData.originalName,
-        originalPhone: `91${formData.originalPhone}`, // Add 91 prefix to original phone too
+        originalPhone: `91${formData.originalPhone.replace(/\D/g, '')}`,
         ...payload,
       });
       if (res.data.success) toast.success(`${name} updated`);
@@ -257,12 +289,12 @@ const handleSubmit = async (e) => {
     fetchPeople();
     closeModal();
   } catch (err) {
+    console.error("❌ Error details:", err.response?.data);
     toast.error(err.response?.data?.message || "Failed to save data");
   } finally {
     setLoading(false);
   }
 };
-
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete ${name}?`)) return;
     try {
@@ -502,15 +534,16 @@ const handleSubmit = async (e) => {
   };
  const handleEdit = (person) => {
   setFormData({
+    // ❌ personId: person._id,  // Ye mat karo
     originalName: person.name,
-    originalPhone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone, // Remove 91 prefix for display
+    originalPhone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone,
     name: person.name,
     category: person.category,
     batch: person.batch || "",
-    phone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone, // Remove 91 prefix for display
+    phone: person.phone.startsWith('91') ? person.phone.slice(2) : person.phone,
     email: person.email || "",
-    parentPhone1: person.parentPhone1 ? person.parentPhone1.slice(2) : "", // Remove 91 if exists
-    parentPhone2: person.parentPhone2 ? person.parentPhone2.slice(2) : "", // Remove 91 if exists
+    parentPhone1: person.parentPhone1 ? person.parentPhone1.slice(2) : "",
+    parentPhone2: person.parentPhone2 ? person.parentPhone2.slice(2) : "",
     fatherEmail: person.fatherEmail || "",
     motherEmail: person.motherEmail || "",
     aadhaarCard: person.aadhaarCard || "",
@@ -519,6 +552,7 @@ const handleSubmit = async (e) => {
   setIsEditMode(true);
   setIsModalOpen(true);
 };
+
   const totalPeople = people.length;
   const activePeople = people.filter((p) => !p.disabled).length;
   const disabledPeople = people.filter((p) => p.disabled).length;
@@ -729,108 +763,152 @@ const handleSubmit = async (e) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPeople.map((person, index) => (
             <motion.div
-              key={person._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${
-                person.disabled
-                  ? "border-red-200 opacity-75"
-                  : "border-gray-100"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold border ${getCategoryColor(
-                    person.category
-                  )}`}
-                >
-                  {person.category}
-                </span>
-                {person.disabled && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
-                    DISABLED
-                  </span>
-                )}
-              </div>
+  key={person._id}
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: index * 0.05 }}
+  className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${
+    person.disabled
+      ? "border-red-200 opacity-75"
+      : "border-gray-100"
+  }`}
+>
+  <div className="flex items-start justify-between mb-4">
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-bold border ${getCategoryColor(
+        person.category
+      )}`}
+    >
+      {person.category}
+    </span>
+    {person.disabled && (
+      <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+        DISABLED
+      </span>
+    )}
+  </div>
 
-              <h3
-                className={`text-xl font-bold mb-2 ${
-                  person.disabled ? "text-gray-500" : "text-gray-800"
-                }`}
-              >
-                {person.name}
-              </h3>
+  <h3
+    className={`text-xl font-bold mb-2 ${
+      person.disabled ? "text-gray-500" : "text-gray-800"
+    }`}
+  >
+    {person.name}
+  </h3>
 
-              <div className="space-y-2 mb-4">
-                {person.batch && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Layers className="w-4 h-4" />
-                    <span className="text-sm">Batch: {person.batch}</span>
-                  </div>
-                )}
-                <div className="text-sm text-gray-600 font-mono">
-                  {person.phone}
-                </div>
-                {person.aadhaarCard && (
-                  <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
-                    🆔 Aadhaar: {person.aadhaarCard}
-                  </div>
-                )}
-                {person.address && (
-                  <div className="text-xs bg-gray-50 px-2 py-1 rounded-md text-gray-600">
-                    📍 {person.address}
-                  </div>
-                )}
-                {person.parentPhone1 && (
-                  <div className="text-xs bg-green-50 px-2 py-1 rounded-md text-green-600 font-semibold">
-                    👨 Parent 1: {person.parentPhone1}
-                  </div>
-                )}
-                {person.parentPhone2 && (
-                  <div className="text-xs bg-blue-50 px-2 py-1 rounded-md text-blue-600 font-semibold">
-                    👩 Parent 2: {person.parentPhone2}
-                  </div>
-                )}
-              </div>
+  <div className="space-y-2 mb-4">
+    {/* Batch */}
+    {person.batch && (
+      <div className="flex items-center gap-2 text-gray-600">
+        <Layers className="w-4 h-4" />
+        <span className="text-sm">Batch: {person.batch}</span>
+      </div>
+    )}
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(person)}
-                  disabled={person.disabled}
-                  className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-100 disabled:opacity-50"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleToggleDisable(person)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${
-                    person.disabled
-                      ? "bg-green-50 text-green-600 hover:bg-green-100"
-                      : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                  }`}
-                >
-                  {person.disabled ? (
-                    <>
-                      <UserCheck className="w-4 h-4" />
-                      Enable
-                    </>
-                  ) : (
-                    <>
-                      <UserX className="w-4 h-4" />
-                      Disable
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => handleDelete(person._id, person.name)}
-                  className="flex items-center justify-center bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
+    {/* Main Phone */}
+    <div className="flex items-center gap-2 text-sm text-gray-600 font-mono">
+      <Phone className="w-4 h-4" />
+      {person.phone}
+    </div>
+
+    {/* Main Email */}
+    {person.email && (
+      <div className="text-xs bg-blue-50 px-2 py-1 rounded-md text-blue-600 flex items-center gap-2">
+        <Mail className="w-3 h-3" />
+        <span className="break-all">{person.email}</span>
+      </div>
+    )}
+
+    {/* Aadhaar Card */}
+    {person.aadhaarCard && (
+      <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
+        🆔 Aadhaar: {person.aadhaarCard}
+      </div>
+    )}
+
+    {/* Address */}
+    {person.address && (
+      <div className="text-xs bg-gray-50 px-2 py-1 rounded-md text-gray-600">
+        📍 {person.address}
+      </div>
+    )}
+
+    {/* Parent 1 (Father) Details */}
+    {(person.parentPhone1 || person.fatherEmail) && (
+      <div className="border-t pt-2 mt-2">
+        <div className="text-xs font-bold text-gray-500 mb-1">👨 Father Details</div>
+        {person.parentPhone1 && (
+          <div className="text-xs bg-green-50 px-2 py-1 rounded-md text-green-600 font-semibold flex items-center gap-2 mb-1">
+            <Phone className="w-3 h-3" />
+            {person.parentPhone1}
+          </div>
+        )}
+        {person.fatherEmail && (
+          <div className="text-xs bg-green-50 px-2 py-1 rounded-md text-green-600 flex items-center gap-2">
+            <Mail className="w-3 h-3" />
+            <span className="break-all">{person.fatherEmail}</span>
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* Parent 2 (Mother) Details */}
+    {(person.parentPhone2 || person.motherEmail) && (
+      <div className="border-t pt-2 mt-2">
+        <div className="text-xs font-bold text-gray-500 mb-1">👩 Mother Details</div>
+        {person.parentPhone2 && (
+          <div className="text-xs bg-purple-50 px-2 py-1 rounded-md text-purple-600 font-semibold flex items-center gap-2 mb-1">
+            <Phone className="w-3 h-3" />
+            {person.parentPhone2}
+          </div>
+        )}
+        {person.motherEmail && (
+          <div className="text-xs bg-purple-50 px-2 py-1 rounded-md text-purple-600 flex items-center gap-2">
+            <Mail className="w-3 h-3" />
+            <span className="break-all">{person.motherEmail}</span>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+
+  <div className="flex gap-2">
+    <button
+      onClick={() => handleEdit(person)}
+      disabled={person.disabled}
+      className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-100 disabled:opacity-50"
+    >
+      <Edit2 className="w-4 h-4" />
+      Edit
+    </button>
+    <button
+      onClick={() => handleToggleDisable(person)}
+      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${
+        person.disabled
+          ? "bg-green-50 text-green-600 hover:bg-green-100"
+          : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
+      }`}
+    >
+      {person.disabled ? (
+        <>
+          <UserCheck className="w-4 h-4" />
+          Enable
+        </>
+      ) : (
+        <>
+          <UserX className="w-4 h-4" />
+          Disable
+        </>
+      )}
+    </button>
+    <button
+      onClick={() => handleDelete(person._id, person.name)}
+      className="flex items-center justify-center bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</motion.div>
           ))}
         </div>
       </div>
