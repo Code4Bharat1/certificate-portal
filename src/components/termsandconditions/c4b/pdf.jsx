@@ -169,7 +169,7 @@ export default function PdfPreviewPage() {
           </motion.button>
             <button
             onClick={() =>
-            router.push('/termsandconditions/onboard')
+            router.push('/termsandconditions/C4B/onboard')
             }
             className={`flex items-center gap-3 px-5 py-3 ml-15 rounded-xl font-medium shadow-lg transition-all ${
               downloading

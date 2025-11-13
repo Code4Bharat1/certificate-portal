@@ -14,8 +14,9 @@ export default function TermsAndConditions() {
     if (file) setSignature(URL.createObjectURL(file));
   };
  const handleSubmit = () => {
-    if (accepted) {
-      router.push("/termsandconditions/pdf"); // ✅ redirects after submit
+    if (accepted && signature) {
+      router.push("/termsandconditions/C4B/pdf"); // ✅ redirects after submit
+    
     }
   };
   return (

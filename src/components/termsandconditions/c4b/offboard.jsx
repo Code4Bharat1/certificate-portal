@@ -18,38 +18,38 @@ export default function OnboardingChecklist() {
         className="max-w-3xl w-full bg-white dark:bg-gray-800 shadow-2xl rounded-3xl p-8 md:p-12 border border-gray-200 dark:border-gray-700"
       >
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-          Onboarding Process Checklist
+          OffBoarding Process Checklist
         </h1>
 
-        {/* Pre-Onboarding Section */}
+        {/* Pre-Offboarding Section */}
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-indigo-500 mb-4">
-            Pre-Onboarding (Before Joining)
+            Pre-Offboarding (Before Leaving)
+          </h2>
+          <h2 className="text-2xl font-semibold text-indigo-500 mb-4">
+            Knowledge & Asset Handover
           </h2>
           <ul className="space-y-3 text-lg leading-relaxed">
             <li className="flex items-start gap-3">
               <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Share offer letter and job description.</span>
+              <span>Transfer ongoing work responsibilities and documents preparation if needed</span>
+            </li>
+           
+            <li className="flex items-start gap-3">
+              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
+              <span>Collect office assets (ID card, company documents).</span>
             </li>
             <li className="flex items-start gap-3">
               <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Collect necessary documents (ID proof - Aadhar Card, PAN Card, Bank details).</span>
+              <span>Revoke access to emails, software, and internal systems.</span>
             </li>
             <li className="flex items-start gap-3">
               <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Provide company policies and code of conduct.</span>
+              <span>Inform teams about the transition.</span>
             </li>
             <li className="flex items-start gap-3">
               <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Assign mentor or buddy for smoother integration.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Biometric Access Control.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Tracky Onboarding and Login Credentials.</span>
+              <span>Biometric Removal</span>
             </li>
           </ul>
         </section>
@@ -57,34 +57,18 @@ export default function OnboardingChecklist() {
         {/* First Day & Training Section */}
         <section>
           <h2 className="text-2xl font-semibold text-indigo-500 mb-4">
-            First Day & Training
+           Documentation
           </h2>
           <ul className="space-y-3 text-lg leading-relaxed">
             <li className="flex items-start gap-3">
               <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Conduct HR and team introduction.</span>
+              <span>Issue experience certificate and relieving letter, any other.</span>
             </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Provide workspace.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Issue work assets (ID card, credentials if required).</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Explain roles, KPIs, and performance expectations.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <input type="checkbox" disabled className="w-5 h-5 accent-indigo-600 cursor-not-allowed mt-1" />
-              <span>Sign Non-Disclosure Agreement (NDA).</span>
-            </li>
+       
           </ul>
         </section>
 
-        {/* Signature Section */}
-        <div className="mt-16 border-t border-gray-300 dark:border-gray-700 pt-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+            <div className="mt-16 border-t border-gray-300 dark:border-gray-700 pt-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
           <div>
             <div className="border-b border-gray-400 dark:border-gray-600 w-3/4 mx-auto mb-2"></div>
             <p className="text-lg font-medium text-gray-600 dark:text-gray-300">HR</p>
@@ -94,32 +78,6 @@ export default function OnboardingChecklist() {
             <p className="text-lg font-medium text-gray-600 dark:text-gray-300">Intern</p>
           </div>
         </div>
-              <div>
-            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-purple-500">
-              <FileSignature className="w-6 h-6" /> Upload Your Signature
-            </h3>
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <label className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-400 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                <Upload className="w-5 h-5" />
-                <span>Choose File</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSignatureUpload}
-                  className="hidden"
-                />
-              </label>
-              {signature && (
-                <motion.img
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  src={signature}
-                  alt="Signature"
-                  className="w-40 h-20 object-contain border border-gray-300 dark:border-gray-600 rounded-lg"
-                />
-              )}
-            </div>
-          </div>
       </motion.div>
       
 

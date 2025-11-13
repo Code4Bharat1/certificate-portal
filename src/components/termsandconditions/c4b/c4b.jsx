@@ -291,7 +291,7 @@ export default function Verify() {
                       "verifiedCredentialId",
                       verificationResult.id
                     );
-                    router.push("/termsandconditions/t&c");
+                    router.push("/termsandconditions/C4B/t&c");
                   }}
                   className="mt-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
                 >
