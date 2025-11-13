@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
@@ -26,412 +26,424 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateCertificate() {
   const router = useRouter();
-  const [isCreating, setIsCreating] = useState(false);
-  const [loadingNames, setLoadingNames] = useState(false);
-  const [loadingCourses, setLoadingCourses] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+const [isCreating, setIsCreating] = useState(false);
+const [loadingNames, setLoadingNames] = useState(false);
+const [loadingCourses, setLoadingCourses] = useState(false);
+const [previewImage, setPreviewImage] = useState(null);
+const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
+const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
 
-  // Form States
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    issueDate: "",
-    course: "",
-    batch: "",
-    description: "",
-    templateId: "",
-  });
+// Form States
+const [formData, setFormData] = useState({
+  name: "",
+  category: "",
+  issueDate: "",
+  course: "",
+  batch: "",
+  description: "",
+  templateId: "",
+});
 
-  // Data Lists
-  const [namesList, setNamesList] = useState([]);
-  const [coursesList, setCoursesList] = useState([]);
-  const [createdCertificates, setCreatedCertificates] = useState([]);
+// Data Lists
+const [namesList, setNamesList] = useState([]);
+const [coursesList, setCoursesList] = useState([]);
+const [createdCertificates, setCreatedCertificates] = useState([]);
 
-  // OTP States
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [otpSent, setOtpSent] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
-  const [otpVerified, setOtpVerified] = useState(false);
+// OTP States
+const [showOtpModal, setShowOtpModal] = useState(false);
+const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+const [otpSent, setOtpSent] = useState(false);
+const [resendTimer, setResendTimer] = useState(0);
+const [otpVerified, setOtpVerified] = useState(false);
+const inputRefs = useRef([]);
 
-  // Success State
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+// Success State
+const [showSuccess, setShowSuccess] = useState(false);
+const [showPreview, setShowPreview] = useState(false);
 
-  const categoryConfig = {
-    code4bharat: { label: "Code4Bharat", batches: [] },
-    "marketing-junction": { label: "Marketing Junction", batches: [] },
-    FSD: { label: "FSD", batches: batches.FSD || [] },
-    // 'BVOC': { label: 'BVOC', batches: batches.BVOC || [] },
-    // 'BOOTCAMP': { label: 'BOOTCAMP', batches: [] },
-    // 'HR': { label: 'HR', batches: [] }
-  };
-  const handleTemplateSelect = (template) => {
-    setFormData((prev) => ({ ...prev, templateId: template.id }));
-    // Optional: You could show a preview of the certificate with this template
-  };
+const categoryConfig = {
+  code4bharat: { label: "Code4Bharat", batches: [] },
+  "marketing-junction": { label: "Marketing Junction", batches: [] },
+  FSD: { label: "FSD", batches: batches.FSD || [] },
+};
 
-  useEffect(() => {
-    const fetchBatches = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/batches`);
-        if (response.data.success) {
-          setBatches(response.data.batches);
-        }
-      } catch (error) {
-        console.error("Error fetching batches:", error);
-        toast.error("Failed to load batches");
+const handleTemplateSelect = (template) => {
+  setFormData((prev) => ({ ...prev, templateId: template.id }));
+};
+
+useEffect(() => {
+  const fetchBatches = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/batches`);
+      if (response.data.success) {
+        setBatches(response.data.batches);
       }
-    };
-    fetchBatches();
-  }, []);
-
-  // OTP Timer
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+      toast.error("Failed to load batches");
     }
-  }, [resendTimer]);
+  };
+  fetchBatches();
+}, []);
 
-  // Fetch names when category/batch is selected
-  useEffect(() => {
-    const shouldFetchNames =
-      formData.category &&
-      (categoryConfig[formData.category]?.batches?.length === 0 ||
-        formData.batch);
+// OTP Timer - ONLY ONE useEffect for resendTimer
+useEffect(() => {
+  if (resendTimer > 0) {
+    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    return () => clearTimeout(timer);
+  }
+}, [resendTimer]);
 
-    if (shouldFetchNames) {
-      fetchNames();
+// Fetch names when category/batch is selected
+useEffect(() => {
+  const shouldFetchNames =
+    formData.category &&
+    (categoryConfig[formData.category]?.batches?.length === 0 ||
+      formData.batch);
+
+  if (shouldFetchNames) {
+    fetchNames();
+  } else {
+    setNamesList([]);
+    setFormData((prev) => ({ ...prev, name: "", course: "" }));
+  }
+}, [formData.category, formData.batch]);
+
+// Fetch courses when name is selected
+useEffect(() => {
+  if (formData.name) {
+    fetchCourses();
+  } else {
+    setCoursesList([]);
+    setFormData((prev) => ({ ...prev, course: "" }));
+  }
+}, [formData.name]);
+
+// Generate preview after OTP verification
+useEffect(() => {
+  if (
+    otpVerified &&
+    formData.name &&
+    formData.category &&
+    formData.course &&
+    formData.issueDate
+  ) {
+    generatePreview();
+  }
+}, [otpVerified]);
+
+const getAuthHeaders = () => {
+  const token =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("authToken")
+      : null;
+  return { Authorization: `Bearer ${token}` };
+};
+
+const fetchNames = async () => {
+  setLoadingNames(true);
+  try {
+    let response;
+
+    if (
+      formData.category === "code4bharat" ||
+      formData.category === "marketing-junction"
+    ) {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: { category: formData.category },
+      });
+    } else {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: { category: formData.category, batch: formData.batch },
+      });
+    }
+
+    if (response.data.success && response.data.names?.length > 0) {
+      const enabledNames = response.data.names.filter(
+        (person) => !person.disabled
+      );
+      setNamesList(enabledNames);
     } else {
       setNamesList([]);
-      setFormData((prev) => ({ ...prev, name: "", course: "" }));
     }
-  }, [formData.category, formData.batch]);
+  } catch (error) {
+    console.error("Fetch names error:", error);
+    toast.error("Failed to load names");
+  } finally {
+    setLoadingNames(false);
+  }
+};
 
-  // Fetch courses when name is selected
-  useEffect(() => {
-    if (formData.name) {
-      fetchCourses();
-    } else {
-      setCoursesList([]);
-      setFormData((prev) => ({ ...prev, course: "" }));
-    }
-  }, [formData.name]);
-
-  // Generate preview after OTP verification
-  useEffect(() => {
-    if (
-      otpVerified &&
-      formData.name &&
-      formData.category &&
-      formData.course &&
-      formData.issueDate
-    ) {
-      generatePreview();
-    }
-  }, [otpVerified]);
-
-  const getAuthHeaders = () => {
-    const token =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem("authToken")
-        : null;
-    return { Authorization: `Bearer ${token}` };
-  };
-
-  const fetchNames = async () => {
-    setLoadingNames(true);
-    try {
-      let response;
-
-      if (
-        formData.category === "code4bharat" ||
-        formData.category === "marketing-junction"
-      ) {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category },
-        });
-      } else {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category, batch: formData.batch },
-        });
+const fetchCourses = async () => {
+  setLoadingCourses(true);
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/certificates/available-courses`,
+      {
+        headers: getAuthHeaders(),
+        params: {
+          category: formData.category,
+          name: formData.name,
+        },
       }
+    );
 
-      if (response.data.success && response.data.names?.length > 0) {
-        // ✅ Filter out disabled people
-        const enabledNames = response.data.names.filter(
-          (person) => !person.disabled
+    if (response.data.success) {
+      const allCoursesForCategory = response.data.allCourses || [];
+      setCoursesList(allCoursesForCategory);
+      setCreatedCertificates(response.data.createdCertificates || []);
+
+      if (response.data.createdCertificates?.length > 0) {
+        toast.success(
+          `${response.data.createdCertificates.length} course(s) already completed`
         );
-        setNamesList(enabledNames);
-      } else {
-        setNamesList([]);
       }
-    } catch (error) {
-      console.error("Fetch names error:", error);
-      toast.error("Failed to load names (using mock data)");
-    } finally {
-      setLoadingNames(false);
     }
-  };
+  } catch (error) {
+    console.error("Fetch courses error:", error);
+    toast.error("Failed to load courses");
+  } finally {
+    setLoadingCourses(false);
+  }
+};
 
-  const fetchCourses = async () => {
-    setLoadingCourses(true);
-    try {
-      const response = await axios.get(
-        `${API_URL}/api/certificates/available-courses`,
-        {
-          headers: getAuthHeaders(),
-          params: {
-            category: formData.category,
-            name: formData.name, // Pass the selected name
-          },
-        }
-      );
-
-      if (response.data.success) {
-        // Combine all courses (available + completed) for display
-        const allCoursesForCategory = response.data.allCourses || [];
-        setCoursesList(allCoursesForCategory);
-
-        // Set already created certificates for this student
-        setCreatedCertificates(response.data.createdCertificates || []);
-
-        // Optional: Show info about completed courses
-        if (response.data.createdCertificates?.length > 0) {
-          toast.success(
-            `${response.data.createdCertificates.length} course(s) already completed`
-            // { icon: '✅', duration: 3000 }
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Fetch courses error:", error);
-      toast.error("Failed to load courses");
-    } finally {
-      setLoadingCourses(false);
-    }
-  };
-
-  const handleInputChange = (field, value) => {
-    if (field === "category") {
-      setFormData((prev) => ({
-        ...prev,
-        category: value,
-        batch: "",
-        name: "",
-        course: "",
-      }));
+const handleInputChange = (field, value) => {
+  if (field === "category") {
+    setFormData((prev) => ({
+      ...prev,
+      category: value,
+      batch: "",
+      name: "",
+      course: "",
+    }));
+    setPreviewImage(null);
+    setOtpVerified(false);
+  } else if (field === "batch") {
+    setFormData((prev) => ({ ...prev, batch: value, name: "", course: "" }));
+    setPreviewImage(null);
+    setOtpVerified(false);
+  } else {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "course" || field === "issueDate") {
       setPreviewImage(null);
       setOtpVerified(false);
-    } else if (field === "batch") {
-      setFormData((prev) => ({ ...prev, batch: value, name: "", course: "" }));
-      setPreviewImage(null);
-      setOtpVerified(false);
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-      if (field === "course" || field === "issueDate") {
-        setPreviewImage(null);
-        setOtpVerified(false);
-      }
     }
-  };
+  }
+};
 
-  const validateForm = () => {
-    if (!formData.category) {
-      toast.error("Please select a category");
-      return false;
-    }
-    if (
-      categoryConfig[formData.category]?.batches?.length > 0 &&
-      !formData.batch
-    ) {
-      toast.error("Please select a batch");
-      return false;
-    }
-    if (!formData.name) {
-      toast.error("Please select a name");
-      return false;
-    }
-    if (!formData.course) {
-      toast.error("Please select a course");
-      return false;
-    }
-    if (formData.course === "custom" && !formData.customCourse?.trim()) {
-      toast.error("Please enter the custom course name");
-      return false;
-    }
-    if (
-      formData.course === "Certificate of Appreciation" &&
-      !formData.description.trim()
-    ) {
-      toast.error("Please enter the description");
-      return false;
-    }
-    if (!formData.issueDate) {
-      toast.error("Please select issue date");
-      return false;
-    }
-    return true;
-  };
-
-  const isDescriptionInvalid =
+const validateForm = () => {
+  if (!formData.category) {
+    toast.error("Please select a category");
+    return false;
+  }
+  if (
+    categoryConfig[formData.category]?.batches?.length > 0 &&
+    !formData.batch
+  ) {
+    toast.error("Please select a batch");
+    return false;
+  }
+  if (!formData.name) {
+    toast.error("Please select a name");
+    return false;
+  }
+  if (!formData.course) {
+    toast.error("Please select a course");
+    return false;
+  }
+  if (formData.course === "custom" && !formData.customCourse?.trim()) {
+    toast.error("Please enter the custom course name");
+    return false;
+  }
+  if (
     formData.course === "Certificate of Appreciation" &&
-    (formData.description.trim().length < 100 ||
-      formData.description.trim().length > 1000);
+    !formData.description.trim()
+  ) {
+    toast.error("Please enter the description");
+    return false;
+  }
+  if (!formData.issueDate) {
+    toast.error("Please select issue date");
+    return false;
+  }
+  return true;
+};
 
-  const handlePreview = () => {
-    if (validateForm()) {
-      setShowOtpModal(true);
-    }
-  };
+const isDescriptionInvalid =
+  formData.course === "Certificate of Appreciation" &&
+  (formData.description.trim().length < 100 ||
+    formData.description.trim().length > 1000);
 
-  const sendOTP = async () => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/send`,
-        { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
-        { headers: getAuthHeaders() }
-      );
+const handlePreview = () => {
+  if (validateForm()) {
+    setShowOtpModal(true);
+  }
+};
 
-      if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
-        setOtpSent(true);
-        setResendTimer(60);
-      } else {
-        toast.error(response.data.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      toast.error("Failed to send OTP");
-    }
-  };
+const handleOtpChange = (index, value) => {
+  if (!/^\d*$/.test(value)) return;
 
-  const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return;
+  const newOtp = [...otp];
+  newOtp[index] = value;
+  setOtp(newOtp);
 
+  if (value && index < 5) {
+    inputRefs.current[index + 1]?.focus();
+  }
+};
+
+const handleOtpKeyDown = (index, e) => {
+  if (e.key === "Backspace" && !otp[index] && index > 0) {
+    inputRefs.current[index - 1]?.focus();
+  }
+};
+
+const handlePaste = (e) => {
+  e.preventDefault();
+  const pastedData = e.clipboardData.getData("text").trim();
+  const digits = pastedData.replace(/\D/g, "").slice(0, 6);
+
+  if (digits.length > 0) {
     const newOtp = [...otp];
-    newOtp[index] = value;
+    digits.split("").forEach((digit, index) => {
+      if (index < 6) {
+        newOtp[index] = digit;
+      }
+    });
     setOtp(newOtp);
 
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus();
+    const nextEmptyIndex = newOtp.findIndex((digit) => !digit);
+    if (nextEmptyIndex !== -1) {
+      inputRefs.current[nextEmptyIndex]?.focus();
+    } else {
+      inputRefs.current[5]?.focus();
     }
-  };
+  }
+};
 
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`)?.focus();
+const sendOTP = async () => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/certificates/otp/send`,
+      { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
+      { headers: getAuthHeaders() }
+    );
+
+    if (response.data.success) {
+      toast.success("OTP sent to your WhatsApp! 📱");
+      setOtpSent(true);
+      setResendTimer(60);
+    } else {
+      toast.error(response.data.message || "Failed to send OTP");
     }
-  };
+  } catch (error) {
+    console.error("Failed to send OTP:", error);
+    toast.error("Failed to send OTP");
+  }
+};
 
-  const verifyOTP = async () => {
-    try {
-      const otpCode = otp.join("");
-      if (otpCode.length !== 6) {
-        toast.error("Please enter complete OTP");
-        return;
-      }
-
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        {
-          phone: "919892398976",
-          otp: otpCode,
-        },
-        { headers: getAuthHeaders() }
-      );
-
-      console.log(response);
-
-      if (response.data.success) {
-        toast.success("✅ OTP Verified Successfully!");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        generatePreview();
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
-      }
-    } catch (error) {
-      console.error("Verify OTP error:", error);
-      toast.error("OTP verification failed");
-      setOtp(["", "", "", "", "", ""]);
-    }
-  };
-
-  const generatePreview = async () => {
-    setLoadingPreview(true);
-    try {
-      const payload = {
-        ...formData,
-        course:
-          formData.course === "custom"
-            ? formData.customCourse
-            : formData.course,
-      };
-
-      const response = await axios.post(
-        `${API_URL}/api/certificates/preview`,
-        payload,
-        {
-          headers: getAuthHeaders(),
-          responseType: "blob", // Important: Tell axios to expect binary data
-        }
-      );
-
-      // Create a local URL from the blob
-      const imageUrl = URL.createObjectURL(response.data);
-      setPreviewImage(imageUrl);
-    } catch (error) {
-      console.error("Preview error:", error);
-      toast.error("Failed to generate preview");
-    } finally {
-      setLoadingPreview(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!otpVerified) {
-      toast.error("Please verify OTP first");
+const verifyOTP = async () => {
+  try {
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      toast.error("Please enter complete OTP");
       return;
     }
 
-    setIsCreating(true);
-    try {
-      const payload = {
-        ...formData,
-        course:
-          formData.course === "custom"
-            ? formData.customCourse
-            : formData.course,
-      };
+    const response = await axios.post(
+      `${API_URL}/api/certificates/otp/verify`,
+      {
+        phone: "919892398976",
+        otp: otpCode,
+      },
+      { headers: getAuthHeaders() }
+    );
 
-      const response = await axios.post(
-        `${API_URL}/api/certificates/`,
-        payload,
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          // router.push('/certificates');
-        }, 2000);
-      }
-    } catch (error) {
-      toast.error("Failed to create certificate");
-    } finally {
-      setIsCreating(false);
+    if (response.data.success) {
+      toast.success("✅ OTP Verified Successfully!");
+      setOtpVerified(true);
+      setShowOtpModal(false);
+      setShowPreview(true);
+      // generatePreview will be called by useEffect
+    } else {
+      toast.error("Invalid OTP");
+      setOtp(["", "", "", "", "", ""]);
     }
-  };
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    toast.error("OTP verification failed");
+    setOtp(["", "", "", "", "", ""]);
+  }
+};
 
+const generatePreview = async () => {
+  setLoadingPreview(true);
+  try {
+    const payload = {
+      ...formData,
+      course:
+        formData.course === "custom"
+          ? formData.customCourse
+          : formData.course,
+    };
+
+    const response = await axios.post(
+      `${API_URL}/api/certificates/preview`,
+      payload,
+      {
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+
+    const imageUrl = URL.createObjectURL(response.data);
+    setPreviewImage(imageUrl);
+  } catch (error) {
+    console.error("Preview error:", error);
+    toast.error("Failed to generate preview");
+  } finally {
+    setLoadingPreview(false);
+  }
+};
+
+const handleSubmit = async () => {
+  if (!otpVerified) {
+    toast.error("Please verify OTP first");
+    return;
+  }
+
+  setIsCreating(true);
+  try {
+    const payload = {
+      ...formData,
+      course:
+        formData.course === "custom"
+          ? formData.customCourse
+          : formData.course,
+    };
+
+    const response = await axios.post(
+      `${API_URL}/api/certificates/`,
+      payload,
+      { headers: getAuthHeaders() }
+    );
+
+    if (response.data.success) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        // router.push('/certificates');
+      }, 2000);
+    }
+  } catch (error) {
+    toast.error("Failed to create certificate");
+  } finally {
+    setIsCreating(false);
+  }
+};
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
       <Toaster position="top-center" />
@@ -691,12 +703,12 @@ export default function CreateCertificate() {
                     />
                   </div>
                 )}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <TemplateSelector
                     onSelect={handleTemplateSelect}
                     selectedTemplateId={formData.templateId}
                   />
-                </div>
+                </div> */}
 
                 {/* Issue Date */}
                 <div>
@@ -710,7 +722,7 @@ export default function CreateCertificate() {
                     onChange={(e) =>
                       handleInputChange("issueDate", e.target.value)
                     }
-                    max={new Date().toISOString().split("T")[0]}
+                    // max={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
@@ -903,95 +915,95 @@ export default function CreateCertificate() {
 
         {/* OTP Modal - Same as before */}
         <AnimatePresence>
-          {showOtpModal && (
+        {showOtpModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full relative"
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full relative"
+              <button
+                onClick={() => setShowOtpModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <button
-                  onClick={() => setShowOtpModal(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
 
-                <div className="text-center mb-6">
-                  <div className="inline-block p-4 bg-green-100 rounded-full mb-4">
-                    <FaWhatsapp className="w-12 h-12 text-green-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    WhatsApp OTP Verification
-                  </h2>
-                  <p className="text-gray-600">
-                    {otpSent
-                      ? "Enter the 6-digit code sent to your WhatsApp"
-                      : "We will send an OTP to verify this action"}
-                  </p>
+              <div className="text-center mb-6">
+                <div className="inline-block p-4 bg-green-100 rounded-full mb-4">
+                  <FaWhatsapp className="w-12 h-12 text-green-600" />
                 </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  WhatsApp OTP Verification
+                </h2>
+                <p className="text-gray-600">
+                  {otpSent
+                    ? "Enter the 6-digit code sent to your WhatsApp"
+                    : "We will send an OTP to verify this action"}
+                </p>
+              </div>
 
-                {otpSent ? (
-                  <>
-                    <div className="flex gap-2 justify-center mb-6">
-                      {otp.map((digit, index) => (
-                        <input
-                          key={index}
-                          id={`otp-${index}`}
-                          type="text"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) =>
-                            handleOtpChange(index, e.target.value)
-                          }
-                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
-                        />
-                      ))}
-                    </div>
+              {otpSent ? (
+                <>
+                  <div className="flex gap-2 justify-center mb-6">
+                    {otp.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => (inputRefs.current[index] = el)}
+                        id={`otp-${index}`}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        onPaste={handlePaste}
+                        className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
+                      />
+                    ))}
+                  </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={verifyOTP}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg mb-3 flex items-center justify-center gap-2"
-                    >
-                      <FaWhatsapp className="w-5 h-5" />
-                      Verify OTP
-                    </motion.button>
-
-                    <button
-                      onClick={resendTimer === 0 ? sendOTP : null}
-                      disabled={resendTimer > 0}
-                      className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
-                    >
-                      {resendTimer > 0
-                        ? `Resend OTP in ${resendTimer}s`
-                        : "Resend OTP"}
-                    </button>
-                  </>
-                ) : (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={sendOTP}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    onClick={verifyOTP}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg mb-3 flex items-center justify-center gap-2"
                   >
                     <FaWhatsapp className="w-5 h-5" />
-                    Send OTP via WhatsApp
+                    Verify OTP
                   </motion.button>
-                )}
-              </motion.div>
+
+                  <button
+                    onClick={resendTimer === 0 ? sendOTP : null}
+                    disabled={resendTimer > 0}
+                    className="w-full text-green-600 py-2 font-medium disabled:text-gray-400 transition-colors"
+                  >
+                    {resendTimer > 0
+                      ? `Resend OTP in ${resendTimer}s`
+                      : "Resend OTP"}
+                  </button>
+                </>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={sendOTP}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <FaWhatsapp className="w-5 h-5" />
+                  Send OTP via WhatsApp
+                </motion.button>
+              )}
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
         {/* Success Modal - Same as before */}
         <AnimatePresence>

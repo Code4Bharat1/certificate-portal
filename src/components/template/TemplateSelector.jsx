@@ -2,20 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import {
   File,
-  Image,
   AlertCircle,
   Loader2,
-  Eye,
-  Download,
-  Edit,
-  Trash2,
   X
 } from 'lucide-react';
 
-export default function TemplateSelector({ onSelect, selectedTemplateId = null }) {
+export default function TemplateSelector({ 
+  onSelect, 
+  selectedTemplateId = null,
+  hasCertification = false // New prop to indicate if user has certification
+}) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,7 +29,9 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
   // Get headers with optional token
   const getHeaders = () => {
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
-    const headers = {};
+    const headers = {
+      'Content-Type': 'application/json'
+    };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -47,12 +47,14 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
       setLoading(true);
       setError(null);
 
-      const response = await axios.get(`${API_URL}/api/templates`, {
+      const response = await fetch(`${API_URL}/api/templates`, {
         headers: getHeaders(),
       });
 
-      if (response.data.success) {
-        setTemplates(response.data.data || []);
+      const data = await response.json();
+
+      if (data.success) {
+        setTemplates(data.data || []);
       } else {
         setError('Failed to fetch templates');
       }
@@ -77,34 +79,17 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
     }
   };
 
-  const handleDownload = async (template) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/templates/${template.id || template._id}/download`, {
-        headers: getHeaders(),
-        responseType: 'blob',
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${template.name || 'template'}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error('Download failed:', error);
-      alert('Failed to download the template.');
-    }
-  };
-
   const handleUpdate = async () => {
     if (!selectedTemplate) return;
 
     try {
-      await axios.put(
+      await fetch(
         `${API_URL}/api/templates/${selectedTemplate.id || selectedTemplate._id}`,
-        editData,
-        { headers: getHeaders() }
+        {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(editData)
+        }
       );
 
       setShowModal(false);
@@ -117,7 +102,8 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_URL}/api/templates/${id}`, {
+      await fetch(`${API_URL}/api/templates/${id}`, {
+        method: 'DELETE',
         headers: getHeaders(),
       });
       setShowModal(false);
@@ -128,10 +114,28 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
     }
   };
 
+  // Filter templates based on certification status
+  const filteredTemplates = templates.filter(template => {
+    // If user has certification, show only certified templates
+    if (hasCertification) {
+      return template.isCertified === true || template.requiresCertification === true;
+    }
+    // If no certification, show only non-certified templates
+    return !template.isCertified && !template.requiresCertification;
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold text-gray-800">Select Template</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">Select Template</h3>
+          {hasCertification && (
+            <p className="text-sm text-green-600 flex items-center gap-2 mt-1">
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+              Showing certified templates only
+            </p>
+          )}
+        </div>
         {loading && <Loader2 className="w-5 h-5 animate-spin text-blue-600" />}
       </div>
 
@@ -142,22 +146,24 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
         </div>
       )}
 
-      {templates.length === 0 && !loading ? (
+      {filteredTemplates.length === 0 && !loading ? (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
           <p className="text-yellow-700">
-            No templates available. Please upload templates first.
+            {hasCertification 
+              ? 'No certified templates available.'
+              : 'No templates available. Please upload templates first.'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {templates.map((template, index) => (
+          {filteredTemplates.map((template, index) => (
             <motion.div
               key={template.id || template._id || index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8 }}
-              className={`bg-white rounded-2xl shadow-lg overflow-hidden group border-2 ${
+              className={`bg-white rounded-2xl shadow-lg overflow-hidden group border-2 cursor-pointer ${
                 selectedTemplateId === template.id ? 'border-blue-500' : 'border-transparent'
               }`}
               onClick={() => onSelect && onSelect(template)}
@@ -182,6 +188,13 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
                 >
                   <File className="text-gray-400" size={64} />
                 </div>
+
+                {/* Certification Badge */}
+                {hasCertification && (template.isCertified || template.requiresCertification) && (
+                  <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                    ✓ Certified
+                  </div>
+                )}
 
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <button
@@ -214,61 +227,6 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
                     ? new Date(template.createdAt).toLocaleDateString()
                     : 'Unknown'}
                 </div>
-
-                {/* Action Buttons */}
-                {/* <div className="grid grid-cols-flex gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal('view', template);
-                    }}
-                    className="bg-blue-100 text-blue-600 p-3 rounded-lg hover:bg-blue-200 transition-all"
-                    title="View"
-                  >
-                    <Eye size={18} className="mx-auto" />
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownload(template);
-                    }}
-                    className="bg-green-100 text-green-600 p-3 rounded-lg hover:bg-green-200 transition-all"
-                    title="Download"
-                  >
-                    <Download size={18} className="mx-auto" />
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal('edit', template);
-                    }}
-                    className="bg-yellow-100 text-yellow-600 p-3 rounded-lg hover:bg-yellow-200 transition-all"
-                    title="Edit"
-                  >
-                    <Edit size={18} className="mx-auto" />
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal('delete', template);
-                    }}
-                    className="bg-red-100 text-red-600 p-3 rounded-lg hover:bg-red-200 transition-all"
-                    title="Delete"
-                  >
-                    <Trash2 size={18} className="mx-auto" />
-                  </motion.button>
-                </div> */}
               </div>
             </motion.div>
           ))}
@@ -328,6 +286,17 @@ export default function TemplateSelector({ onSelect, selectedTemplateId = null }
                         {selectedTemplate.description || 'N/A'}
                       </p>
                     </div>
+                    {(selectedTemplate.isCertified || selectedTemplate.requiresCertification) && (
+                      <div>
+                        <label className="font-semibold text-gray-700">
+                          Certification:
+                        </label>
+                        <p className="text-green-600 flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                          Certified Template
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <label className="font-semibold text-gray-700">
                         Uploaded:

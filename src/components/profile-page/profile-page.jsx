@@ -235,56 +235,56 @@ export default function ProfilePage() {
   const loadAdmins = async () => {
     setLoadingAdmins(true);
     
-    const sampleAdmins = [
-      {
-        id: '1',
-        name: 'Abhishek Sharma',
-        email: 'abhishek@code4bharat.com',
-        phone: '9876543210',
-        role: 'code4bharat_admin',
-        permissions: ['code4bharat'],
-        status: 'active',
-        lastLogin: '2025-11-08T10:30:00.000Z',
-        createdAt: '2024-03-15T08:00:00.000Z'
-      },
-      {
-        id: '2',
-        name: 'Priya Patel',
-        email: 'priya@marketingjunction.com',
-        phone: '9876543211',
-        role: 'marketing_junction_admin',
-        permissions: ['marketing-junction'],
-        status: 'active',
-        lastLogin: '2025-11-09T11:45:00.000Z',
-        createdAt: '2024-04-20T09:30:00.000Z'
-      },
-      {
-        id: '3',
-        name: 'Raj Kumar',
-        email: 'raj@nexcorealliance.com',
-        phone: '9876543212',
-        role: 'admin',
-        permissions: ['marketing-junction', 'code4bharat', 'bootcamp', 'bvoc', 'fsd', 'hr'],
-        status: 'inactive',
-        lastLogin: '2025-10-20T09:15:00.000Z',
-        createdAt: '2024-02-10T10:00:00.000Z'
-      },
-      {
-        id: '4',
-        name: 'Sneha Desai',
-        email: 'sneha@code4bharat.com',
-        phone: '9876543213',
-        role: 'hr_admin',
-        permissions: ['hr'],
-        status: 'active',
-        lastLogin: '2025-11-10T08:20:00.000Z',
-        createdAt: '2024-05-12T11:15:00.000Z'
-      }
-    ];
+    // const sampleAdmins = [
+    //   {
+    //     id: '1',
+    //     name: 'Abhishek Sharma',
+    //     email: 'abhishek@code4bharat.com',
+    //     phone: '9876543210',
+    //     role: 'code4bharat_admin',
+    //     permissions: ['code4bharat'],
+    //     status: 'active',
+    //     lastLogin: '2025-11-08T10:30:00.000Z',
+    //     createdAt: '2024-03-15T08:00:00.000Z'
+    //   },
+    //   {
+    //     id: '2',
+    //     name: 'Priya Patel',
+    //     email: 'priya@marketingjunction.com',
+    //     phone: '9876543211',
+    //     role: 'marketing_junction_admin',
+    //     permissions: ['marketing-junction'],
+    //     status: 'active',
+    //     lastLogin: '2025-11-09T11:45:00.000Z',
+    //     createdAt: '2024-04-20T09:30:00.000Z'
+    //   },
+    //   {
+    //     id: '3',
+    //     name: 'Raj Kumar',
+    //     email: 'raj@nexcorealliance.com',
+    //     phone: '9876543212',
+    //     role: 'admin',
+    //     permissions: ['marketing-junction', 'code4bharat', 'bootcamp', 'bvoc', 'fsd', 'hr'],
+    //     status: 'inactive',
+    //     lastLogin: '2025-10-20T09:15:00.000Z',
+    //     createdAt: '2024-02-10T10:00:00.000Z'
+    //   },
+    //   {
+    //     id: '4',
+    //     name: 'Sneha Desai',
+    //     email: 'sneha@code4bharat.com',
+    //     phone: '9876543213',
+    //     role: 'hr_admin',
+    //     permissions: ['hr'],
+    //     status: 'active',
+    //     lastLogin: '2025-11-10T08:20:00.000Z',
+    //     createdAt: '2024-05-12T11:15:00.000Z'
+    //   }
+    // ];
     
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
-      setAdmins(sampleAdmins);
+      // setAdmins(sampleAdmins);
     } catch (error) {
       console.error('Error fetching admins:', error);
       toast.error('Failed to load admin users');
@@ -372,41 +372,71 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
+ // Replace the handleChangePassword function with this:
+
+const handleChangePassword = async () => {
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    toast.error('New passwords do not match');
+    return;
+  }
+
+  if (passwordData.newPassword.length < 6) {
+    toast.error('Password must be at least 6 characters');
+    return;
+  }
+
+  try {
+    const token = sessionStorage.getItem('authToken');
+    
+    if (!token) {
+      toast.error('Authentication required. Please login again.');
+      setTimeout(() => router.push('/login'), 1500);
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/admin/change-password`,
-        {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
+    const response = await axios.post(
+      `${API_URL}/api/admin/change-password`,
+      {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      },
+      { 
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        toast.success('Password changed successfully!');
-        setShowChangePassword(false);
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
+        timeout: 10000
       }
-    } catch (error) {
-      console.error('Error changing password:', error);
+    );
+
+    if (response.data.success) {
+      toast.success('Password changed successfully!');
+      setShowChangePassword(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    }
+  } catch (error) {
+    console.error('Error changing password:', error);
+    
+    if (error.response?.status === 401) {
+      if (error.response?.data?.message?.includes('not found')) {
+        toast.error('Admin account not found. Please contact support.');
+      } else if (error.response?.data?.message?.includes('incorrect')) {
+        toast.error('Current password is incorrect');
+      } else {
+        toast.error('Authentication failed. Please login again.');
+        setTimeout(() => router.push('/login'), 1500);
+      }
+    } else if (error.response?.status === 403) {
+      toast.error('You do not have permission to change password');
+    } else {
       toast.error(error.response?.data?.message || 'Failed to change password');
     }
-  };
+  }
+};
 
   const handleResetToDefault = () => {
     if (confirm('Are you sure you want to reset to default admin data?')) {
