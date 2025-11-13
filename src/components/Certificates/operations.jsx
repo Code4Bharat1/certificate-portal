@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import { 
   ArrowLeft, 
   Download, 
@@ -13,7 +14,8 @@ import {
   AlertCircle, 
   CheckCircle, 
   Loader2,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 
 export default function OperationsPage() {
@@ -26,33 +28,160 @@ export default function OperationsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [processingItem, setProcessingItem] = useState(null);
   const [sortBy, setSortBy] = useState('date-desc');
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Simulate data fetch
-    setTimeout(() => {
-      setCertificates([
-        {
-          _id: '1',
-          name: 'Sarah Johnson',
-          course: 'Operations Management',
-          certificateId: 'OPS2024001',
-          issueDate: '2024-03-10',
-          status: 'downloaded',
-          type: 'certificate'
-        },
-        {
-          _id: '2',
-          name: 'Michael Brown',
-          course: 'Supply Chain Basics',
-          certificateId: 'OPS2024002',
-          issueDate: '2024-03-25',
-          status: 'pending',
-          type: 'certificate'
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
+
+ // ✅ Fetch certificates from backend
+     useEffect(() => {
+       const fetchCertificates = async () => {
+         try {
+           if (typeof window !== 'undefined') {
+             const token = sessionStorage.getItem('authToken');
+             if (!token) {
+               router.push('/login');
+               return;
+             }
+   
+             const res = await axios.get(
+               `${API_URL}/api/certificates`,
+               {
+                 headers: { Authorization: `Bearer ${token}` },
+                 params: { category: 'DM' },
+               }
+             );
+   
+             if (res.data.success) {
+               // defend against missing arrays
+               const certificates = Array.isArray(res.data.data) ? res.data.data : [];
+               const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+   
+               const combined = [
+                 ...certificates.map((c) => ({ ...c, type: 'certificate' })),
+                 ...letters.map((l) => ({ ...l, type: 'letter' })),
+               ];
+   
+               // keep newest first (api already sorts but safe)
+               combined.sort((a, b) => new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate));
+   
+               setCertificates(combined);
+             } else {
+               toast.error('Failed to fetch certificates');
+             }
+           }
+         } catch (error) {
+           console.error('Fetch error:', error);
+           toast.error('Error fetching certificates');
+         } finally {
+           setLoading(false);
+         }
+       };
+   
+       fetchCertificates();
+     }, [router]);
+ const handleDownloadPDF = async (cert) => {
+     setProcessingItem(cert._id);
+     try {
+       const token = sessionStorage.getItem('authToken');
+       if (!token) {
+         router.push('/login');
+         return;
+       }
+ 
+       let url;
+       if (cert.type === 'letter') {
+         url = `${API_URL}/api/letters/${cert._id}/download.pdf  `;
+       } else {
+         url = `${API_URL}/api/certificates/download/${cert._id}`;
+       }
+ 
+       const response = await axios.get(url, {
+         headers: { Authorization: `Bearer ${token}` },
+         responseType: 'blob',
+       });
+ 
+       const blob = new Blob([response.data], { type: 'application/pdf' });
+       const downloadUrl = window.URL.createObjectURL(blob);
+       const link = document.createElement('a');
+       link.href = downloadUrl;
+       link.download = `${cert.name}.pdf`;
+       document.body.appendChild(link);
+       link.click();
+       link.remove();
+       window.URL.revokeObjectURL(downloadUrl);
+ 
+       // Update status to 'downloaded' if it's not already
+       if (cert.status !== 'downloaded') {
+         await updateCertificateStatus(cert._id, 'downloaded');
+       }
+ 
+       toast.success(`${cert.name}.pdf downloaded successfully`);
+     } catch (error) {
+       console.error(error);
+       toast.error('Failed to download PDF');
+     } finally {
+       setProcessingItem(null);
+     }
+   };
+ 
+   const handleDownloadJPG = async (cert) => {
+     setProcessingItem(cert._id);
+     try {
+       const token = sessionStorage.getItem('authToken');
+       if (!token) {
+         router.push('/login');
+         return;
+       }
+ 
+       const response = await axios.get(
+         `${API_URL}/api/certificates/${cert._id}/download/jpg`,
+         {
+           headers: { Authorization: `Bearer ${token}` },
+           responseType: 'blob',
+         }
+       );
+ 
+       const blob = new Blob([response.data], { type: 'image/jpeg' });
+       const downloadUrl = window.URL.createObjectURL(blob);
+       const link = document.createElement('a');
+       link.href = downloadUrl;
+       link.download = `${cert.name}.jpg`;
+       document.body.appendChild(link);
+       link.click();
+       link.remove();
+       window.URL.revokeObjectURL(downloadUrl);
+ 
+       // Update status to 'downloaded' if it's not already
+       if (cert.status !== 'downloaded') {
+         await updateCertificateStatus(cert._id, 'downloaded');
+       }
+ 
+       toast.success(`${cert.name}.jpg downloaded successfully`);
+     } catch (error) {
+       console.error(error);
+       toast.error('Failed to download JPG');
+     } finally {
+       setProcessingItem(null);
+     }
+   };
+  const handleDelete = async (id) => {
+    try {
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
+      
+      await axios.delete(`${API_URL}/api/certificates/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+      });
+
+      setCertificates(certificates.filter(cert => cert._id !== id));
+      setDeleteConfirm(null);
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert(err.response?.data?.message || 'Failed to delete certificate');
+    }
+  };
 
   const sortedItems = [...certificates].sort((a, b) => {
     switch(sortBy) {
@@ -135,6 +264,23 @@ export default function OperationsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <p className="text-red-800">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-3 mb-6">
           <div className="relative flex-grow">
@@ -248,9 +394,13 @@ export default function OperationsPage() {
                 </div>
 
                 <div className="space-y-3 mb-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Certificate ID:</span>
-                    <span className="font-semibold text-gray-800">{cert.certificateId}</span>
+                 <div className="flex justify-between items-center">
+                    <span className="text-gray-800 dark:text-gray-400">
+                      {cert.type === 'certificate' ? 'Certificate ID:' : 'Letter ID:'}
+                    </span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
+                      {cert.certificateId || cert.letterId || cert._id}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
@@ -264,18 +414,48 @@ export default function OperationsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-gray-600 text-white py-2.5 rounded-lg hover:bg-gray-700 transition text-sm font-semibold">
-                    <Download className="w-4 h-4" />
+               <div className="flex gap-2 mt-auto">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    disabled={processingItem === cert._id}
+                    onClick={() => handleDownloadPDF(cert)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gray-600 text-white py-2.5 rounded-lg hover:bg-gray-700 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {processingItem === cert._id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
                     PDF
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white py-2.5 rounded-lg hover:bg-slate-700 transition text-sm font-semibold">
-                    <Download className="w-4 h-4" />
-                    JPG
-                  </button>
-                  <button className="p-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                  </motion.button>
+
+                  {cert.type !== 'letter' && (
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      disabled={processingItem === cert._id}
+                      onClick={() => handleDownloadJPG(cert)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white py-2.5 rounded-lg hover:bg-slate-700 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {processingItem === cert._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      JPG
+                    </motion.button>
+                  )}
+
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setDeleteConfirm(cert._id)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-cyan-600 text-white py-2.5 rounded-lg hover:bg-cyan-700 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Delete item"
+                  >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             ))}
@@ -291,6 +471,44 @@ export default function OperationsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setDeleteConfirm(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Confirm Delete</h3>
+              <p className="text-gray-600 mb-6">Are you sure you want to delete this certificate? This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm)}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
