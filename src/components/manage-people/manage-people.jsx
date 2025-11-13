@@ -48,10 +48,10 @@ export default function ManagePeople() {
   const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
   const closeBatchModal = () => setIsBatchModalOpen(false);
   const openBatchModal = () => setIsBatchModalOpen(true);
-  // For Add Category Modal
-const [showAddCategory, setShowAddCategory] = useState(false);
-const [newCategoryName, setNewCategoryName] = useState("");
-const [newCategoryDesc, setNewCategoryDesc] = useState("");
+//   // For Add Category Modal
+// const [showAddCategory, setShowAddCategory] = useState(false);
+// const [newCategoryName, setNewCategoryName] = useState("");
+// const [newCategoryDesc, setNewCategoryDesc] = useState("");
 
 
   const [batchForm, setBatchForm] = useState({
@@ -207,20 +207,20 @@ const [newCategoryDesc, setNewCategoryDesc] = useState("");
       toast.error("Failed to delete batch");
     }
   };
-const handleAddCategory = () => {
-  if (!newCategoryName.trim()) {
-    return toast.error("Category name is required");
-  }
+// const handleAddCategory = () => {
+//   if (!newCategoryName.trim()) {
+//     return toast.error("Category name is required");
+//   }
 
-  toast.success(`Category "${newCategoryName}" added successfully`);
+//   toast.success(`Category "${newCategoryName}" added successfully`);
 
-  // Close modal
-  setShowAddCategory(false);
+//   // Close modal
+//   setShowAddCategory(false);
 
-  // Reset fields
-  setNewCategoryName("");
-  setNewCategoryDesc("");
-};
+//   // Reset fields
+//   setNewCategoryName("");
+//   setNewCategoryDesc("");
+// };
 
   /* --------------------- CRUD Handlers --------------------- */
 
@@ -600,7 +600,7 @@ const handleAddCategory = () => {
               Manage Batches
             </motion.button>
             {/* ⭐ NEW BUTTON — ADD CATEGORY */}
-            <motion.button
+            {/* <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowAddCategory(true)}
@@ -608,7 +608,7 @@ const handleAddCategory = () => {
             >
               <Tag className="w-5 h-5" />
               Add Category
-            </motion.button>
+            </motion.button> */}
 
             <div className="flex gap-2 bg-white rounded-xl p-1 shadow-lg border border-gray-200">
               <motion.button
@@ -1621,7 +1621,10 @@ const handleAddCategory = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence>
+
+
+      
+      {/* <AnimatePresence>
         {showAddCategory && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1637,7 +1640,6 @@ const handleAddCategory = () => {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">
                   Add Category
@@ -1650,9 +1652,7 @@ const handleAddCategory = () => {
                 </button>
               </div>
 
-              {/* Form Inputs */}
               <div className="space-y-5">
-                {/* Category Name */}
                 <div>
                   <label className="block mb-1 font-semibold text-gray-700">
                     Category Name *
@@ -1666,7 +1666,6 @@ const handleAddCategory = () => {
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block mb-1 font-semibold text-gray-700">
                     Description (optional)
@@ -1680,7 +1679,6 @@ const handleAddCategory = () => {
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setShowAddCategory(false)}
@@ -1701,7 +1699,7 @@ const handleAddCategory = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
     </div>
   );
 }
