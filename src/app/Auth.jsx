@@ -9,7 +9,7 @@ export default function Auth({ children }) {
 
   useEffect(() => {
     // Allow public page(s)
-    if (pathname === '/verify-certificate' || pathname === '/login') return;
+    if (pathname === '/verify-certificate' || pathname === '/login' || pathname === '/termsandconditions/t&c' || pathname === '/termsandconditions/C4B'|| pathname === '/termsandconditions/onboard' || pathname === '/termsandconditions/pdf' ) return;
 
     const isAuthenticated = sessionStorage.getItem("isAuthenticated");
     if (!isAuthenticated) {
