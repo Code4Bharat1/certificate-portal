@@ -134,7 +134,8 @@ export default function ManagePeople() {
     if (!API_URL) return;
     try {
       setFetchLoading(true);
-      const res = await axios.get(`${API_URL}/api/people`);
+      const res = await axios.get(`${API_URL}/api/people/all`);
+      console.log(res);
       if (res.data.success) setPeople(res.data.names || res.data.data || []);
       else toast.error("Failed to load people");
     } catch (err) {
