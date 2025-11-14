@@ -239,7 +239,7 @@ export default function ManagePeople() {
 
     if (!name || !category || !phone)
       return toast.error("Missing required fields");
-    if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
+    if (!/^\d{12}$/.test(phone)) return toast.error("Phone must be 10 digits");
 
     if ((category === "FSD" || category === "BVOC") && !batch)
       return toast.error("Select a batch for this category");
