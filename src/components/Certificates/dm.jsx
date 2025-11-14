@@ -3,16 +3,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { 
-  ArrowLeft, 
-  Download, 
-  Trash2, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Download,
+  Trash2,
+  Search,
+  Filter,
+  ChevronDown,
+  Clock,
+  AlertCircle,
+  CheckCircle,
   Loader2,
   Megaphone,
   X
@@ -34,53 +34,54 @@ export default function DigitalMarketingPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
   // ✅ Fetch certificates from backend
-    useEffect(() => {
-      const fetchCertificates = async () => {
-        try {
-          if (typeof window !== 'undefined') {
-            const token = sessionStorage.getItem('authToken');
-            if (!token) {
-              router.push('/login');
-              return;
-            }
-  
-            const res = await axios.get(
-              `${API_URL}/api/certificates`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-                params: { category: 'DM' },
-              }
-            );
-  
-            if (res.data.success) {
-              // defend against missing arrays
-              const certificates = Array.isArray(res.data.data) ? res.data.data : [];
-              const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
-  
-              const combined = [
-                ...certificates.map((c) => ({ ...c, type: 'certificate' })),
-                ...letters.map((l) => ({ ...l, type: 'letter' })),
-              ];
-  
-              // keep newest first (api already sorts but safe)
-              combined.sort((a, b) => new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate));
-  
-              setCertificates(combined);
-            } else {
-              toast.error('Failed to fetch certificates');
-            }
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const token = sessionStorage.getItem('authToken');
+          if (!token) {
+            router.push('/login');
+            return;
           }
-        } catch (error) {
-          console.error('Fetch error:', error);
-          toast.error('Error fetching certificates');
-        } finally {
-          setLoading(false);
+
+          const res = await axios.get(
+            `${API_URL}/api/certificates`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              params: { category: 'DM' },
+            }
+          );
+
+          if (res.data.success) {
+            // defend against missing arrays
+            const certificates = Array.isArray(res.data.data) ? res.data.data : [];
+            const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+
+            const combined = [
+              ...certificates.map((c) => ({ ...c, type: 'certificate' })),
+              ...letters.map((l) => ({ ...l, type: 'letter' })),
+            ];
+
+            // keep newest first (api already sorts but safe)
+            combined.sort((a, b) => new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate));
+
+            setCertificates(combined);
+          } else {
+            toast.error('Failed to fetch certificates');
+          }
         }
-      };
-  
-      fetchCertificates();
-    }, [router]);
-const handleDownloadPDF = async (cert) => {
+      } catch (error) {
+        console.error('Fetch error:', error);
+        toast.error('Error fetching certificates');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, [router]);
+
+  const handleDownloadPDF = async (cert) => {
     setProcessingItem(cert._id);
     try {
       const token = sessionStorage.getItem('authToken');
@@ -165,10 +166,11 @@ const handleDownloadPDF = async (cert) => {
       setProcessingItem(null);
     }
   };
+
   const handleDelete = async (id) => {
     try {
       const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
-      
+
       await axios.delete(`${API_URL}/api/certificates/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -177,6 +179,7 @@ const handleDownloadPDF = async (cert) => {
       });
 
       setCertificates(certificates.filter(cert => cert._id !== id));
+      toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`);
       setDeleteConfirm(null);
     } catch (err) {
       console.error('Delete error:', err);
@@ -185,7 +188,7 @@ const handleDownloadPDF = async (cert) => {
   };
 
   const sortedItems = [...certificates].sort((a, b) => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'name-asc':
         return a.name?.localeCompare(b.name || '') || 0;
       case 'name-desc':
@@ -200,7 +203,7 @@ const handleDownloadPDF = async (cert) => {
 
   const filteredCertificates = sortedItems.filter(cert => {
     const search = searchTerm.trim().toLowerCase();
-    const matchesSearch = !search || 
+    const matchesSearch = !search ||
       (cert.name?.toLowerCase().includes(search)) ||
       (cert.certificateId?.toLowerCase().includes(search)) ||
       (cert.course?.toLowerCase().includes(search));
@@ -245,7 +248,7 @@ const handleDownloadPDF = async (cert) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 w-full md:w-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex flex-col items-center justify-center">
                 <span className="text-sm text-sky-100">Total</span>
@@ -336,15 +339,14 @@ const handleDownloadPDF = async (cert) => {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                        statusFilter === status
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
                           ? status === 'downloaded'
                             ? 'bg-green-500 text-white'
                             : status === 'pending'
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-gradient-to-r from-sky-600 to-blue-600 text-white'
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-gradient-to-r from-sky-600 to-blue-600 text-white'
                           : 'bg-gray-100 text-gray-700'
-                      }`}
+                        }`}
                     >
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </button>
@@ -384,11 +386,10 @@ const handleDownloadPDF = async (cert) => {
                     <h3 className="text-lg font-bold text-gray-800 truncate">{cert.name}</h3>
                     <p className="text-sm text-gray-600 truncate">{cert.course}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1 ${
-                    cert.status === 'downloaded'
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1 ${cert.status === 'downloaded'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-amber-100 text-amber-700'
-                  }`}>
+                    }`}>
                     {cert.status === 'downloaded' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                     {cert.status}
                   </span>
@@ -396,15 +397,15 @@ const handleDownloadPDF = async (cert) => {
 
                 <div className="space-y-3 mb-4 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-800 dark:text-gray-400">
+                    <span className="text-gray-800 dark:text-black-900">
                       {cert.type === 'certificate' ? 'Certificate ID:' : 'Letter ID:'}
                     </span>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
+                    <span className="font-semibold text-gray-800 dark:text-black-200 text-right break-all">
                       {cert.certificateId || cert.letterId || cert._id}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Issue Date:</span>
+                    <span className="text-gray-800 dark:text-black-200">Issue Date:</span>
                     <span className="font-semibold text-gray-800">
                       {new Date(cert.issueDate).toLocaleDateString('en-GB', {
                         day: '2-digit',
@@ -415,7 +416,7 @@ const handleDownloadPDF = async (cert) => {
                   </div>
                 </div>
 
-                 <div className="flex gap-2 mt-auto">
+                <div className="flex gap-2 mt-auto">
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}

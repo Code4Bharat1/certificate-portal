@@ -128,7 +128,7 @@ export default function MarketingJunctionPage() {
       
       // Handle different endpoint for letters if needed
       if (cert.type === 'letter') {
-        url = `${API_URL}/api/letters/${cert._id}/download/pdf`;
+        url = `${API_URL}/api/letters/${cert._id}/download.pdf`;
       }
 
       const response = await axios.get(url, {
@@ -252,13 +252,13 @@ export default function MarketingJunctionPage() {
         endpoint = `${API_URL}/api/certificates/${id}`;
       }
 
-      const response = await axios.delete(endpoint, {
+      const response = await axios.delete(`${API_URL}/api/certificates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.data.success) {
         setCertificates(certificates.filter(item => item._id !== id));
-        toast.success(`${cert.type === 'letter' ? 'Letter' : 'Certificate'} deleted successfully`);
+        toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`);
       } else {
         toast.error('Delete failed');
       }

@@ -79,7 +79,7 @@ export default function ManagePeople() {
   const [viewMode, setViewMode] = useState("active");
 
   const MAX_NAME_LENGTH = 50;
-  const MAX_ADDRESS_LENGTH = 100;
+  const MAX_ADDRESS_LENGTH = 200;
 
   const categories = [
     { value: "all", label: "All Categories" },
@@ -1003,7 +1003,7 @@ export default function ManagePeople() {
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Address{" "}
-                    <span className="text-sm text-gray-500">(max 100)</span>
+                    <span className="text-sm text-gray-500">(max 200)</span>
                   </label>
                   <textarea
                     name="address"

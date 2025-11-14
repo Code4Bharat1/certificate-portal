@@ -121,9 +121,9 @@ export default function CreateLetter() {
           "Appreciation for Outstanding Performance",
         ],
         "Experience Certificate": [
-          "Experience Certificate - Video Editing",
-          "Experience Certificate - Video Graphics",
-          "Experience Certificate - Graphic Desigining",
+          // "Experience Certificate - Video Editing",
+          // "Experience Certificate - Video Graphics",
+          // "Experience Certificate - Graphic Desigining",
         ],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
@@ -132,7 +132,10 @@ export default function CreateLetter() {
         // "Memo": [],
         "Non-Disclosure Agreement": [],
         // "Other": [],
-        "Promotion Letter": [],
+        "Promotion Letter": [
+          "Non Paid to Paid",
+          "Stipend Revision",
+        ],
         "Timeline Letter": [],
       };
     } else if (category === "FSD") {
@@ -1020,11 +1023,11 @@ export default function CreateLetter() {
                 {needsMisconductReason() && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Reason (max 100 chars) *
+                      Reason (max 70 chars) *
                     </label>
                     <input
                       type="text"
-                      maxLength={100}
+                      maxLength={70}
                       value={formData.misconductReason || ""}
                       onChange={(e) => handleInputChange("misconductReason", e.target.value)}
                       placeholder="Enter reason"
@@ -1126,7 +1129,12 @@ export default function CreateLetter() {
                 )}
 
                 {/* FSD Internship Experience Certificate Specific Inputs */}
-                {formData.category === "FSD" && formData.letterType === "Internship Experience Certificate" && (
+                {((formData.category === "FSD" &&
+                  formData.course === "Internship Experience Certificate")
+                  ||
+                  (formData.category === "marketing-junction" &&
+                  formData.course === "Experience Certificate"))
+                  && (
                   <>
                     {/* Role */}
                     <div>
@@ -1200,8 +1208,12 @@ export default function CreateLetter() {
                 )}
 
                 {/* ✅✅✅ Description for FSD Internship Experience Certificate ✅✅✅ */}
-                {formData.category === "FSD" &&
-                  formData.course === "Internship Experience Certificate" && (
+                {((formData.category === "FSD" &&
+                  formData.course === "Internship Experience Certificate")
+                  ||
+                  (formData.category === "marketing-junction" &&
+                  formData.course === "Experience Certificate"))
+                  && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         <FileText className="w-4 h-4 inline mr-2" />
