@@ -239,7 +239,7 @@ export default function ManagePeople() {
 
     if (!name || !category || !phone)
       return toast.error("Missing required fields");
-    if (!/^\d{12}$/.test(phone)) return toast.error("Phone must be 10 digits");
+    if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
 
     if ((category === "FSD" || category === "BVOC") && !batch)
       return toast.error("Select a batch for this category");
@@ -978,7 +978,7 @@ export default function ManagePeople() {
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    maxLength={12}
+                    maxLength={10}
                     required
                   />
                 </div>
