@@ -67,13 +67,13 @@ export default function ManagePeople() {
     name: "",
     category: "",
     batch: "",
-    email: "", // ✅ Added
-    parentEmail: "", // ✅ Added
     phone: "",
     parentPhone1: "",
     parentPhone2: "",
     aadhaarCard: "",
     address: "",
+    email: "",
+    parentEmail: "",
   });
 
   const [viewMode, setViewMode] = useState("active");
@@ -134,7 +134,7 @@ export default function ManagePeople() {
     if (!API_URL) return;
     try {
       setFetchLoading(true);
-      const res = await axios.get(`${API_URL}/api/people/all`);
+      const res = await axios.get(`${API_URL}/api/people/`);
       console.log(res);
       if (res.data.success) setPeople(res.data.names || res.data.data || []);
       else toast.error("Failed to load people");
@@ -236,6 +236,8 @@ export default function ManagePeople() {
       parentPhone2,
       aadhaarCard,
       address,
+      email,
+      parentEmail
     } = formData;
 
     if (!name || !category || !phone)
@@ -254,6 +256,8 @@ export default function ManagePeople() {
       parentPhone2: parentPhone2 || null,
       aadhaarCard: aadhaarCard || null,
       address: address?.trim() || null,
+      email: email || null,
+      parentEmail: parentEmail || null,
     };
 
     try {
@@ -581,7 +585,7 @@ export default function ManagePeople() {
               Add Person
             </motion.button>
 
-            <motion.button
+            {/* <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowBulkUpload(true)}
@@ -589,7 +593,7 @@ export default function ManagePeople() {
             >
               <Upload className="w-5 h-5" />
               Bulk Upload
-            </motion.button>
+            </motion.button> */}
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -795,6 +799,11 @@ export default function ManagePeople() {
                 <div className="text-sm text-gray-600 font-mono">
                   {person.phone}
                 </div>
+                {/* {person.email && ( */}
+                  <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
+                    Email: {person.email}
+                  </div>
+                {/* )} */}
                 {person.aadhaarCard && (
                   <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
                     🆔 Aadhaar: {person.aadhaarCard}
@@ -929,10 +938,10 @@ export default function ManagePeople() {
                   </select>
                 </div>
 
-                {/* ✅ Email (always required) */}
+                {/* Email */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
-                    Email *
+                    Email
                   </label>
                   <input
                     type="email"
