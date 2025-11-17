@@ -309,9 +309,9 @@ export default function Verify() {
 
       {/* FOOTER */}
       <footer className="text-center text-sm text-gray-600 dark:text-gray-400 py-6">
-        <div className="flex items-center justify-center gap-2">
-          <Shield className="w-4 h-4 text-emerald-500" />
-          Secured by Nexcore Alliance | Code4Bharat © {new Date().getFullYear()}
+        <div className="bg-neutral-900 text-white px-8 py-6 text-center border-t-4 border-blue-600">
+          <p className="font-bold text-sm mb-1 uppercase tracking-widest">© 2024 Nexcore Alliance</p>
+          <p className="text-neutral-400 text-xs">All rights reserved. For queries, contact administration.</p>
         </div>
       </footer>
     </div>
