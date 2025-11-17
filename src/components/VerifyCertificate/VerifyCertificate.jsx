@@ -49,20 +49,75 @@ export default function VerifyCertificate() {
 
   const fetchCertificatePreview = async (id) => {
     setLoadingPreview(true);
+
+    try {
+      const certRes = await axios.get(
+        `${API_URL}/api/certificates/${id}/download/jpg`,
+        { responseType: "blob" }
+      );
+
+      setPreviewImage({
+        type: certRes.data.type,   // "image/jpeg"
+        url: URL.createObjectURL(certRes.data)
+      });
+
+    } catch (err) {
+      try {
+        const letterRes = await axios.get(
+          `${API_URL}/api/letters/${id}/download.pdf`,
+          { responseType: "blob" }
+        );
+
+        setPreviewImage({
+          type: letterRes.data.type,  // "application/pdf"
+          url: URL.createObjectURL(letterRes.data)
+        });
+
+      } catch (pdfErr) {
+        setPreviewImage(null);
+      }
+    }
+
+    setLoadingPreview(false);
+  };
+
+  const handleDownload = async (id) => {
+  try {
+    // Try downloading JPG
+    let res = await axios.get(
+      `${API_URL}/api/certificates/${id}/download/jpg`,
+      { responseType: "blob" }
+    );
+
+    const fileURL = URL.createObjectURL(res.data);
+    const link = document.createElement("a");
+    link.href = fileURL;
+    link.download = `${id}.jpg`;
+    link.click();
+    URL.revokeObjectURL(fileURL);
+    return;
+
+  } catch (err) {
+    // JPG failed → try PDF
     try {
       const res = await axios.get(
-        `${API_URL}/api/certificates/${id}/download/jpg`,
-        {
-          responseType: "blob",
-        }
+        `${API_URL}/api/letters/${id}/download.pdf`,
+        { responseType: "blob" }
       );
-      setPreviewImage(URL.createObjectURL(res.data));
-    } catch {
-      setPreviewImage(null);
-    } finally {
-      setLoadingPreview(false);
+      const fileURL = URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = `${id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(fileURL);
+      return;
+
+    } catch (err2) {
+      toast.error("Download not available!");
     }
-  };
+  }
+};
+
 
   const handleVerify = async (customId) => {
     const idToVerify = customId || verifyId.trim();
@@ -186,9 +241,8 @@ export default function VerifyCertificate() {
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                   transform: `rotate(${Math.random() * 360}deg)`,
-                  animation: `float ${
-                    1 + Math.random() * 3
-                  }s ease-in-out infinite`,
+                  animation: `float ${1 + Math.random() * 3
+                    }s ease-in-out infinite`,
                 }}
               />
             ))}
@@ -214,11 +268,10 @@ export default function VerifyCertificate() {
             whileTap={{ scale: 0.97 }}
             onClick={() => handleVerify()}
             disabled={isVerifying || !verifyId.trim()}
-            className={`px-8 py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all ${
-              isVerifying
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-lg"
-            }`}
+            className={`px-8 py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all ${isVerifying
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-lg"
+              }`}
           >
             {isVerifying ? (
               <>
@@ -240,19 +293,17 @@ export default function VerifyCertificate() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 30 }}
               transition={{ duration: 0.5 }}
-              className={`mt-10 rounded-2xl p-6 ${
-                verificationResult.valid
-                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200"
-                  : "bg-gradient-to-br from-red-50 to-pink-50 border border-red-200"
-              }`}
+              className={`mt-10 rounded-2xl p-6 ${verificationResult.valid
+                ? "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200"
+                : "bg-gradient-to-br from-red-50 to-pink-50 border border-red-200"
+                }`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div
-                  className={`p-4 rounded-xl ${
-                    verificationResult.valid
-                      ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                      : "bg-gradient-to-br from-red-500 to-pink-600"
-                  }`}
+                  className={`p-4 rounded-xl ${verificationResult.valid
+                    ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                    : "bg-gradient-to-br from-red-500 to-pink-600"
+                    }`}
                 >
                   {verificationResult.valid ? (
                     <CheckCircle className="w-8 h-8 text-white" />
@@ -261,9 +312,8 @@ export default function VerifyCertificate() {
                   )}
                 </div>
                 <h2
-                  className={`text-xl font-bold ${
-                    verificationResult.valid ? "text-green-800" : "text-red-800"
-                  }`}
+                  className={`text-xl font-bold ${verificationResult.valid ? "text-green-800" : "text-red-800"
+                    }`}
                 >
                   {verificationResult.valid
                     ? "Authentic Certificate"
@@ -324,13 +374,13 @@ export default function VerifyCertificate() {
                     <p className="text-gray-700 font-semibold">
                       {verificationResult.date
                         ? new Date(verificationResult.date).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )
                         : "N/A"}
                     </p>
                   </div>
@@ -351,24 +401,33 @@ export default function VerifyCertificate() {
                       <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
                     </div>
                   ) : previewImage ? (
-                    <motion.img
-                      src={previewImage}
-                      whileHover={{ scale: 1.02 }}
-                      className="rounded-2xl border border-emerald-100 shadow-xl"
-                      alt="Certificate"
-                      onClick={() => window.open(previewImage, "_blank")}
-                    />
+                    previewImage.type === "application/pdf" ? (
+                      <iframe
+                        src={`${previewImage.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                        className="w-full h-[500px] rounded-2xl border border-emerald-200 shadow-xl"
+                      />
+                    ) : (
+                      <motion.img
+                        src={previewImage.url}
+                        whileHover={{ scale: 1.02 }}
+                        className="rounded-2xl border border-emerald-100 shadow-xl"
+                        alt="Certificate Preview"
+                        onClick={() => window.open(previewImage.url, "_blank")}
+                      />
+                    )
                   ) : (
                     <div className="p-6 border border-dashed border-gray-300 text-center text-gray-600 rounded-xl">
                       Preview not available
                     </div>
                   )}
 
+
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <a
-                      href={`${API_URL}/api/certificates/${verificationResult.id}/download/pdf`}
-                      target="_blank"
-                      className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg flex items-center gap-2"
+                      // href={`${API_URL}/api/certificates/${verificationResult.id}/download/pdf`}
+                      // target="_blank"
+                      onClick={() => handleDownload(verificationResult.id)}
+                      className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg flex items-center gap-2 cursor-pointer"
                     >
                       <Download className="w-5 h-5" /> Download PDF
                     </a>
@@ -381,7 +440,7 @@ export default function VerifyCertificate() {
                     >
                       <Copy className="w-5 h-5" /> Copy Link
                     </button>
-                    <button
+                    {/* <button
                       onClick={() =>
                         window.open(
                           `https://www.linkedin.com/sharing/share-offsite/?url=${window.location.origin}${window.location.pathname}?id=${verificationResult.id}`,
@@ -391,7 +450,7 @@ export default function VerifyCertificate() {
                       className="px-6 py-3 bg-emerald-700 text-white rounded-xl font-semibold hover:shadow-lg flex items-center gap-2"
                     >
                       <Share2 className="w-5 h-5" /> Share
-                    </button>
+                    </button> */}
                   </div>
                 </>
               ) : (
