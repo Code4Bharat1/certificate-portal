@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { PlusCircle, Search, Sparkles, Users, FileText } from 'lucide-react';
+import { PlusCircle, Search, Sparkles, Users, FileText, ScrollText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function QuickActions() {
@@ -10,7 +10,8 @@ export default function QuickActions() {
   const handleCreateClick = () => router.push('/create-certificate');
   const handleVerifyClick = () => router.push('/verify-certificate');
   const handleManagePeopleClick = () => router.push('/manage-people');
-  const handleCreateLetterClick = () => router.push('/create-letter'); // ✅ New function
+  const handleCreateLetterClick = () => router.push('/create-letter');
+  const handleViewTCClick = () => router.push('/verify-t&c'); // FIXED
 
   const actions = [
     {
@@ -33,7 +34,7 @@ export default function QuickActions() {
     },
     {
       title: 'Manage People',
-      description: 'Add, edit, view, and remove participants from your database',
+      description: 'Add, edit, view, and remove participants',
       icon: Users,
       gradient: 'from-orange-500 to-red-600',
       hoverGradient: 'from-red-600 to-orange-500',
@@ -41,13 +42,22 @@ export default function QuickActions() {
       iconAnimation: 'group-hover:scale-110',
     },
     {
-      title: 'Create Letter', // ✅ New button
+      title: 'Create Letter',
       description: 'Design and generate official letters with ease',
       icon: FileText,
       gradient: 'from-indigo-500 to-cyan-600',
       hoverGradient: 'from-cyan-600 to-indigo-500',
       onClick: handleCreateLetterClick,
       iconAnimation: 'group-hover:rotate-6 group-hover:scale-110',
+    },
+    {
+      title: 'View T&C',
+      description: 'Review the terms and conditions for certificate issuance',
+      icon: ScrollText,
+      gradient: 'from-red-600 via-purple-600 to-pink-600',
+      hoverGradient: 'from-pink-600 via-purple-600 to-blue-600',
+      onClick: handleViewTCClick,
+      iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
     },
   ];
 
@@ -58,7 +68,7 @@ export default function QuickActions() {
       transition={{ delay: 0.3, duration: 0.6 }}
       className="relative bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl p-8 overflow-hidden border border-gray-100 mb-10 mt-10"
     >
-      {/* Decorative elements */}
+      {/* Background glows */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-full blur-3xl -z-0 animate-pulse" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-100/50 to-teal-100/50 rounded-full blur-3xl -z-0 animate-pulse" />
       <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-gradient-to-bl from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-0 animate-pulse" />
@@ -78,7 +88,7 @@ export default function QuickActions() {
         </div>
 
         {/* Action Buttons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {actions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -116,12 +126,12 @@ export default function QuickActions() {
           })}
         </div>
 
-        {/* Descriptions */}
+        {/* Descriptions aligned below cards */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6"
+          className="mt-8 grid grid-cols-1 md:grid-cols-5 gap-6"
         >
           {actions.map((action, index) => (
             <motion.div
