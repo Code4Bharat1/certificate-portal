@@ -117,6 +117,7 @@ export default function MarketingJunctionPage() {
 
   const handleDownloadPDF = async (cert) => {
     setProcessingItem(cert._id);
+    console.log(cert);
     try {
       const token = sessionStorage.getItem('authToken');
       if (!token) {
