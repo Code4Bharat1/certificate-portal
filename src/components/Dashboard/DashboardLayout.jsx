@@ -54,22 +54,22 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-orange-50 dark:from-gray-950 dark:via-blue-950 dark:to-orange-950">
       {/* Navbar */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white shadow-md"
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg border-b border-blue-200 dark:border-blue-800"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Portal
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
+                Portal
               </h1>
             </div>
 
@@ -80,9 +80,9 @@ export default function DashboardLayout({ children }) {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleProfileClick}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 text-white rounded-xl hover:shadow-lg transition-all"
               >
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                   <User className="w-5 h-5" />
                 </div>
                 <span className="hidden sm:inline font-medium">{userName}</span>
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }) {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowLogoutModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-700 dark:to-red-700 text-white rounded-xl hover:shadow-lg transition-all"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline font-medium">Logout</span>
@@ -115,25 +115,26 @@ export default function DashboardLayout({ children }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={() => setShowLogoutModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-6 w-80 text-center border border-white/30"
+              className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-96 text-center border-2 border-orange-200 dark:border-orange-800"
             >
-              <div className="flex justify-center mb-3">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shadow-inner">
-                  <AlertTriangle className="w-6 h-6 text-red-500" />
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/50 dark:to-red-900/50 flex items-center justify-center shadow-lg">
+                  <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
                 </div>
               </div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                 Confirm Logout
               </h2>
-              <p className="text-sm text-gray-600 mb-5">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 Are you sure you want to log out of the Admin Certificate Portal?
               </p>
               <div className="flex justify-center gap-3">
@@ -141,7 +142,7 @@ export default function DashboardLayout({ children }) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowLogoutModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-200/70 hover:bg-gray-300 text-gray-700 font-medium backdrop-blur-sm"
+                  className="px-6 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold backdrop-blur-sm transition-colors"
                 >
                   Cancel
                 </motion.button>
@@ -149,7 +150,7 @@ export default function DashboardLayout({ children }) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLogoutConfirm}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-medium shadow-md"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-700 dark:to-red-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
                   Yes, Logout
                 </motion.button>

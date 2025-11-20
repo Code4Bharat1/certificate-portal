@@ -106,82 +106,85 @@ export default function CategoryOverview() {
     {
       title: 'Marketing Junction',
       key: 'marketing-junction',
-      gradient: 'from-blue-500 via-blue-600 to-purple-600',
-      buttonTextColor: 'text-blue-600',
+      gradient: 'from-blue-600 via-blue-500 to-cyan-500',
+      darkGradient: 'dark:from-blue-700 dark:via-blue-600 dark:to-cyan-600',
+      buttonTextColor: 'text-blue-700',
       route: '/certificates/marketing-junction',
       icon: BarChart3
     },
     {
       title: 'Code4Bharat',
       key: 'code4bharat',
-      gradient: 'from-emerald-500 via-teal-600 to-cyan-600',
-      buttonTextColor: 'text-emerald-600',
+      gradient: 'from-orange-600 via-orange-500 to-amber-500',
+      darkGradient: 'dark:from-orange-700 dark:via-orange-600 dark:to-amber-600',
+      buttonTextColor: 'text-orange-700',
       route: '/certificates/code4bharat',
       icon: Code2
     },
     {
       title: 'BootCamp',
       key: 'BootCamp',
-      gradient: 'from-orange-500 via-red-500 to-pink-600',
-      buttonTextColor: 'text-orange-600',
+      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+      darkGradient: 'dark:from-blue-700 dark:via-indigo-700 dark:to-purple-700',
+      buttonTextColor: 'text-blue-700',
       route: '/certificates/bootcamp',
       icon: Rocket
     },
     {
       title: 'BVOC',
       key: 'BVOC',
-      gradient: 'from-violet-500 via-purple-600 to-indigo-600',
-      buttonTextColor: 'text-violet-600',
+      gradient: 'from-orange-600 via-red-600 to-pink-600',
+      darkGradient: 'dark:from-orange-700 dark:via-red-700 dark:to-pink-700',
+      buttonTextColor: 'text-orange-700',
       route: '/certificates/bvoc',
       icon: GraduationCap
     },
     {
       title: 'FSD',
       key: 'FSD',
-      gradient: 'from-amber-500 via-yellow-600 to-orange-500',
-      buttonTextColor: 'text-amber-600',
+      gradient: 'from-blue-500 via-indigo-500 to-blue-600',
+      darkGradient: 'dark:from-blue-600 dark:via-indigo-600 dark:to-blue-700',
+      buttonTextColor: 'text-blue-700',
       route: '/certificates/fsd',
       icon: Zap
     },
     {
       title: 'HR',
       key: 'HR',
-      gradient: 'from-rose-500 via-pink-600 to-fuchsia-600',
-      buttonTextColor: 'text-rose-600',
+      gradient: 'from-orange-600 via-orange-500 to-red-500',
+      darkGradient: 'dark:from-orange-700 dark:via-orange-600 dark:to-red-600',
+      buttonTextColor: 'text-orange-700',
       route: '/certificates/hr',
       icon: Users
     },
     {
       title: 'Digital Marketing',
       key: 'DM',
-      gradient: 'from-sky-500 via-cyan-600 to-blue-600',
-      buttonTextColor: 'text-sky-600',
+      gradient: 'from-cyan-600 via-blue-600 to-blue-700',
+      darkGradient: 'dark:from-cyan-700 dark:via-blue-700 dark:to-blue-800',
+      buttonTextColor: 'text-cyan-700',
       route: '/certificates/dm',
       icon: Megaphone
     },
     {
       title: 'Operations Department',
       key: 'Operations',
-      gradient: 'from-gray-500 via-slate-600 to-gray-700',
-      buttonTextColor: 'text-gray-600',
+      gradient: 'from-gray-600 via-slate-600 to-gray-700',
+      darkGradient: 'dark:from-gray-700 dark:via-slate-700 dark:to-gray-800',
+      buttonTextColor: 'text-gray-700',
       route: '/certificates/operations',
       icon: Settings
     },
-    // {
-    //   title: 'Monthly Report',
-    //   key: 'MonthlyReport',
-    //   gradient: 'from-teal-500 via-emerald-600 to-green-600',
-    //   buttonTextColor: 'text-teal-600',
-    //   route: '/certificates/monthly-report',
-    //   icon: Calendar
-    // }
   ];
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-          <div key={i} className="bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-3xl h-72 shadow-lg"></div>
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div 
+            key={i} 
+            className="bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-900 animate-pulse rounded-2xl h-72 shadow-lg"
+          ></div>
         ))}
       </div>
     );
@@ -189,7 +192,7 @@ export default function CategoryOverview() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-red-700 shadow-md">
+      <div className="bg-red-50 dark:bg-red-950 border-2 border-red-200 dark:border-red-800 rounded-2xl p-6 text-red-700 dark:text-red-300 shadow-lg">
         <div className="flex items-center gap-3">
           <AlertCircle size={28} />
           <div>
@@ -214,7 +217,7 @@ export default function CategoryOverview() {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/templates')}
-          className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 group"
+          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-600 dark:from-blue-700 dark:via-indigo-700 dark:to-orange-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
         >
           <FileText size={24} className="group-hover:rotate-12 transition-transform duration-300" />
           <span>Manage Templates</span>
@@ -239,7 +242,7 @@ export default function CategoryOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index, duration: 0.4 }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className={`bg-gradient-to-br ${category.gradient} rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden group`}
+              className={`bg-gradient-to-br ${category.gradient} ${category.darkGradient} rounded-2xl shadow-lg p-8 text-white relative overflow-hidden group`}
             >
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-10">
@@ -247,44 +250,51 @@ export default function CategoryOverview() {
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
               </div>
 
+              {/* Animated Glow Effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-white rounded-full blur-3xl"></div>
+              </div>
+
               {/* Content */}
               <div className="relative z-10">
                 {/* Header with Icon */}
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold">{category.title}</h3>
-                  <IconComponent 
-                    size={48} 
-                    className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" 
-                  />
+                  <h3 className="text-2xl font-bold drop-shadow-md">{category.title}</h3>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 group-hover:bg-white/30 transition-all duration-300">
+                    <IconComponent 
+                      size={40} 
+                      className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" 
+                    />
+                  </div>
                 </div>
 
                 {/* Stats */}
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm rounded-xl p-3 hover:bg-white/20 transition-all duration-300">
-                    <span className="text-sm font-medium">Total Certificates</span>
-                    <span className="text-2xl font-bold">{stats[category.key]?.total || 0}</span>
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between items-center bg-white/15 backdrop-blur-sm rounded-xl p-3.5 hover:bg-white/25 transition-all duration-300 border border-white/10">
+                    <span className="text-sm font-semibold">Total Certificates</span>
+                    <span className="text-2xl font-black">{stats[category.key]?.total || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm rounded-xl p-3 hover:bg-white/20 transition-all duration-300">
-                    <span className="text-sm font-medium">Downloaded</span>
-                    <span className="text-2xl font-bold text-green-200">{stats[category.key]?.downloaded || 0}</span>
+                  <div className="flex justify-between items-center bg-white/15 backdrop-blur-sm rounded-xl p-3.5 hover:bg-white/25 transition-all duration-300 border border-white/10">
+                    <span className="text-sm font-semibold">Downloaded</span>
+                    <span className="text-2xl font-black text-green-100">{stats[category.key]?.downloaded || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm rounded-xl p-3 hover:bg-white/20 transition-all duration-300">
-                    <span className="text-sm font-medium">Pending</span>
-                    <span className="text-2xl font-bold text-yellow-200">{stats[category.key]?.pending || 0}</span>
+                  <div className="flex justify-between items-center bg-white/15 backdrop-blur-sm rounded-xl p-3.5 hover:bg-white/25 transition-all duration-300 border border-white/10">
+                    <span className="text-sm font-semibold">Pending</span>
+                    <span className="text-2xl font-black text-yellow-100">{stats[category.key]?.pending || 0}</span>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mb-6">
-                  <div className="flex justify-between text-xs mb-2 opacity-90">
-                    <span>Progress</span>
-                    <span>
+                  <div className="flex justify-between text-xs mb-2 opacity-90 font-medium">
+                    <span>Completion Progress</span>
+                    <span className="font-bold">
                       {stats[category.key]?.total > 0 
                         ? Math.round((stats[category.key]?.downloaded / stats[category.key]?.total) * 100) 
                         : 0}%
                     </span>
                   </div>
-                  <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-white/25 rounded-full h-2.5 overflow-hidden backdrop-blur-sm">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ 
@@ -293,8 +303,10 @@ export default function CategoryOverview() {
                           : '0%' 
                       }}
                       transition={{ delay: 0.5 + (0.1 * index), duration: 0.8, ease: "easeOut" }}
-                      className="bg-white h-full rounded-full shadow-lg"
-                    />
+                      className="bg-white h-full rounded-full shadow-lg relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                    </motion.div>
                   </div>
                 </div>
 
@@ -303,7 +315,7 @@ export default function CategoryOverview() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => router.push(category.route)}
-                  className={`w-full bg-white ${category.buttonTextColor} font-bold py-3 rounded-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center gap-2 group/button`}
+                  className={`w-full bg-white ${category.buttonTextColor} font-bold py-3.5 rounded-xl hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group/button`}
                 >
                   <span>View All Details</span>
                   <ArrowRight size={20} className="group-hover/button:translate-x-1 transition-transform duration-300" />
@@ -313,6 +325,21 @@ export default function CategoryOverview() {
           );
         })}
       </motion.div>
+
+      {/* Add shimmer animation to your global CSS or tailwind config */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
     </div>
   );
 }

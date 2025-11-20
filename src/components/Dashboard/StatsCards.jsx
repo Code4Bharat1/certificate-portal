@@ -59,7 +59,7 @@ const StatCard = ({
   hr,
   bc,
   bvoc,
-  dm ,
+  dm,
   operations,
   monthlyReport,
   gradient,
@@ -76,7 +76,7 @@ const StatCard = ({
     const category = getCategory(key);
     return (
       <div 
-        className="flex justify-between items-center p-2 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-lg cursor-pointer transition-all duration-200 group border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+        className="flex justify-between items-center p-2.5 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl cursor-pointer transition-all duration-200 group border border-transparent hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-sm"
         onClick={() => category && router.push(category.route)}
       >
         <span className="text-gray-700 dark:text-gray-300 font-medium">{label}:</span>
@@ -85,7 +85,7 @@ const StatCard = ({
             {value}
           </span>
           {value > 0 && (
-            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-gray-500" />
+            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-500 dark:text-orange-500" />
           )}
         </div>
       </div>
@@ -98,36 +98,33 @@ const StatCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className={`${bg} rounded-3xl shadow-xl p-6 border-2 ${glowColor} relative overflow-hidden group`}
+      className={`${bg} rounded-2xl shadow-lg p-6 border-2 ${glowColor} relative overflow-hidden group`}
     >
-      {/* Animated background gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <div className={`${iconBg} p-4 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden`}>
+          <div className={`${iconBg} p-3.5 rounded-xl flex items-center justify-center shadow-md relative overflow-hidden`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-20`}></div>
-            <Icon className="w-7 h-7 text-gray-800 dark:text-white relative z-10" />
+            <Icon className="w-6 h-6 text-gray-800 dark:text-white relative z-10" />
           </div>
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">{title}</h3>
+        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">{title}</h3>
 
         <div className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-6 drop-shadow-sm`}>
           <AnimatedCounter value={total} />
         </div>
 
-        {/* Enhanced Category Stats Grid */}
         <div className="space-y-2">
-          {createCategoryRow("MJ", mj, "marketing-junction", "from-blue-500 to-purple-600")}
-          {createCategoryRow("C4B", c4b, "code4bharat", "from-emerald-500 to-cyan-600")}
-          {createCategoryRow("FSD", fsd, "fsd", "from-amber-500 to-orange-500")}
-          {createCategoryRow("HR", hr, "hr", "from-rose-500 to-fuchsia-600")}
-          {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-orange-500 to-pink-600")}
-          {createCategoryRow("BVOC", bvoc, "bvoc", "from-violet-500 to-indigo-600")}
-          {createCategoryRow("DM", dm, "dm", "from-sky-500 to-blue-600")}
-          {/* {createCategoryRow("Monthly Report", monthlyReport, "monthlyreport", "from-teal-500 to-green-600")} */}
-          {createCategoryRow("Operations", operations, "operations", "from-gray-500 to-gray-700")}
+          {createCategoryRow("MJ", mj, "marketing-junction", "from-blue-600 to-cyan-500")}
+          {createCategoryRow("C4B", c4b, "code4bharat", "from-orange-500 to-amber-500")}
+          {createCategoryRow("FSD", fsd, "fsd", "from-blue-500 to-indigo-600")}
+          {createCategoryRow("HR", hr, "hr", "from-orange-600 to-red-500")}
+          {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-blue-600 to-purple-600")}
+          {createCategoryRow("BVOC", bvoc, "bvoc", "from-orange-500 to-pink-600")}
+          {createCategoryRow("DM", dm, "dm", "from-cyan-500 to-blue-600")}
+          {createCategoryRow("Operations", operations, "operations", "from-gray-600 to-gray-800")}
         </div>
       </div>
     </motion.div>
@@ -140,20 +137,19 @@ const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, b
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1 }}
     whileHover={{ y: -8, transition: { duration: 0.3 } }}
-    className={`${bg} rounded-3xl shadow-xl p-6 border-2 ${glowColor} relative overflow-hidden group`}
+    className={`${bg} rounded-2xl shadow-lg p-6 border-2 ${glowColor} relative overflow-hidden group`}
   >
-    {/* Animated background gradient */}
     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
     
     <div className="relative z-10">
       <div className="flex items-center justify-between mb-4">
-        <div className={`${iconBg} p-4 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden`}>
+        <div className={`${iconBg} p-3.5 rounded-xl flex items-center justify-center shadow-md relative overflow-hidden`}>
           <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-20`}></div>
-          <Icon className="w-7 h-7 text-gray-800 dark:text-white relative z-10" />
+          <Icon className="w-6 h-6 text-gray-800 dark:text-white relative z-10" />
         </div>
       </div>
 
-      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">{title}</h3>
+      <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">{title}</h3>
 
       <div className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-2 drop-shadow-sm`}>
         <AnimatedCounter value={operations} />
@@ -161,14 +157,14 @@ const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, b
       </div>
 
       <div className="space-y-3 mt-4">
-        <div className="flex justify-between items-center p-2 bg-white/50 dark:bg-gray-700/30 rounded-lg">
-          <span className="text-gray-700 dark:text-gray-300 font-medium">Total Certificates</span>
+        <div className="flex justify-between items-center p-2.5 bg-white/50 dark:bg-gray-700/40 rounded-xl">
+          <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">Total Certificates</span>
           <span className={`font-bold text-xl bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
             {certificates}
           </span>
         </div>
-        <div className="flex justify-between items-center p-2 bg-white/50 dark:bg-gray-700/30 rounded-lg">
-          <span className="text-gray-700 dark:text-gray-300 font-medium">Avg per operation</span>
+        <div className="flex justify-between items-center p-2.5 bg-white/50 dark:bg-gray-700/40 rounded-xl">
+          <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">Avg per operation</span>
           <span className={`font-bold text-xl bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
             {operations > 0 ? Math.round(certificates / operations) : 0}
           </span>
@@ -197,44 +193,43 @@ const CreationRatioCard = ({ individual, bulk, total, index }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 rounded-3xl shadow-2xl p-6 border-2 border-purple-500/30 relative overflow-hidden group"
+      className="bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50 dark:from-slate-900 dark:via-blue-950 dark:to-orange-950 rounded-2xl shadow-lg p-6 border-2 border-blue-200 dark:border-blue-800 relative overflow-hidden group"
     >
-      {/* Animated particles effect */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500 rounded-full filter blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-pink-500 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-orange-400 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <div className="bg-gradient-to-br from-indigo-500 to-pink-600 p-4 rounded-2xl flex items-center justify-center shadow-2xl">
-            <Package className="w-7 h-7 text-white relative z-10" />
+          <div className="bg-gradient-to-br from-blue-500 to-orange-500 p-3.5 rounded-xl flex items-center justify-center shadow-md">
+            <Package className="w-6 h-6 text-white relative z-10" />
           </div>
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">Creation Ratio</h3>
+        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">Creation Ratio</h3>
 
-        <div className="text-5xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6 drop-shadow-lg">
+        <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent mb-6 drop-shadow-sm">
           <AnimatedCounter value={total} />
         </div>
 
         <div className="space-y-4">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-300">Individual</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Individual</span>
               <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-blue-400">{individual}</span>
-                <span className="text-sm font-medium text-blue-300 bg-blue-500/20 px-3 py-1 rounded-full">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{individual}</span>
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">
                   {individualPercentage}%
                 </span>
               </div>
             </div>
-            <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
+            <div className="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${individualPercentage}%` }}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-500 h-3 rounded-full shadow-lg relative"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full shadow-md relative"
               >
                 <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
               </motion.div>
@@ -243,20 +238,20 @@ const CreationRatioCard = ({ individual, bulk, total, index }) => {
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-300">Bulk</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Bulk</span>
               <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-purple-400">{bulk}</span>
-                <span className="text-sm font-medium text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">
+                <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">{bulk}</span>
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full">
                   {bulkPercentage}%
                 </span>
               </div>
             </div>
-            <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
+            <div className="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${bulkPercentage}%` }}
                 transition={{ duration: 1, delay: 0.7 }}
-                className="bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 h-3 rounded-full shadow-lg relative"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full shadow-md relative"
               >
                 <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
               </motion.div>
@@ -277,10 +272,10 @@ export default function StatsCards() {
       total: 0,
       mj: 0,
       c4b: 0,
-      gradient: 'from-blue-500 via-blue-600 to-indigo-600',
-      bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950 dark:via-indigo-950 dark:to-blue-900',
+      gradient: 'from-blue-600 via-blue-500 to-cyan-500',
+      bg: 'bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-950 dark:via-cyan-950 dark:to-blue-900',
       iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-      glowColor: 'border-blue-300 dark:border-blue-700',
+      glowColor: 'border-blue-200 dark:border-blue-800',
     },
     {
       title: 'Last Month',
@@ -288,10 +283,10 @@ export default function StatsCards() {
       total: 0,
       mj: 0,
       c4b: 0,
-      gradient: 'from-purple-500 via-fuchsia-600 to-pink-600',
-      bg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-100 dark:from-purple-950 dark:via-fuchsia-950 dark:to-pink-900',
-      iconBg: 'bg-purple-100 dark:bg-purple-900/50',
-      glowColor: 'border-purple-300 dark:border-purple-700',
+      gradient: 'from-orange-600 via-orange-500 to-amber-500',
+      bg: 'bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900',
+      iconBg: 'bg-orange-100 dark:bg-orange-900/50',
+      glowColor: 'border-orange-200 dark:border-orange-800',
     },
     {
       title: 'Downloaded',
@@ -299,10 +294,10 @@ export default function StatsCards() {
       total: 0,
       mj: 0,
       c4b: 0,
-      gradient: 'from-emerald-500 via-green-600 to-teal-600',
-      bg: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 dark:from-emerald-950 dark:via-green-950 dark:to-teal-900',
-      iconBg: 'bg-green-100 dark:bg-green-900/50',
-      glowColor: 'border-emerald-300 dark:border-emerald-700',
+      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+      bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-900',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50',
+      glowColor: 'border-blue-200 dark:border-blue-800',
     },
     {
       title: 'Pending',
@@ -310,10 +305,10 @@ export default function StatsCards() {
       total: 0,
       mj: 0,
       c4b: 0,
-      gradient: 'from-amber-500 via-orange-600 to-red-600',
-      bg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-red-100 dark:from-amber-950 dark:via-orange-950 dark:to-red-900',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
-      glowColor: 'border-amber-300 dark:border-amber-700',
+      gradient: 'from-orange-600 via-red-600 to-pink-600',
+      bg: 'bg-gradient-to-br from-orange-50 via-red-50 to-pink-100 dark:from-orange-950 dark:via-red-950 dark:to-pink-900',
+      iconBg: 'bg-orange-100 dark:bg-orange-900/50',
+      glowColor: 'border-orange-200 dark:border-orange-800',
     },
   ]);
 
@@ -333,10 +328,10 @@ export default function StatsCards() {
   const [error, setError] = useState(null);
   
   const categories = [
-     {
+    {
       title: 'Marketing Junction',
       key: 'marketing-junction',
-      gradient: 'from-blue-500 via-blue-600 to-purple-600',
+      gradient: 'from-blue-600 to-cyan-500',
       buttonTextColor: 'text-blue-600',
       route: '/certificates/marketing-junction',
       icon: BarChart3
@@ -344,55 +339,55 @@ export default function StatsCards() {
     {
       title: 'Code4Bharat',
       key: 'code4bharat',
-      gradient: 'from-emerald-500 via-teal-600 to-cyan-600',
-      buttonTextColor: 'text-emerald-600',
+      gradient: 'from-orange-500 to-amber-500',
+      buttonTextColor: 'text-orange-600',
       route: '/certificates/code4bharat',
       icon: Code2
     },
     {
       title: 'BootCamp',
       key: 'BootCamp',
-      gradient: 'from-orange-500 via-red-500 to-pink-600',
-      buttonTextColor: 'text-orange-600',
+      gradient: 'from-blue-600 to-purple-600',
+      buttonTextColor: 'text-blue-600',
       route: '/certificates/bootcamp',
       icon: Rocket
     },
     {
       title: 'BVOC',
       key: 'BVOC',
-      gradient: 'from-violet-500 via-purple-600 to-indigo-600',
-      buttonTextColor: 'text-violet-600',
+      gradient: 'from-orange-500 to-pink-600',
+      buttonTextColor: 'text-orange-600',
       route: '/certificates/bvoc',
       icon: GraduationCap
     },
     {
       title: 'FSD',
       key: 'FSD',
-      gradient: 'from-amber-500 via-yellow-600 to-orange-500',
-      buttonTextColor: 'text-amber-600',
+      gradient: 'from-blue-500 to-indigo-600',
+      buttonTextColor: 'text-blue-600',
       route: '/certificates/fsd',
       icon: Zap
     },
     {
       title: 'HR',
       key: 'HR',
-      gradient: 'from-rose-500 via-pink-600 to-fuchsia-600',
-      buttonTextColor: 'text-rose-600',
+      gradient: 'from-orange-600 to-red-500',
+      buttonTextColor: 'text-orange-600',
       route: '/certificates/hr',
       icon: Users
     },
     {
       title: 'Digital Marketing',
       key: 'DM',
-      gradient: 'from-sky-500 via-cyan-600 to-blue-600',
-      buttonTextColor: 'text-sky-600',
+      gradient: 'from-cyan-500 to-blue-600',
+      buttonTextColor: 'text-cyan-600',
       route: '/certificates/dm',
       icon: Megaphone
     },
     {
       title: 'Operations Department',
       key: 'Operations',
-      gradient: 'from-gray-500 via-slate-600 to-gray-700',
+      gradient: 'from-gray-600 to-gray-800',
       buttonTextColor: 'text-gray-600',
       route: '/certificates/operations',
       icon: Settings
@@ -400,7 +395,7 @@ export default function StatsCards() {
     {
       title: 'Monthly Report',
       key: 'MonthlyReport',
-      gradient: 'from-teal-500 via-emerald-600 to-green-600',
+      gradient: 'from-teal-500 to-emerald-600',
       buttonTextColor: 'text-teal-600',
       route: '/certificates/monthly-report',
       icon: Calendar
@@ -427,80 +422,81 @@ export default function StatsCards() {
 
       const data = response.data.data;
 
-     setStats([
-  {
-    title: 'Last 7 Days',
-    icon: Calendar,
-    total: data.last7Days?.total || 0,
-    mj: data.last7Days?.marketingJunction || 0,
-    c4b: data.last7Days?.code4bharat || 0,
-    fsd: data.last7Days?.FSD || 0,
-    hr: data.last7Days?.HR || 0,
-    bc: data.last7Days?.BOOTCAMP || 0,
-    bvoc: data.last7Days?.BVOC || 0,
-    dm: data.last7Days?.DM || 0,
-    operations: data.last7Days?.OD || 0,  // Changed from Operations to OD
-    monthlyReport: data.last7Days?.MonthlyReport || 0,
-    gradient: 'from-blue-500 via-blue-600 to-indigo-600',
-    bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950 dark:via-indigo-950 dark:to-blue-900',
-    iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-    glowColor: 'border-blue-300 dark:border-blue-700',
-  },
-  {
-    title: 'Last Month',
-    icon: TrendingUp,
-    total: data.lastMonth?.total || 0,
-    mj: data.lastMonth?.marketingJunction || 0,
-    c4b: data.lastMonth?.code4bharat || 0,
-    fsd: data.lastMonth?.FSD || 0,
-    hr: data.lastMonth?.HR || 0,
-    bc: data.lastMonth?.BOOTCAMP || 0,
-    bvoc: data.lastMonth?.BVOC || 0,
-    dm: data.lastMonth?.DM || 0,
-    operations: data.lastMonth?.OD || 0,  // Changed from Operations to OD
-    monthlyReport: data.lastMonth?.MonthlyReport || 0,
-    gradient: 'from-purple-500 via-fuchsia-600 to-pink-600',
-    bg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-100 dark:from-purple-950 dark:via-fuchsia-950 dark:to-pink-900',
-    iconBg: 'bg-purple-100 dark:bg-purple-900/50',
-    glowColor: 'border-purple-300 dark:border-purple-700',
-  },
-  {
-    title: 'Downloaded',
-    icon: Download,
-    total: data.downloaded?.total || 0,
-    mj: data.downloaded?.marketingJunction || 0,
-    c4b: data.downloaded?.code4bharat || 0,
-    fsd: data.downloaded?.FSD || 0,
-    hr: data.downloaded?.HR || 0,
-    bc: data.downloaded?.BOOTCAMP || 0,
-    bvoc: data.downloaded?.BVOC || 0,
-    dm: data.downloaded?.DM || 0,
-    operations: data.downloaded?.OD || 0,  // Changed from Operations to OD
-    monthlyReport: data.downloaded?.MonthlyReport || 0,
-    gradient: 'from-emerald-500 via-green-600 to-teal-600',
-    bg: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 dark:from-emerald-950 dark:via-green-950 dark:to-teal-900',
-    iconBg: 'bg-green-100 dark:bg-green-900/50',
-    glowColor: 'border-emerald-300 dark:border-emerald-700',
-  },
-  {
-    title: 'Pending',
-    icon: Clock,
-    total: data.pending?.total || 0,
-    mj: data.pending?.marketingJunction || 0,
-    c4b: data.pending?.code4bharat || 0,
-    fsd: data.pending?.FSD || 0,
-    hr: data.pending?.HR || 0,
-    bc: data.pending?.BOOTCAMP || 0,
-    bvoc: data.pending?.BVOC || 0,
-    dm: data.pending?.DM || 0,
-    operations: data.pending?.OD || 0,  // Changed from Operations to OD
-    monthlyReport: data.pending?.MonthlyReport || 0,
-    gradient: 'from-amber-500 via-orange-600 to-red-600',
-    bg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-red-100 dark:from-amber-950 dark:via-orange-950 dark:to-red-900',
-    iconBg: 'bg-amber-100 dark:bg-amber-900/50',
-    glowColor: 'border-amber-300 dark:border-amber-700',
-  },
-]);
+      setStats([
+        {
+          title: 'Last 7 Days',
+          icon: Calendar,
+          total: data.last7Days?.total || 0,
+          mj: data.last7Days?.marketingJunction || 0,
+          c4b: data.last7Days?.code4bharat || 0,
+          fsd: data.last7Days?.FSD || 0,
+          hr: data.last7Days?.HR || 0,
+          bc: data.last7Days?.BOOTCAMP || 0,
+          bvoc: data.last7Days?.BVOC || 0,
+          dm: data.last7Days?.DM || 0,
+          operations: data.last7Days?.OD || 0,
+          monthlyReport: data.last7Days?.MonthlyReport || 0,
+          gradient: 'from-blue-600 via-blue-500 to-cyan-500',
+          bg: 'bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-950 dark:via-cyan-950 dark:to-blue-900',
+          iconBg: 'bg-blue-100 dark:bg-blue-900/50',
+          glowColor: 'border-blue-200 dark:border-blue-800',
+        },
+        {
+          title: 'Last Month',
+          icon: TrendingUp,
+          total: data.lastMonth?.total || 0,
+          mj: data.lastMonth?.marketingJunction || 0,
+          c4b: data.lastMonth?.code4bharat || 0,
+          fsd: data.lastMonth?.FSD || 0,
+          hr: data.lastMonth?.HR || 0,
+          bc: data.lastMonth?.BOOTCAMP || 0,
+          bvoc: data.lastMonth?.BVOC || 0,
+          dm: data.lastMonth?.DM || 0,
+          operations: data.lastMonth?.OD || 0,
+          monthlyReport: data.lastMonth?.MonthlyReport || 0,
+          gradient: 'from-orange-600 via-orange-500 to-amber-500',
+          bg: 'bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900',
+          iconBg: 'bg-orange-100 dark:bg-orange-900/50',
+          glowColor: 'border-orange-200 dark:border-orange-800',
+        },
+        {
+          title: 'Downloaded',
+          icon: Download,
+          total: data.downloaded?.total || 0,
+          mj: data.downloaded?.marketingJunction || 0,
+          c4b: data.downloaded?.code4bharat || 0,
+          fsd: data.downloaded?.FSD || 0,
+          hr: data.downloaded?.HR || 0,
+          bc: data.downloaded?.BOOTCAMP || 0,
+          bvoc: data.downloaded?.BVOC || 0,
+          dm: data.downloaded?.DM || 0,
+          operations: data.downloaded?.OD || 0,
+          monthlyReport: data.downloaded?.MonthlyReport || 0,
+          gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+          bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-900',
+          iconBg: 'bg-blue-100 dark:bg-blue-900/50',
+          glowColor: 'border-blue-200 dark:border-blue-800',
+        },
+        {
+          title: 'Pending',
+          icon: Clock,
+          total: data.pending?.total || 0,
+          mj: data.pending?.marketingJunction || 0,
+          c4b: data.pending?.code4bharat || 0,
+          fsd: data.pending?.FSD || 0,
+          hr: data.pending?.HR || 0,
+          bc: data.pending?.BOOTCAMP || 0,
+          bvoc: data.pending?.BVOC || 0,
+          dm: data.pending?.DM || 0,
+          operations: data.pending?.OD || 0,
+          monthlyReport: data.pending?.MonthlyReport || 0,
+          gradient: 'from-orange-600 via-red-600 to-pink-600',
+          bg: 'bg-gradient-to-br from-orange-50 via-red-50 to-pink-100 dark:from-orange-950 dark:via-red-950 dark:to-pink-900',
+          iconBg: 'bg-orange-100 dark:bg-orange-900/50',
+          glowColor: 'border-orange-200 dark:border-orange-800',
+        },
+      ]);
+
       if (data.bulk) {
         setBulkStats(data.bulk);
       }
@@ -528,10 +524,10 @@ export default function StatsCards() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-xl p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
+              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
             >
-              <div className="h-16 bg-gray-300 dark:bg-gray-700 rounded-2xl mb-4"></div>
-              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
+              <div className="h-14 bg-gray-300 dark:bg-gray-700 rounded-xl mb-4"></div>
+              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-1/2"></div>
               <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded mb-4"></div>
               <div className="space-y-2">
                 <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
@@ -546,10 +542,10 @@ export default function StatsCards() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={`bulk-${i}`}
-              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-xl p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
+              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
             >
-              <div className="h-16 bg-gray-300 dark:bg-gray-700 rounded-2xl mb-4"></div>
-              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
+              <div className="h-14 bg-gray-300 dark:bg-gray-700 rounded-xl mb-4"></div>
+              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-1/2"></div>
               <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded mb-4"></div>
               <div className="space-y-2">
                 <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
@@ -564,14 +560,14 @@ export default function StatsCards() {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-2 border-red-300 dark:border-red-700 rounded-3xl p-8 text-center shadow-2xl">
+      <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-2 border-red-300 dark:border-red-700 rounded-2xl p-8 text-center shadow-lg">
         <div className="bg-red-100 dark:bg-red-900/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
           <RefreshCw className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
         <p className="text-red-700 dark:text-red-300 mb-6 text-lg font-semibold">{error}</p>
         <button
           onClick={fetchStats}
-          className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
         >
           <RefreshCw className="w-5 h-5" />
           Retry
@@ -582,7 +578,6 @@ export default function StatsCards() {
 
   return (
     <>
-      {/* Regular Stats - First Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => (
           <StatCard 
@@ -595,17 +590,16 @@ export default function StatsCards() {
         ))}
       </div>
 
-      {/* Bulk Stats - Second Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <BulkStatCard
           title="Bulk Generated (7D)"
           icon={Layers}
           operations={bulkStats.last7Days.operations}
           certificates={bulkStats.last7Days.certificates}
-          gradient="from-cyan-500 via-cyan-600 to-blue-600"
+          gradient="from-cyan-500 to-blue-600"
           bg="bg-gradient-to-br from-cyan-50 via-blue-50 to-cyan-100 dark:from-cyan-950 dark:via-blue-950 dark:to-cyan-900"
           iconBg="bg-cyan-100 dark:bg-cyan-900/50"
-          glowColor="border-cyan-300 dark:border-cyan-700"
+          glowColor="border-cyan-200 dark:border-cyan-800"
           index={0}
         />
         <BulkStatCard
@@ -613,10 +607,10 @@ export default function StatsCards() {
           icon={Layers}
           operations={bulkStats.lastMonth.operations}
           certificates={bulkStats.lastMonth.certificates}
-          gradient="from-teal-500 via-emerald-600 to-green-600"
-          bg="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-100 dark:from-teal-950 dark:via-emerald-950 dark:to-green-900"
-          iconBg="bg-teal-100 dark:bg-teal-900/50"
-          glowColor="border-teal-300 dark:border-teal-700"
+          gradient="from-orange-500 to-amber-600"
+          bg="bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900"
+          iconBg="bg-orange-100 dark:bg-orange-900/50"
+          glowColor="border-orange-200 dark:border-orange-800"
           index={1}
         />
         <BulkStatCard
@@ -624,10 +618,10 @@ export default function StatsCards() {
           icon={Download}
           operations={bulkStats.downloads.operations}
           certificates={bulkStats.downloads.certificates}
-          gradient="from-emerald-500 via-green-600 to-lime-600"
-          bg="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-100 dark:from-emerald-950 dark:via-green-950 dark:to-lime-900"
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          glowColor="border-emerald-300 dark:border-emerald-700"
+          gradient="from-blue-600 to-indigo-600"
+          bg="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950 dark:via-indigo-950 dark:to-blue-900"
+          iconBg="bg-blue-100 dark:bg-blue-900/50"
+          glowColor="border-blue-200 dark:border-blue-800"
           index={2}
         />
         <CreationRatioCard

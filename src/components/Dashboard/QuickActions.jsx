@@ -11,15 +11,15 @@ export default function QuickActions() {
   const handleVerifyClick = () => router.push('/verify-certificate');
   const handleManagePeopleClick = () => router.push('/manage-people');
   const handleCreateLetterClick = () => router.push('/create-letter');
-  const handleViewTCClick = () => router.push('/verify-t&c'); // FIXED
+  const handleViewTCClick = () => router.push('/verify-t&c');
 
   const actions = [
     {
       title: 'Create Certificate',
       description: 'Generate new certificates for completed courses',
       icon: PlusCircle,
-      gradient: 'from-blue-600 via-purple-600 to-pink-600',
-      hoverGradient: 'from-pink-600 via-purple-600 to-blue-600',
+      gradient: 'from-blue-600 via-blue-500 to-cyan-500',
+      hoverGradient: 'from-cyan-500 via-blue-500 to-blue-600',
       onClick: handleCreateClick,
       iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
     },
@@ -27,8 +27,8 @@ export default function QuickActions() {
       title: 'Verify Certificate',
       description: 'Verify the authenticity of issued certificates',
       icon: Search,
-      gradient: 'from-green-500 to-emerald-600',
-      hoverGradient: 'from-emerald-600 to-green-500',
+      gradient: 'from-orange-600 via-orange-500 to-amber-500',
+      hoverGradient: 'from-amber-500 via-orange-500 to-orange-600',
       onClick: handleVerifyClick,
       iconAnimation: 'group-hover:rotate-12 group-hover:scale-110',
     },
@@ -36,8 +36,8 @@ export default function QuickActions() {
       title: 'Manage People',
       description: 'Add, edit, view, and remove participants',
       icon: Users,
-      gradient: 'from-orange-500 to-red-600',
-      hoverGradient: 'from-red-600 to-orange-500',
+      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+      hoverGradient: 'from-purple-600 via-indigo-600 to-blue-600',
       onClick: handleManagePeopleClick,
       iconAnimation: 'group-hover:scale-110',
     },
@@ -45,8 +45,8 @@ export default function QuickActions() {
       title: 'Create Letter',
       description: 'Design and generate official letters with ease',
       icon: FileText,
-      gradient: 'from-indigo-500 to-cyan-600',
-      hoverGradient: 'from-cyan-600 to-indigo-500',
+      gradient: 'from-orange-600 via-red-600 to-pink-600',
+      hoverGradient: 'from-pink-600 via-red-600 to-orange-600',
       onClick: handleCreateLetterClick,
       iconAnimation: 'group-hover:rotate-6 group-hover:scale-110',
     },
@@ -54,8 +54,8 @@ export default function QuickActions() {
       title: 'View T&C',
       description: 'Review the terms and conditions for certificate issuance',
       icon: ScrollText,
-      gradient: 'from-red-600 via-purple-600 to-pink-600',
-      hoverGradient: 'from-pink-600 via-purple-600 to-blue-600',
+      gradient: 'from-blue-700 via-blue-600 to-cyan-600',
+      hoverGradient: 'from-cyan-600 via-blue-600 to-blue-700',
       onClick: handleViewTCClick,
       iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
     },
@@ -66,12 +66,12 @@ export default function QuickActions() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.6 }}
-      className="relative bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl p-8 overflow-hidden border border-gray-100 mb-10 mt-10"
+      className="relative bg-gradient-to-br from-white via-blue-50 to-orange-50 dark:from-gray-900 dark:via-blue-950 dark:to-orange-950 rounded-2xl shadow-xl p-8 overflow-hidden border-2 border-blue-200 dark:border-blue-800 mb-10 mt-10"
     >
-      {/* Background glows */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-full blur-3xl -z-0 animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-100/50 to-teal-100/50 rounded-full blur-3xl -z-0 animate-pulse" />
-      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-gradient-to-bl from-pink-100/30 to-orange-100/30 rounded-full blur-3xl -z-0 animate-pulse" />
+      {/* Background glows - Updated colors */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-200/40 to-cyan-200/40 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-full blur-3xl -z-0 animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-orange-200/40 to-amber-200/40 dark:from-orange-900/30 dark:to-amber-900/30 rounded-full blur-3xl -z-0 animate-pulse" />
+      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-gradient-to-bl from-blue-100/30 to-orange-100/30 dark:from-blue-800/20 dark:to-orange-800/20 rounded-full blur-3xl -z-0 animate-pulse" />
 
       <div className="relative z-10">
         {/* Header */}
@@ -79,10 +79,11 @@ export default function QuickActions() {
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            className="bg-gradient-to-r from-blue-500 to-orange-500 rounded-xl p-2"
           >
-            <Sparkles className="w-8 h-8 text-purple-600 drop-shadow-lg" />
+            <Sparkles className="w-7 h-7 text-white drop-shadow-lg" />
           </motion.div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 via-blue-600 to-orange-600 dark:from-blue-400 dark:via-blue-300 dark:to-orange-400 bg-clip-text text-transparent">
             Quick Actions
           </h2>
         </div>
@@ -100,20 +101,22 @@ export default function QuickActions() {
                 whileHover={{ scale: 1.03, y: -4 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={action.onClick}
-                className={`group relative overflow-hidden flex flex-col items-center justify-center gap-4 bg-gradient-to-r ${action.gradient} text-white py-10 px-6 rounded-2xl font-semibold text-xl shadow-lg hover:shadow-2xl transition-all duration-300`}
+                className={`group relative overflow-hidden flex flex-col items-center justify-center gap-4 bg-gradient-to-r ${action.gradient} text-white py-10 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-2xl transition-all duration-300`}
               >
                 {/* Hover overlay */}
                 <div
                   className={`absolute inset-0 bg-gradient-to-r ${action.hoverGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                 />
 
-                {/* Icon */}
-                <Icon
-                  className={`w-8 h-8 relative z-10 transition-transform duration-300 ${action.iconAnimation}`}
-                />
+                {/* Icon Container */}
+                <div className="relative z-10 bg-white/20 backdrop-blur-sm rounded-full p-3">
+                  <Icon
+                    className={`w-8 h-8 transition-transform duration-300 ${action.iconAnimation}`}
+                  />
+                </div>
 
                 {/* Title */}
-                <span className="relative z-10 text-center leading-tight">
+                <span className="relative z-10 text-center leading-tight font-bold">
                   {action.title}
                 </span>
 
@@ -141,7 +144,7 @@ export default function QuickActions() {
               transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
               className="text-center"
             >
-              <p className="text-sm text-gray-600 leading-relaxed px-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed px-2 font-medium">
                 {action.description}
               </p>
             </motion.div>
