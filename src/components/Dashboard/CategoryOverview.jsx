@@ -106,54 +106,54 @@ export default function CategoryOverview() {
     {
       title: 'Marketing Junction',
       key: 'marketing-junction',
-      gradient: 'from-blue-600 via-blue-500 to-cyan-500',
-      darkGradient: 'dark:from-blue-700 dark:via-blue-600 dark:to-cyan-600',
-      buttonTextColor: 'text-blue-700',
+      gradient: 'from-blue-500 via-blue-600 to-blue-700',
+      darkGradient: 'dark:from-gray-700 dark:via-gray-800 dark:to-gray-900',
+      buttonTextColor: 'text-blue-700 dark:text-blue-600',
       route: '/certificates/marketing-junction',
       icon: BarChart3
     },
     {
       title: 'Code4Bharat',
       key: 'code4bharat',
-      gradient: 'from-orange-600 via-orange-500 to-amber-500',
-      darkGradient: 'dark:from-orange-700 dark:via-orange-600 dark:to-amber-600',
-      buttonTextColor: 'text-orange-700',
+      gradient: 'from-blue-600 via-indigo-600 to-blue-700',
+      darkGradient: 'dark:from-gray-800 dark:via-gray-900 dark:to-gray-950',
+      buttonTextColor: 'text-blue-700 dark:text-blue-600',
       route: '/certificates/code4bharat',
       icon: Code2
     },
     {
       title: 'BootCamp',
       key: 'BootCamp',
-      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
-      darkGradient: 'dark:from-blue-700 dark:via-indigo-700 dark:to-purple-700',
-      buttonTextColor: 'text-blue-700',
+      gradient: 'from-blue-500 via-blue-600 to-indigo-600',
+      darkGradient: 'dark:from-gray-700 dark:via-gray-800 dark:to-gray-900',
+      buttonTextColor: 'text-blue-700 dark:text-blue-600',
       route: '/certificates/bootcamp',
       icon: Rocket
     },
     {
       title: 'BVOC',
       key: 'BVOC',
-      gradient: 'from-orange-600 via-red-600 to-pink-600',
-      darkGradient: 'dark:from-orange-700 dark:via-red-700 dark:to-pink-700',
-      buttonTextColor: 'text-orange-700',
+      gradient: 'from-indigo-600 via-blue-600 to-blue-700',
+      darkGradient: 'dark:from-gray-800 dark:via-gray-900 dark:to-gray-950',
+      buttonTextColor: 'text-indigo-700 dark:text-blue-600',
       route: '/certificates/bvoc',
       icon: GraduationCap
     },
     {
       title: 'FSD',
       key: 'FSD',
-      gradient: 'from-blue-500 via-indigo-500 to-blue-600',
-      darkGradient: 'dark:from-blue-600 dark:via-indigo-600 dark:to-blue-700',
-      buttonTextColor: 'text-blue-700',
+      gradient: 'from-blue-600 via-blue-700 to-indigo-700',
+      darkGradient: 'dark:from-gray-700 dark:via-gray-800 dark:to-gray-900',
+      buttonTextColor: 'text-blue-700 dark:text-blue-600',
       route: '/certificates/fsd',
       icon: Zap
     },
     {
       title: 'HR',
       key: 'HR',
-      gradient: 'from-orange-600 via-orange-500 to-red-500',
-      darkGradient: 'dark:from-orange-700 dark:via-orange-600 dark:to-red-600',
-      buttonTextColor: 'text-orange-700',
+      gradient: 'from-blue-500 via-indigo-500 to-blue-600',
+      darkGradient: 'dark:from-gray-800 dark:via-gray-900 dark:to-gray-950',
+      buttonTextColor: 'text-blue-700 dark:text-blue-600',
       route: '/certificates/hr',
       icon: Users
     },
@@ -161,17 +161,17 @@ export default function CategoryOverview() {
       title: 'Digital Marketing',
       key: 'DM',
       gradient: 'from-cyan-600 via-blue-600 to-blue-700',
-      darkGradient: 'dark:from-cyan-700 dark:via-blue-700 dark:to-blue-800',
-      buttonTextColor: 'text-cyan-700',
+      darkGradient: 'dark:from-gray-700 dark:via-gray-800 dark:to-gray-900',
+      buttonTextColor: 'text-cyan-700 dark:text-blue-600',
       route: '/certificates/dm',
       icon: Megaphone
     },
     {
       title: 'Operations Department',
       key: 'Operations',
-      gradient: 'from-gray-600 via-slate-600 to-gray-700',
-      darkGradient: 'dark:from-gray-700 dark:via-slate-700 dark:to-gray-800',
-      buttonTextColor: 'text-gray-700',
+      gradient: 'from-slate-600 via-blue-600 to-blue-700',
+      darkGradient: 'dark:from-gray-800 dark:via-gray-900 dark:to-gray-950',
+      buttonTextColor: 'text-slate-700 dark:text-gray-400',
       route: '/certificates/operations',
       icon: Settings
     },
@@ -217,7 +217,7 @@ export default function CategoryOverview() {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/templates')}
-          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-600 dark:from-blue-700 dark:via-indigo-700 dark:to-orange-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
         >
           <FileText size={24} className="group-hover:rotate-12 transition-transform duration-300" />
           <span>Manage Templates</span>

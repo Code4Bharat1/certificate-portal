@@ -21,7 +21,8 @@ import {
   FileX,
   Search,
   Filter,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -29,15 +30,17 @@ import axios from 'axios';
 
 export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [userData, setUserData] = useState(null);
   const [statistics, setStatistics] = useState({
-    totalLetters: 0,
-    signedUploaded: 0,
-    pendingSignature: 0,
-    approved: 0,
-    rejected: 0,
-    inReview: 0
-  });
+  totalLetters: 0,
+  signedUploaded: 0,
+  pendingSignature: 0,
+  approved: 0,
+  rejected: 0,
+  inReview: 0
+});
+  const [allLetters, setAllLetters] = useState([]);
   const [recentLetters, setRecentLetters] = useState([]);
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -46,6 +49,9 @@ export default function UserDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewLetter, setPreviewLetter] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const router = useRouter();
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
@@ -98,12 +104,12 @@ export default function UserDashboard() {
       
       if (response.data.success) {
         setUserData(response.data.user);
-        console.log('User data loaded:', response.data.user);
+        console.log('✅ User data loaded:', response.data.user);
       } else {
         throw new Error(response.data.message || 'Failed to load user data');
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('❌ Error fetching user data:', error);
       if (error.response?.status === 401) {
         toast.error('Session expired. Please login again.');
         handleLogout();
@@ -122,10 +128,10 @@ export default function UserDashboard() {
       
       if (response.data.success) {
         setStatistics(response.data.statistics);
-        console.log('Statistics loaded:', response.data.statistics);
+        console.log('✅ Statistics loaded:', response.data.statistics);
       }
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      console.error('❌ Error fetching statistics:', error);
       if (error.response?.status !== 401) {
         toast.error('Failed to load statistics');
       }
@@ -135,16 +141,16 @@ export default function UserDashboard() {
   const fetchRecentLetters = async () => {
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await axios.get(`${API_URL}/api/student/letters/recent?limit=10`, {
+      const response = await axios.get(`${API_URL}/api/student/letters/recent`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.success) {
         setRecentLetters(response.data.letters);
-        console.log('Recent letters loaded:', response.data.letters);
+        console.log('✅ Recent letters loaded:', response.data.letters.length, 'letters');
       }
     } catch (error) {
-      console.error('Error fetching recent letters:', error);
+      console.error('❌ Error fetching recent letters:', error);
       if (error.response?.status !== 401) {
         toast.error('Failed to load recent letters');
       }
@@ -165,19 +171,95 @@ export default function UserDashboard() {
     }
   };
 
+  const verifyAndLoadPDF = async (letter) => {
+    console.log('🔍 Loading preview for letter:', letter);
+    setPreviewLetter(letter);
+    setShowPreviewModal(true);
+    setPreviewLoading(true);
+
+    try {
+      const verifyRes = await axios.post(`${API_URL}/api/certificates/verify`, {
+        certificateId: letter.credentialId || letter.id,
+      });
+      console.log("✅ Verification response:", verifyRes.data);
+
+      if (!verifyRes.data?.valid) {
+        toast.error("Invalid or unauthorized certificate ID");
+        setShowPreviewModal(false);
+        return;
+      }
+
+      const token = sessionStorage.getItem('authToken');
+      const pdfResponse = await axios.get(
+        `${API_URL}/api/letters/${letter.id}/download.pdf`,
+        { 
+          responseType: "blob",
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      const blob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      console.log("✅ PDF loaded successfully");
+    } catch (error) {
+      console.error("❌ PDF load error:", error);
+      toast.error("Failed to load PDF preview");
+      setShowPreviewModal(false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDownloadLetter = async (letter) => {
+    console.log('⬇️ Downloading letter:', letter);
+    const downloadToast = toast.loading('Preparing download...');
+    
+    try {
+      if (letter.downloadLink) {
+        window.open(letter.downloadLink, '_blank');
+        toast.success('Download started!', { id: downloadToast });
+      } else {
+        console.log('📥 Using API fallback download for ID:', letter.id);
+        
+        const token = sessionStorage.getItem('authToken');
+        const response = await axios.get(
+          `${API_URL}/api/letters/${letter.id}/download.pdf`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+          }
+        );
+        
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${letter.credentialId || letter.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        
+        toast.success('Download started!', { id: downloadToast });
+      }
+    } catch (error) {
+      console.error('❌ Error downloading certificate:', error);
+      toast.error('Failed to download certificate', { id: downloadToast });
+    }
+  };
+
   const handleUploadSigned = async (letterId) => {
     if (!uploadFile) {
       toast.error('Please select a file to upload');
       return;
     }
 
-    // Validate file size (10MB)
     if (uploadFile.size > 10 * 1024 * 1024) {
       toast.error('File size must be less than 10MB');
       return;
     }
 
-    // Validate file type
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(uploadFile.type)) {
       toast.error('Only PDF, JPG, JPEG, and PNG files are allowed');
@@ -214,7 +296,6 @@ export default function UserDashboard() {
         setUploadFile(null);
         setSelectedLetter(null);
         
-        // Refresh data
         await fetchStatistics();
         await fetchRecentLetters();
       } else {
@@ -241,11 +322,10 @@ export default function UserDashboard() {
       if (response.data.success && response.data.certificates?.length > 0) {
         toast.success(`Found ${response.data.certificates.length} certificates`, { id: downloadToast });
         
-        // Open all download links
         response.data.certificates.forEach((cert, index) => {
           setTimeout(() => {
             window.open(cert.downloadLink, '_blank');
-          }, index * 300); // Stagger downloads by 300ms
+          }, index * 300);
         });
       } else {
         toast.error('No certificates found to download', { id: downloadToast });
@@ -317,7 +397,7 @@ export default function UserDashboard() {
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -325,10 +405,6 @@ export default function UserDashboard() {
               <p className="text-sm text-gray-500 dark:text-gray-400">{letter.subType || 'N/A'}</p>
             </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getStatusColor(letter.status)}`}>
-            <StatusIcon className="w-3 h-3" />
-            {letter.status}
-          </span>
         </div>
 
         <div className="space-y-2 mb-4">
@@ -350,14 +426,14 @@ export default function UserDashboard() {
 
         <div className="flex gap-2 flex-wrap">
           <button
-            onClick={() => window.open(letter.verificationLink, '_blank')}
+            onClick={() =>verifyAndLoadPDF(letter)}
             className="flex-1 min-w-[100px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition flex items-center justify-center gap-2"
           >
             <Eye className="w-4 h-4" />
             View
           </button>
           <button
-            onClick={() => window.open(letter.downloadLink, '_blank')}
+            onClick={() => handleDownloadLetter(letter)}
             className="flex-1 min-w-[100px] bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 dark:hover:bg-green-900/50 transition flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4" />
@@ -369,7 +445,7 @@ export default function UserDashboard() {
                 setSelectedLetter(letter);
                 setShowUploadModal(true);
               }}
-              className="flex-1 min-w-[100px] bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 py-2 rounded-lg text-sm font-semibold hover:bg-orange-100 dark:hover:bg-orange-900/50 transition flex items-center justify-center gap-2"
+              className="flex-1 min-w-[100px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center justify-center gap-2"
             >
               <Upload className="w-4 h-4" />
               Upload
@@ -389,9 +465,9 @@ export default function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-orange-50 dark:from-gray-950 dark:via-blue-950 dark:to-orange-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-orange-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-blue-300 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400 font-semibold">Loading Dashboard...</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Fetching your data from server</p>
         </div>
@@ -400,19 +476,19 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-orange-50 dark:from-gray-950 dark:via-blue-950 dark:to-orange-950">
+    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <Toaster position="top-right" />
 
       {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg border-b-2 border-blue-200 dark:border-blue-800 sticky top-0 z-40">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg border-b-2 border-blue-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-orange-600 rounded-full flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md">
                 <User className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
                   Welcome back, {userData?.name || 'User'}!
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Manage your certificates and letters</p>
@@ -429,7 +505,7 @@ export default function UserDashboard() {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-700 dark:to-red-700 text-white rounded-xl hover:shadow-lg transition font-semibold text-sm"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-xl hover:shadow-lg transition font-semibold text-sm"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -444,7 +520,7 @@ export default function UserDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-600 to-orange-600 rounded-2xl p-6 mb-8 text-white shadow-xl"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 mb-8 text-white shadow-xl"
         >
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4 sm:gap-6">
@@ -482,7 +558,6 @@ export default function UserDashboard() {
             value={statistics.totalLetters}
             color="bg-gradient-to-r from-blue-600 to-blue-700"
             bgColor="bg-blue-50 dark:bg-blue-950"
-            trend={statistics.totalLetters > 0 ? 5 : null}
           />
           <StatCard
             icon={FileCheck}
@@ -495,8 +570,8 @@ export default function UserDashboard() {
             icon={Clock}
             title="Pending Signature"
             value={statistics.pendingSignature}
-            color="bg-gradient-to-r from-orange-600 to-orange-700"
-            bgColor="bg-orange-50 dark:bg-orange-950"
+            color="bg-gradient-to-r from-indigo-600 to-indigo-700"
+            bgColor="bg-indigo-50 dark:bg-indigo-950"
           />
           <StatCard
             icon={CheckCircle}
@@ -509,8 +584,8 @@ export default function UserDashboard() {
             icon={FileClock}
             title="In Review"
             value={statistics.inReview}
-            color="bg-gradient-to-r from-blue-600 to-indigo-700"
-            bgColor="bg-indigo-50 dark:bg-indigo-950"
+            color="bg-gradient-to-r from-cyan-600 to-cyan-700"
+            bgColor="bg-cyan-50 dark:bg-cyan-950"
           />
           <StatCard
             icon={FileX}
@@ -525,9 +600,9 @@ export default function UserDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mb-8 border-2 border-blue-200 dark:border-blue-800"
+          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mb-8 border-2 border-blue-200 dark:border-gray-700"
         >
-          <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+          <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent mb-4 flex items-center gap-2">
             <Award className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             Quick Actions
           </h3>
@@ -544,9 +619,9 @@ export default function UserDashboard() {
             </button>
             <button 
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-950 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900 transition border-2 border-transparent hover:border-orange-300 dark:hover:border-orange-700"
+              className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-950 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900 transition border-2 border-transparent hover:border-indigo-300 dark:hover:border-indigo-700"
             >
-              <Upload className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <div className="text-left">
                 <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">Upload Signed</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Submit signed documents</p>
@@ -569,10 +644,10 @@ export default function UserDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg border-2 border-blue-200 dark:border-blue-800"
+          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg border-2 border-blue-200 dark:border-gray-700"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
+            <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent flex items-center gap-2">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
               Recent Letters
             </h3>
@@ -628,9 +703,9 @@ export default function UserDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mt-8 border-2 border-blue-200 dark:border-blue-800"
+          className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mt-8 border-2 border-blue-200 dark:border-gray-700"
         >
-          <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+          <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             Completion Progress
           </h3>
@@ -653,7 +728,7 @@ export default function UserDashboard() {
                       : 0}%` 
                   }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="bg-gradient-to-r from-blue-600 to-orange-600 h-3 rounded-full"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 h-3 rounded-full"
                 ></motion.div>
               </div>
             </div>
@@ -695,10 +770,10 @@ export default function UserDashboard() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-2 border-blue-200 dark:border-blue-800"
+            className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-2 border-blue-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+            <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent mb-4 flex items-center gap-2">
               <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
               Upload Signed Letter
             </h3>
@@ -706,7 +781,7 @@ export default function UserDashboard() {
               Please upload the signed copy of your {selectedLetter?.letterType || 'letter'}
             </p>
             
-            <div className="border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-6 text-center mb-6 hover:border-orange-500 dark:hover:border-orange-600 transition bg-blue-50 dark:bg-blue-950">
+            <div className="border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-6 text-center mb-6 hover:border-blue-500 dark:hover:border-blue-600 transition bg-blue-50 dark:bg-blue-950">
               <input
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
@@ -739,7 +814,7 @@ export default function UserDashboard() {
               <button
                 onClick={() => handleUploadSigned(selectedLetter?.id)}
                 disabled={!uploadFile || uploading}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {uploading ? (
                   <>
@@ -749,6 +824,114 @@ export default function UserDashboard() {
                 ) : (
                   'Upload'
                 )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Preview Modal with Iframe */}
+      {showPreviewModal && previewLetter && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowPreviewModal(false);
+            setPreviewLetter(null);
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl h-[90vh] shadow-2xl border-2 border-blue-200 dark:border-gray-700 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                    {previewLetter.letterType}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    ID: {previewLetter.credentialId}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDownloadLetter(previewLetter)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-semibold"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Download</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    setPreviewLetter(null);
+                  }}
+                  className="flex items-center justify-center w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl transition"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Certificate Details */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400">Issue Date</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {new Date(previewLetter.issueDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400">Sub Type</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {previewLetter.subType || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400">Signed</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {previewLetter.signedUploaded ? '✅ Yes' : '❌ No'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Iframe Preview */}
+            <div className="relative w-full h-[80vh]">
+              <iframe
+                src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                className="w-full h-full border rounded-xl shadow-inner"
+                title="Certificate PDF"
+              />
+              <div className="absolute top-3 right-3 bg-white/80 dark:bg-gray-900/70 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 shadow-md">
+                Preview Mode
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                💡 Tip: Use the buttons above to download or open in new tab
+              </div>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setPreviewLetter(null);
+                }}
+                className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              >
+                Close
               </button>
             </div>
           </motion.div>
