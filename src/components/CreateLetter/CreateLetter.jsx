@@ -672,25 +672,25 @@ export default function CreateLetter() {
         return;
       }
 
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919892398976",
+          otp: otpCode,
+        },
+        { headers: getAuthHeaders() }
+      );
 
-      // if (response.data.success) {
+      if (response.data.success) {
       toast.success("OTP Verified Successfully!");
       setOtpVerified(true);
       setShowOtpModal(false);
       setShowPreview(true);
       generatePreview();
-      // } else {
-      // toast.error("Invalid OTP");
-      // setOtp(["", "", "", "", "", ""]);
-      // }
+      } else {
+      toast.error("Invalid OTP");
+      setOtp(["", "", "", "", "", ""]);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
