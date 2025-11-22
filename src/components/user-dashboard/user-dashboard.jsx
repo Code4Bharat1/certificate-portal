@@ -663,7 +663,7 @@ export default function UserDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mb-8 border-2 border-blue-200 dark:border-gray-700"
@@ -716,7 +716,7 @@ export default function UserDashboard() {
               </div>
             </button>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Recent Letters */}
         <motion.div
