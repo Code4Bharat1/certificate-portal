@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { PlusCircle, Search, Sparkles, Users, FileText, ScrollText } from 'lucide-react';
+import { PlusCircle, Search, Sparkles, Users, FileText, ScrollText, FolderOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function QuickActions() {
@@ -12,6 +12,7 @@ export default function QuickActions() {
   const handleManagePeopleClick = () => router.push('/manage-people');
   const handleCreateLetterClick = () => router.push('/create-letter');
   const handleViewTCClick = () => router.push('/verify-t&c');
+  const handleViewDocumentsClick = () => router.push('/view-documents');
 
   const actions = [
     {
@@ -54,6 +55,14 @@ export default function QuickActions() {
       onClick: handleViewTCClick,
       iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
     },
+    {
+      title: 'View Documents',
+      description: 'Access and review all user submitted documents',
+      icon: FolderOpen,
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      onClick: handleViewDocumentsClick,
+      iconAnimation: 'group-hover:scale-110 group-hover:-rotate-12',
+    },
   ];
 
   return (
@@ -84,7 +93,7 @@ export default function QuickActions() {
         </div>
 
         {/* Action Buttons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
           {actions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -127,7 +136,7 @@ export default function QuickActions() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-5 gap-6"
+          className="mt-8 grid grid-cols-1 md:grid-cols-6 gap-6"
         >
           {actions.map((action, index) => (
             <motion.div
