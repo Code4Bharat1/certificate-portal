@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 export default function OnboardingChecklist() {
   const [signature, setSignature] = useState(null);
+  const [file, setFile] = useState(null);
 
   // USER DATA (example: stored after login)
   const [user, setUser] = useState(null);
@@ -18,6 +19,7 @@ export default function OnboardingChecklist() {
     if (storedUser) setUser(storedUser);
     if (storedSignature) setSignature(storedSignature);
   }, []);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
   // Send onboarding request to admin when signature is uploaded
   const notifyAdminPendingRequest = async (fileUrl) => {
@@ -45,40 +47,53 @@ export default function OnboardingChecklist() {
   };
 
   // Handle signature upload
-const handleSignatureUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+ const handleSignatureUpload = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
 
-  // Show preview to user
-  const previewUrl = URL.createObjectURL(file);
-  setSignature(previewUrl);
-  localStorage.setItem("internSignature", previewUrl);
+    setFile(selectedFile);
 
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    const previewUrl = URL.createObjectURL(selectedFile);
+    setSignature(previewUrl);
 
-  // Build FormData → IMPORTANT
-  const formData = new FormData();
-  formData.append("name", storedUser.name);
-  formData.append("email", storedUser.email);
-  formData.append("signature", file);
+    localStorage.setItem("internSignature", previewUrl);
+  };
+  // Submit onboarding request
+  const handleSubmit = async () => {
+    if (!file) {
+      alert("Please upload a signature first.");
+      return;
+    }
 
-  // SEND MULTIPART request
-  const res = await fetch("http://localhost:5235/api/onboarding-request", {
-    method: "POST",
-    body: formData,
-  });
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
 
-  const data = await res.json();
+    const formData = new FormData();
+    formData.append("name", storedUser.name);
+    formData.append("email", storedUser.email);
+    formData.append("signature", file);
 
-  if (data.success) {
-    alert("Your onboarding signature has been submitted!");
+    try {
+      const res = await fetch(`${API_URL}/api/onboarding-request`, {
+        method: "POST",
+        body: formData,
+      });
 
-    // Redirect to dashboard or exit page
-    window.location.href = "/dashboard"; 
-  } else {
-    alert("Something went wrong. Try again.");
-  }
-};
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Your onboarding signature has been submitted!");
+
+        // Redirect
+        window.location.href = "/user/dashboard";
+      } else {
+        alert("Something went wrong. Try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error!");
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100 flex flex-col items-center py-10 px-6">
@@ -162,9 +177,7 @@ const handleSignatureUpload = async (e) => {
             </li>
           </ul>
         </section>
-
-        {/* Signature Section */}
-        <div className="mt-16 border-t border-gray-300 dark:border-gray-700 pt-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+    <div className="mt-16 border-t border-gray-300 dark:border-gray-700 pt-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
           <div>
             <div className="border-b border-gray-400 dark:border-gray-600 w-3/4 mx-auto mb-2"></div>
             <p className="text-lg font-medium text-gray-600 dark:text-gray-300">HR</p>
@@ -186,7 +199,7 @@ const handleSignatureUpload = async (e) => {
           </div>
         </div>
 
-        {/* Upload Section */}
+        {/* Upload Signature */}
         <div className="mt-10 text-center">
           <h3 className="text-xl font-semibold mb-4 flex items-center justify-center gap-2 text-purple-500">
             <FileSignature className="w-6 h-6" /> Upload Your Signature
@@ -195,6 +208,7 @@ const handleSignatureUpload = async (e) => {
           <label className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-400 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
             <Upload className="w-5 h-5" />
             <span>Choose File</span>
+
             <input
               type="file"
               accept="image/*"
@@ -203,12 +217,17 @@ const handleSignatureUpload = async (e) => {
             />
           </label>
         </div>
-      </motion.div>
 
-      <div className="bg-neutral-900 text-white px-8 py-6 text-center border-t-4 border-blue-600">
-        <p className="font-bold text-sm mb-1 uppercase tracking-widest">© 2025 Nexcore Alliance</p>
-        <p className="text-neutral-400 text-xs">All rights reserved. For queries, contact administration.</p>
-      </div>
+        {/* Submit button */}
+        <div className="w-full flex justify-center mt-6">
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          >
+            Submit Onboarding Request
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

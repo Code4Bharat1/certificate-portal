@@ -52,6 +52,15 @@ export default function UserDashboard() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewLetter, setPreviewLetter] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+const [isAccepted, setIsAccepted] = useState(false);
+
+useEffect(() => {
+  const accepted = localStorage.getItem("tcAccepted");
+  if (accepted === "true") {
+    setIsAccepted(true);
+  }
+}, []);
+
   const router = useRouter();
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
@@ -855,12 +864,34 @@ export default function UserDashboard() {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => window.location.href = '/termsandconditions/C4B/t&c'}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-            >
-              <span>Accept Terms and Conditions</span>
-            </button>
+<div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+
+  {/* If NOT accepted → show button */}
+  {!isAccepted && (
+    <button
+      onClick={() => {
+        localStorage.setItem("tcAccepted", "true");
+        window.location.href = '/termsandconditions/C4B/t&c';
+      }}
+      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
+                 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 
+                 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 
+                 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+    >
+      <span>Accept Terms and Conditions</span>
+    </button>
+  )}
+
+  {/* If already accepted → show success message */}
+  {isAccepted && (
+    <div className="text-center py-3 px-4 mt-2 bg-green-100 border border-green-300 text-green-700 rounded-lg">
+      ✅ You already accepted the Terms & Conditions
+    </div>
+  )}
+
+</div>
+
+
           </div>
         </motion.div>
       </div>

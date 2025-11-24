@@ -282,7 +282,7 @@ export default function TermsAndConditions() {
           <div className="mt-6 flex justify-center">
   <button
           onClick={handleSubmit} // ✅ added click handler
-          disabled={!accepted}
+          disabled={!accepted && !signature}
           className={`${
             accepted
               ? "bg-indigo-600 hover:bg-indigo-700"
@@ -296,10 +296,7 @@ export default function TermsAndConditions() {
         </div>
       </motion.div>
 
-        <div className="bg-neutral-900 text-white px-8 py-6 text-center border-t-4 border-blue-600">
-          <p className="font-bold text-sm mb-1 uppercase tracking-widest">© 2024 Nexcore Alliance</p>
-          <p className="text-neutral-400 text-xs">All rights reserved. For queries, contact administration.</p>
-        </div>
+      
     </div>
   );
 }

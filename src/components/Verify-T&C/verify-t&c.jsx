@@ -2,82 +2,188 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, ChevronDown, SortAsc, Users } from "lucide-react";
+import { Search } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 /**
- * AdminOnboardingRequests — Modern Dashboard Style
- * - Debounced search
- * - Status filter (all / pending / approved / rejected)
- * - Sort by: newest / oldest / name
- * - Table rows with actions and signature preview
- * - Two-step approve modal (details -> checklist)
+ * AdminOnboardingRequests — Final single-file component (updated)
+ * - Fixes typo bug in finalizeOnboarding
+ * - Adds Offboard button when admin approved AND user accepted T&C
+ * - Optimistic UI updates with rollback on API failure
  *
- * Backend assumptions:
- * - GET  http://localhost:5235/api/onboarding-request     -> returns { requests: [...] }
- * - POST http://localhost:5235/api/onboarding-request/approve/:id  -> accepts payload and returns updated request
+ * Notes:
+ * - Expects NEXT_PUBLIC_API_URL env var or uses http://localhost:5235
+ * - Requires authToken in sessionStorage for API requests
+ * - Uses localStorage.user to read reviewer name for approvals
  */
 
 export default function AdminOnboardingRequests() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
+
+  // ---------- State
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Controls
+  // Approve modal state
+  const [selectedReq, setSelectedReq] = useState(null); // used for approve flow
+  const [modalStep, setModalStep] = useState(1);
+  const [form, setForm] = useState({
+    department: "",
+    joiningDate: "",
+    notes: "",
+  });
+
+  // Edit modal state (separate from approve modal)
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null); // used for edit flow
+  const [formData, setFormData] = useState({
+    department: "",
+    joiningDate: "",
+    notes: "",
+    checklist: [],
+  });
+
+  // Misc
+  const [userData, setUserData] = useState(null);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
-  // Modal / approval flow
-  const [selectedReq, setSelectedReq] = useState(null);
-  const [modalStep, setModalStep] = useState(1);
-  const [form, setForm] = useState({ department: "", joiningDate: "", notes: "" });
-
-  const checklistItems = useMemo(
-    () => [
-      "Personal Information Verified",
-      "ID & Address Proof Collected",
-      "Offer Letter Signed",
-      "NDA Signed",
-      "Bank Details Submitted",
-      "Emergency Contact Updated",
-      "Employee Email Created",
-      "Laptop & System Issued",
-      "Access Permissions Given",
-      "Orientation Completed",
-    ],
-    []
-  );
+  // Checklist master list
+  const checklistItems = [
+    "Personal Information Verified",
+    "ID & Address Proof Collected",
+    "Offer Letter Signed",
+    "NDA Signed",
+    "Bank Details Submitted",
+    "Emergency Contact Updated",
+    "Employee Email Created",
+    "Laptop & System Issued",
+    "Access Permissions Given",
+    "Orientation Completed",
+  ];
 
   const [checklist, setChecklist] = useState(
     checklistItems.map((it) => ({ label: it, checked: false }))
   );
 
-  // debounce query
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query.trim().toLowerCase()), 350);
-    return () => clearTimeout(t);
-  }, [query]);
+  // ---------- Derived stats
+  const stats = useMemo(() => {
+    const total = requests.length;
+    const pending = requests.filter((r) => (r.status || "").toLowerCase() === "pending").length;
+    const approved = requests.filter((r) => (r.status || "").toLowerCase() === "approved").length;
+    const rejected = requests.filter((r) => (r.status || "").toLowerCase() === "rejected").length;
+    return { total, pending, approved, rejected };
+  }, [requests]);
 
-  // load data
-  const loadData = async () => {
-    setLoading(true);
+  // ---------- Helpers
+  const formatDateTime = (iso) => {
     try {
-      const res = await fetch("http://localhost:5235/api/onboarding-request");
-      const data = await res.json();
-      setRequests(data.requests || []);
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso || "-";
+    }
+  };
+
+  const hasAcceptedTnC = (r) => {
+    // Accept common backend field variations for a T&C flag
+    if (!r) return false;
+    return !!(
+      r.termsAccepted ||
+      r.acceptedTerms ||
+      r.acceptedTnC ||
+      r.tncAccepted ||
+      r.accepted_terms
+    );
+  };
+
+  // ---------- Auth + fetch helpers
+  const checkAuth = () => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      window.location.href = "/login";
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const token = sessionStorage.getItem("authToken");
+      if (!token) throw new Error("No authentication token found");
+
+      const res = await axios.get(`${API_URL}/api/student/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data?.success) {
+        setUserData(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      } else {
+        throw new Error(res.data?.message || "Failed to fetch profile");
+      }
     } catch (err) {
-      console.error("Failed to load requests", err);
-      // optionally show a toast
+      console.error("fetchUserData error:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
+      } else {
+        toast.error("Could not load profile.");
+      }
+    }
+  };
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem("authToken");
+      if (!token) throw new Error("No authentication token found");
+
+      const res = await axios.get(`${API_URL}/api/onboarding-request`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data?.success) {
+        setRequests(res.data.requests || []);
+      } else {
+        throw new Error(res.data?.message || "Failed to load requests");
+      }
+    } catch (err) {
+      console.error("fetchAllData error:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
+      } else {
+        toast.error("Failed to load onboarding requests");
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // initial load
   useEffect(() => {
-    loadData();
+    checkAuth();
+    fetchUserData();
+    fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // derived filtered + sorted list
+  // ---------- Debounced search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedQuery(query.trim().toLowerCase());
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // ---------- Filter + sort (memoized)
   const filtered = useMemo(() => {
     let list = [...requests];
 
@@ -104,35 +210,92 @@ export default function AdminOnboardingRequests() {
     return list;
   }, [requests, debouncedQuery, statusFilter, sortBy]);
 
-  // stats
-  const stats = useMemo(() => {
-    const total = requests.length;
-    const pending = requests.filter((r) => r.status === "pending").length;
-    const approved = requests.filter((r) => r.status === "approved").length;
-    const rejected = requests.filter((r) => r.status === "rejected").length;
-    return { total, pending, approved, rejected };
-  }, [requests]);
+  // ---------- UI actions
+  const loadData = () => {
+    fetchUserData();
+    fetchAllData();
+    toast.success("Data refreshed");
+  };
 
-  // open modal
+  // quickApprove: optimistic update + API call
+  const quickApprove = async (req) => {
+    if (!confirm(`Quick-approve ${req.name}? This automatically marks all checklist items complete.`)) {
+      return;
+    }
+
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Not authenticated.");
+      return;
+    }
+
+    const payload = {
+      department: req.department || "Not Assigned",
+      joiningDate: new Date().toISOString().slice(0, 10),
+      notes: "Quick approved by admin",
+      checklist: checklistItems.map((label) => ({ label, checked: true })),
+      reviewedBy: JSON.parse(localStorage.getItem("user"))?.name || "admin",
+    };
+
+    // keep a snapshot for rollback
+    const snapshot = [...requests];
+
+    // optimistic update
+    setRequests((prev) =>
+      prev.map((r) =>
+        r._id === req._id
+          ? { ...r, status: "approved", ...payload, approvedAt: new Date().toISOString() }
+          : r
+      )
+    );
+
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/onboarding-request/approve/${req._id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!res.data?.success) {
+        // rollback if API returns an error
+        setRequests(snapshot);
+        toast.error(res.data?.message || "Quick approve failed");
+        return;
+      }
+
+      toast.success("Request quick-approved!");
+    } catch (err) {
+      console.error("quickApprove error:", err);
+      setRequests(snapshot);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
+      } else toast.error("Quick approve failed");
+    }
+  };
+
+  // open modal and initialize form & checklist from request (approve flow)
   const openApprove = (req) => {
     setSelectedReq(req);
     setModalStep(1);
+
     setForm({
       department: req.department || "",
       joiningDate: req.joiningDate ? new Date(req.joiningDate).toISOString().slice(0, 10) : "",
       notes: req.notes || "",
     });
+
     setChecklist(
-      checklistItems.map((it) => ({
-        label: it,
-        checked: req.checklist?.find((c) => c.label === it)?.checked || false,
+      checklistItems.map((item) => ({
+        label: item,
+        checked: req.checklist?.find((c) => c.label === item)?.checked || false,
       }))
     );
   };
 
   const handleNextFromDetails = () => {
     if (!form.department.trim()) return alert("Please enter Department");
-    if (!form.joiningDate) return alert("Please select Joining Date");
+    if (!form.joiningDate) return alert("Select Joining Date");
     setModalStep(2);
   };
 
@@ -144,9 +307,16 @@ export default function AdminOnboardingRequests() {
     });
   };
 
-  // finalize approval
+  // finalize onboarding (from approve modal)
   const finalizeOnboarding = async () => {
     if (!selectedReq) return;
+    if (!confirm(`Finalize onboarding for ${selectedReq.name}? This will mark request approved.`)) return;
+
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Not authenticated.");
+      return;
+    }
 
     const payload = {
       department: form.department,
@@ -156,24 +326,24 @@ export default function AdminOnboardingRequests() {
       reviewedBy: JSON.parse(localStorage.getItem("user"))?.name || "admin",
     };
 
+    // snapshot for rollback
+    const snapshot = [...requests];
+
     try {
-      const res = await fetch(
-        `http://localhost:5235/api/onboarding-request/approve/${selectedReq._id}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
+      setLoading(true);
+
+      const res = await axios.post(
+        `${API_URL}/api/onboarding-request/approve/${selectedReq._id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("Approve error", data);
-        alert(data.message || "Approve failed — check console");
+      if (!res.data?.success) {
+        toast.error(res.data?.message || "Approve failed");
         return;
       }
 
-      // merge update into UI instantly
+      // Update the specific request properly (optimistic)
       setRequests((prev) =>
         prev.map((r) =>
           r._id === selectedReq._id
@@ -184,7 +354,6 @@ export default function AdminOnboardingRequests() {
                 joiningDate: payload.joiningDate,
                 notes: payload.notes,
                 checklist: payload.checklist,
-                reviewedBy: payload.reviewedBy,
                 approvedAt: new Date().toISOString(),
               }
             : r
@@ -193,45 +362,166 @@ export default function AdminOnboardingRequests() {
 
       setSelectedReq(null);
       setModalStep(1);
-      setForm({ department: "", joiningDate: "", notes: "" });
-      setChecklist(checklistItems.map((it) => ({ label: it, checked: false })));
-
-      alert("Onboarding finalized successfully.");
+      toast.success("Onboarding finalized successfully.");
     } catch (err) {
-      console.error("Finalize error", err);
-      alert("Failed to finalize onboarding");
-    }
-  };
-
-  // quick approve (without details) — optional
-  const quickApprove = async (req) => {
-    if (!confirm(`Quick approve ${req.name}?`)) return;
-    try {
-      const res = await fetch(
-        `http://localhost:5235/api/onboarding-request/approve/${req._id}`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ department: "TBD", joiningDate: new Date().toISOString(), notes: "Quick approved", checklist: [] }) }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setRequests((prev) => prev.map((r) => (r._id === req._id ? { ...r, status: "approved" } : r)));
+      console.error("Finalize error:", err);
+      // rollback
+      setRequests(snapshot);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
       } else {
-        alert(data.message || "Quick approve failed");
+        toast.error("Failed to finalize onboarding");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Quick approve failed");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ---------- Edit feature ---------------------------------------------------
+  const handleEdit = (req) => {
+    setSelectedRequest(req);
+    setFormData({
+      department: req.department || "",
+      joiningDate: req.joiningDate ? new Date(req.joiningDate).toISOString().slice(0, 10) : "",
+      notes: req.notes || "",
+      checklist:
+        req.checklist?.length > 0
+          ? req.checklist
+          : checklistItems.map((label) => ({ label, checked: false })),
+    });
+
+    setShowEditModal(true);
+  };
+
+  const updateRequest = async () => {
+    try {
+      const token = sessionStorage.getItem("authToken");
+      if (!token) {
+        toast.error("Not authenticated.");
+        return;
+      }
+
+      const payload = {
+        department: formData.department,
+        joiningDate: formData.joiningDate,
+        notes: formData.notes,
+        checklist: formData.checklist,
+      };
+
+      // snapshot for rollback
+      const snapshot = [...requests];
+
+      // Use axios.put; endpoint path should match your backend
+      const res = await axios.put(
+        `${API_URL}/api/onboarding-request/update/${selectedRequest._id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.data?.success) {
+        toast.error(res.data?.message || "Failed updating");
+        return;
+      }
+
+      // Update UI instantly
+      setRequests((prev) =>
+        prev.map((r) => (r._id === selectedRequest._id ? { ...r, ...payload } : r))
+      );
+
+      toast.success("Request updated successfully");
+      setShowEditModal(false);
+      setSelectedRequest(null);
+    } catch (err) {
+      console.error("updateRequest error:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
+      } else {
+        toast.error("Update failed");
+      }
+    }
+  };
+
+  // ---------- Offboard feature (new) ----------------------------------------
+  const offboardRequest = async (req) => {
+    if (!confirm(`Offboard ${req.name}? This will mark the user as offboarded.`)) return;
+
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Not authenticated.");
+      return;
+    }
+
+    // snapshot for rollback
+    const snapshot = [...requests];
+
+    // optimistic update - set a new status 'offboarded'
+    setRequests((prev) =>
+      prev.map((r) => (r._id === req._id ? { ...r, status: "offboarded", offboardedAt: new Date().toISOString() } : r))
+    );
+
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/onboarding-request/offboard/${req._id}`,
+        { offboardedBy: JSON.parse(localStorage.getItem("user"))?.name || "admin" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!res.data?.success) {
+        setRequests(snapshot);
+        toast.error(res.data?.message || "Offboard failed");
+        return;
+      }
+
+      toast.success("User offboarded successfully");
+    } catch (err) {
+      console.error("offboardRequest error:", err);
+      setRequests(snapshot);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        handleLogout();
+      } else {
+        toast.error("Offboard failed");
+      }
+    }
+  };
+
+  // ---------- Skeleton row for loading state
+  const SkeletonRows = ({ rows = 5 }) => (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <tr key={i} className="animate-pulse">
+          <td className="px-6 py-4">
+            <div className="h-4 bg-slate-200 rounded w-36" />
+          </td>
+          <td className="px-6 py-4">
+            <div className="h-4 bg-slate-200 rounded w-48" />
+          </td>
+          <td className="px-6 py-4 hidden md:table-cell">
+            <div className="h-4 bg-slate-200 rounded w-36" />
+          </td>
+          <td className="px-6 py-4">
+            <div className="h-4 bg-slate-200 rounded w-24" />
+          </td>
+          <td className="px-6 py-4">
+            <div className="h-8 bg-slate-200 rounded w-32" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+
+  // ---------- Render
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-black p-8">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800">
-              Onboarding Requests
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800">Onboarding Requests</h1>
             <p className="text-sm text-slate-500 mt-1">Manage and approve incoming onboarding requests.</p>
           </div>
 
@@ -276,6 +566,7 @@ export default function AdminOnboardingRequests() {
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
+              <option value="offboarded">Offboarded</option>
             </select>
 
             <select
@@ -290,10 +581,7 @@ export default function AdminOnboardingRequests() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={loadData}
-              className="px-4 py-2 bg-slate-800 text-white rounded-lg shadow text-sm"
-            >
+            <button onClick={loadData} className="px-4 py-2 bg-slate-800 text-white rounded-lg shadow text-sm">
               Refresh
             </button>
           </div>
@@ -314,64 +602,82 @@ export default function AdminOnboardingRequests() {
 
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading...</td>
-                </tr>
+                <SkeletonRows rows={5} />
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No requests found.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                    No requests found.
+                  </td>
                 </tr>
               ) : (
                 filtered.map((r) => (
                   <tr key={r._id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4">
                       <div className="font-medium text-slate-800">{r.name}</div>
-                      <div className="text-xs text-slate-500 mt-1 md:hidden">{new Date(r.createdAt).toLocaleString()}</div>
+                      <div className="text-xs text-slate-500 mt-1 md:hidden">{formatDateTime(r.createdAt)}</div>
                     </td>
 
                     <td className="px-6 py-4 text-slate-600">{r.email}</td>
 
-                    <td className="px-6 py-4 text-slate-600 hidden md:table-cell">
-                      {new Date(r.createdAt).toLocaleString()}
-                    </td>
+                    <td className="px-6 py-4 text-slate-600 hidden md:table-cell">{formatDateTime(r.createdAt)}</td>
 
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          r.status === "approved"
+                          (r.status || "").toLowerCase() === "approved"
                             ? "bg-emerald-100 text-emerald-700"
-                            : r.status === "rejected"
+                            : (r.status || "").toLowerCase() === "rejected"
                             ? "bg-red-100 text-red-700"
+                            : (r.status || "").toLowerCase() === "offboarded"
+                            ? "bg-slate-100 text-slate-700"
                             : "bg-amber-100 text-amber-700"
                         }`}
                       >
-                        {r.status?.toUpperCase() || "PENDING"}
+                        {(r.status || "pending").toUpperCase()}
                       </span>
                     </td>
 
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {r.status === "pending" && (
-                          <button
-                            onClick={() => openApprove(r)}
-                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm"
-                          >
-                            Approve
+                        {/* Show Approve & Quick only for pending */}
+                        {(r.status || "pending").toLowerCase() === "pending" && (
+                          <>
+                            <button onClick={() => openApprove(r)} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">
+                              Approve
+                            </button>
+
+                            <button
+                              onClick={() => quickApprove(r)}
+                              className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm border"
+                              title="Quick approve"
+                            >
+                              Quick
+                            </button>
+                          </>
+                        )}
+
+                        {/* Edit should be visible for pending AND approved */}
+                        {((r.status || "pending").toLowerCase() === "pending" ||
+                          (r.status || "").toLowerCase() === "approved") && (
+                          <button onClick={() => handleEdit(r)} className="px-3 py-1 text-blue-600 hover:underline">
+                            Edit
                           </button>
                         )}
 
-                        {r.status === "pending" && (
+                        {/* Offboard button appears only when approved AND T&C accepted */}
+                        {( (r.status || "").toLowerCase() === "approved" && hasAcceptedTnC(r)) && (
                           <button
-                            onClick={() => quickApprove(r)}
-                            className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm border"
-                            title="Quick approve"
+                            onClick={() => offboardRequest(r)}
+                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"
+                            title="Offboard user"
                           >
-                            Quick
+                            Offboard
                           </button>
                         )}
 
+                        {/* View signature / form */}
                         <a
-                          href={r.signature ? `http://localhost:5235${r.signature}` : "#"}
+                          href={r.signature ? `${API_URL}${r.signature}` : "#"}
                           target="_blank"
                           rel="noreferrer"
                           className="px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-sm border"
@@ -388,21 +694,25 @@ export default function AdminOnboardingRequests() {
         </div>
       </div>
 
-      {/* Modal (two-step) */}
+      {/* Approve Modal (two-step) */}
       {selectedReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-semibold">Approve — {selectedReq.name}</h3>
                 <p className="text-sm text-slate-500">Step {modalStep} of 2</p>
               </div>
               <div>
-                <button onClick={() => setSelectedReq(null)} className="text-slate-500 hover:text-slate-800">✕</button>
+                <button
+                  onClick={() => {
+                    setSelectedReq(null);
+                    setModalStep(1);
+                  }}
+                  className="text-slate-500 hover:text-slate-800"
+                >
+                  ✕
+                </button>
               </div>
             </div>
 
@@ -411,36 +721,26 @@ export default function AdminOnboardingRequests() {
                 <>
                   <label className="block mb-3 text-sm">
                     <div className="text-slate-600 mb-1">Department</div>
-                    <input
-                      value={form.department}
-                      onChange={(e) => setForm({ ...form, department: e.target.value })}
-                      className="w-full border rounded-lg p-3"
-                      placeholder="e.g., HR / Engineering"
-                    />
+                    <input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="w-full border rounded-lg p-3" placeholder="e.g., HR / Engineering" />
                   </label>
 
                   <label className="block mb-3 text-sm">
                     <div className="text-slate-600 mb-1">Joining Date</div>
-                    <input
-                      type="date"
-                      value={form.joiningDate}
-                      onChange={(e) => setForm({ ...form, joiningDate: e.target.value })}
-                      className="w-full border rounded-lg p-3"
-                    />
+                    <input type="date" value={form.joiningDate} onChange={(e) => setForm({ ...form, joiningDate: e.target.value })} className="w-full border rounded-lg p-3" />
                   </label>
 
                   <label className="block mb-3 text-sm">
                     <div className="text-slate-600 mb-1">Notes</div>
-                    <textarea
-                      value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      className="w-full border rounded-lg p-3 min-h-[100px]"
-                    />
+                    <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full border rounded-lg p-3 min-h-[100px]" />
                   </label>
 
                   <div className="flex justify-end gap-3">
-                    <button onClick={() => setSelectedReq(null)} className="px-4 py-2 rounded-lg bg-gray-100">Cancel</button>
-                    <button onClick={handleNextFromDetails} className="px-5 py-2 rounded-lg bg-blue-600 text-white">Next →</button>
+                    <button onClick={() => { setSelectedReq(null); setModalStep(1); }} className="px-4 py-2 rounded-lg bg-gray-100">
+                      Cancel
+                    </button>
+                    <button onClick={handleNextFromDetails} className="px-5 py-2 rounded-lg bg-blue-600 text-white">
+                      Next →
+                    </button>
                   </div>
                 </>
               ) : (
@@ -465,6 +765,82 @@ export default function AdminOnboardingRequests() {
                   </div>
                 </>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Modal (separate from Approve modal) */}
+      {showEditModal && selectedRequest && (
+        <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-white w-full max-w-xl rounded-2xl shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Edit Request — {selectedRequest.name}</h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedRequest(null);
+                }}
+                className="text-slate-600 hover:text-slate-900"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Department */}
+            <label className="block mb-3 text-sm">
+              <div className="text-slate-600 mb-1">Department</div>
+              <input
+                value={formData.department}
+                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                className="w-full border rounded-lg p-3"
+                placeholder="e.g., HR / Engineering"
+              />
+            </label>
+
+            {/* Joining Date */}
+            <label className="block mb-3 text-sm">
+              <div className="text-slate-600 mb-1">Joining Date</div>
+              <input type="date" value={formData.joiningDate} onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })} className="w-full border rounded-lg p-3" />
+            </label>
+
+            {/* Notes */}
+            <label className="block mb-3 text-sm">
+              <div className="text-slate-600 mb-1">Notes</div>
+              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full border rounded-lg p-3 min-h-[100px]" />
+            </label>
+
+            {/* Checklist */}
+            <div className="mb-4">
+              <p className="text-slate-600 text-sm mb-2">Checklist</p>
+
+              <div className="grid grid-cols-1 gap-2 max-h-[240px] overflow-auto">
+                {formData.checklist.map((item, i) => (
+                  <label key={i} className="flex items-center gap-2 p-3 border rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={!!item.checked}
+                      onChange={() => {
+                        const updated = [...formData.checklist];
+                        updated[i] = { ...updated[i], checked: !updated[i].checked };
+                        setFormData({ ...formData, checklist: updated });
+                      }}
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setShowEditModal(false); setSelectedRequest(null); }} className="px-4 py-2 bg-gray-100 rounded-lg">
+                Cancel
+              </button>
+
+              <button onClick={updateRequest} className="px-5 py-2 bg-blue-600 text-white rounded-lg">
+                Save Changes
+              </button>
             </div>
           </motion.div>
         </div>
