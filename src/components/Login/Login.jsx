@@ -1,63 +1,75 @@
-'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, User, Lock, Eye, EyeOff, Smartphone, Upload, X, FileText, CheckCircle } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
+"use client";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Shield,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  Smartphone,
+  Upload,
+  X,
+  FileText,
+  CheckCircle,
+} from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loginType, setLoginType] = useState('admin');
+  const [loginType, setLoginType] = useState("admin");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // OTP Flow States
   const [showOtpScreen, setShowOtpScreen] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
-  
+
   // First Login Flow States
   const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [tempToken, setTempToken] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [tempToken, setTempToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  
+
   // Document Upload States
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [documents, setDocuments] = useState({
     aadharFront: null,
     aadharBack: null,
     panCard: null,
-    bankPassbook: null
+    bankPassbook: null,
   });
   const [documentPreviews, setDocumentPreviews] = useState({
     aadharFront: null,
     aadharBack: null,
     panCard: null,
-    bankPassbook: null
+    bankPassbook: null,
   });
   const [uploadingDocument, setUploadingDocument] = useState(false);
-  
+
   // Forgot Password States
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordPhone, setForgotPasswordPhone] = useState('');
+  const [forgotPasswordPhone, setForgotPasswordPhone] = useState("");
   const [showForgotPasswordOtp, setShowForgotPasswordOtp] = useState(false);
-  const [forgotPasswordOtp, setForgotPasswordOtp] = useState('');
+  const [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetToken, setResetToken] = useState('');
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetToken, setResetToken] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
   const [showResetNewPassword, setShowResetNewPassword] = useState(false);
-  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
-  
+  const [showResetConfirmPassword, setShowResetConfirmPassword] =
+    useState(false);
+
   const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
   // ========== RESEND TIMER ==========
   const startResendTimer = () => {
@@ -76,7 +88,7 @@ export default function LoginPage() {
   // ========== ADMIN LOGIN ==========
   const handleAdminLogin = async () => {
     if (!username || !password) {
-      toast.error('Please enter username and password');
+      toast.error("Please enter username and password");
       return;
     }
 
@@ -85,21 +97,22 @@ export default function LoginPage() {
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         username,
-        password
+        password,
       });
 
       if (response.data.success) {
-        toast.success('Admin login successful!');
-        
-        sessionStorage.setItem('isAuthenticated', 'true');
-        sessionStorage.setItem('userType', 'admin');
-        sessionStorage.setItem('authToken', response.data.token);
-        sessionStorage.setItem('userData', JSON.stringify(response.data.user));
+        toast.success("Admin login successful!");
 
-        setTimeout(() => router.push('/dashboard'), 500);
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userType", "admin");
+        sessionStorage.setItem("authToken", response.data.token);
+        sessionStorage.setItem("userData", JSON.stringify(response.data.user));
+
+        setTimeout(() => router.push("/dashboard"), 500);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Invalid credentials!';
+      const errorMessage =
+        error.response?.data?.message || "Invalid credentials!";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -109,30 +122,34 @@ export default function LoginPage() {
   // ========== SUPER ADMIN LOGIN ==========
   const handleSuperAdminLogin = async () => {
     if (!username || !password) {
-      toast.error('Please enter username and password');
+      toast.error("Please enter username and password");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/super-admin/login`, {
-        username,
-        password
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/super-admin/login`,
+        {
+          username,
+          password,
+        }
+      );
 
       if (response.data.success) {
-        toast.success('Super Admin login successful!');
-        
-        sessionStorage.setItem('isAuthenticated', 'true');
-        sessionStorage.setItem('userType', 'superadmin');
-        sessionStorage.setItem('authToken', response.data.token);
-        sessionStorage.setItem('userData', JSON.stringify(response.data.user));
+        toast.success("Super Admin login successful!");
 
-        setTimeout(() => router.push('/super-admin/dashboard'), 500);
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userType", "superadmin");
+        sessionStorage.setItem("authToken", response.data.token);
+        sessionStorage.setItem("userData", JSON.stringify(response.data.user));
+
+        setTimeout(() => router.push("/super-admin/dashboard"), 500);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Invalid credentials!';
+      const errorMessage =
+        error.response?.data?.message || "Invalid credentials!";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -164,7 +181,6 @@ export default function LoginPage() {
         setOtp("");
         startResendTimer();
       }
-
     } catch (error) {
       const err = error.response?.data;
 
@@ -193,12 +209,12 @@ export default function LoginPage() {
         `${API_URL}/api/auth/user/verify-otp`,
         {
           phone: userInfo.phone,
-          otp
+          otp,
         },
         {
           headers: {
-            Authorization: `Bearer ${tempToken}`
-          }
+            Authorization: `Bearer ${tempToken}`,
+          },
         }
       );
 
@@ -213,7 +229,6 @@ export default function LoginPage() {
         setShowOtpScreen(false);
         setIsFirstLogin(true);
       }
-
     } catch (error) {
       const err = error.response?.data;
       const errorMessage = err?.message || "Invalid OTP";
@@ -225,7 +240,6 @@ export default function LoginPage() {
         setOtp("");
         setShowOtpScreen(false);
       }
-
     } finally {
       setLoading(false);
     }
@@ -234,21 +248,24 @@ export default function LoginPage() {
   // ========== RESEND OTP ==========
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
-    
+
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/user/first-login`, {
-        username: username
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/user/first-login`,
+        {
+          username: username,
+        }
+      );
 
       if (response.data.success) {
-        toast.success('New OTP sent! 📱');
-        setOtp('');
+        toast.success("New OTP sent! 📱");
+        setOtp("");
         startResendTimer();
       }
     } catch (error) {
-      toast.error('Failed to resend OTP');
+      toast.error("Failed to resend OTP");
     } finally {
       setLoading(false);
     }
@@ -264,13 +281,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/user/user-login`,
-        {
-          loginId: username,
-          password
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/user/user-login`, {
+        loginId: username,
+        password,
+      });
 
       if (response.data.success) {
         toast.success("Login successful!");
@@ -300,17 +314,17 @@ export default function LoginPage() {
   // ========== SET PASSWORD (After OTP Verify) ==========
   const handleSetPassword = async () => {
     if (!newPassword || !confirmPassword) {
-      toast.error('Please enter both passwords');
+      toast.error("Please enter both passwords");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -321,40 +335,44 @@ export default function LoginPage() {
         `${API_URL}/api/auth/user/set-password`,
         {
           password: newPassword,
-          confirmPassword: confirmPassword
+          confirmPassword: confirmPassword,
         },
         {
           headers: {
-            Authorization: `Bearer ${tempToken}`
-          }
+            Authorization: `Bearer ${tempToken}`,
+          },
         }
       );
 
       if (response.data.success) {
-        toast.success('Password set successfully!');
-        
+        toast.success("Password set successfully!");
+
         // Store token and user data temporarily
         const authToken = response.data.token;
         const userData = response.data.user;
-        
+
         setTempToken(authToken);
         setUserInfo(userData);
-        
+
         // Show document upload modal
         setIsFirstLogin(false);
         setShowDocumentUpload(true);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to set password';
+      const errorMessage =
+        error.response?.data?.message || "Failed to set password";
       toast.error(errorMessage);
-      
-      if (error.response?.data?.message?.includes('expired') || error.response?.data?.message?.includes('Invalid token')) {
+
+      if (
+        error.response?.data?.message?.includes("expired") ||
+        error.response?.data?.message?.includes("Invalid token")
+      ) {
         setIsFirstLogin(false);
         setShowOtpScreen(false);
-        setTempToken('');
-        setNewPassword('');
-        setConfirmPassword('');
-        toast.info('Session expired. Please start login again');
+        setTempToken("");
+        setNewPassword("");
+        setConfirmPassword("");
+        toast.info("Session expired. Please start login again");
       }
     } finally {
       setLoading(false);
@@ -367,121 +385,140 @@ export default function LoginPage() {
     if (!file) return;
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/pdf",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a valid document (JPG, PNG, or PDF)');
+      toast.error("Please upload a valid document (JPG, PNG, or PDF)");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
+      toast.error("File size should be less than 5MB");
       return;
     }
 
-    setDocuments(prev => ({
+    setDocuments((prev) => ({
       ...prev,
-      [documentType]: file
+      [documentType]: file,
     }));
 
     // Create preview for images
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setDocumentPreviews(prev => ({
+        setDocumentPreviews((prev) => ({
           ...prev,
-          [documentType]: reader.result
+          [documentType]: reader.result,
         }));
       };
       reader.readAsDataURL(file);
     } else {
-      setDocumentPreviews(prev => ({
+      setDocumentPreviews((prev) => ({
         ...prev,
-        [documentType]: 'pdf'
+        [documentType]: "pdf",
       }));
     }
   };
 
   const handleDocumentUpload = async () => {
-    // Check if all mandatory documents are uploaded
-    if (!documents.aadharFront || !documents.aadharBack || !documents.panCard || !documents.bankPassbook) {
-      toast.error('Please upload all mandatory documents');
-      return;
-    }
+  // Check if all mandatory documents are uploaded
+  if (
+    !documents.aadharFront ||
+    !documents.aadharBack ||
+    !documents.panCard ||
+    !documents.bankPassbook
+  ) {
+    toast.error("Please upload all mandatory documents");
+    return;
+  }
 
-    setUploadingDocument(true);
+  setUploadingDocument(true);
 
-    try {
-      const formData = new FormData();
-      formData.append('aadharFront', documents.aadharFront);
-      formData.append('aadharBack', documents.aadharBack);
-      formData.append('panCard', documents.panCard);
-      formData.append('bankPassbook', documents.bankPassbook);
+  try {
+    const formData = new FormData();
 
-      const response = await axios.post(
-        `${API_URL}/api/auth/user/upload-documents`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${tempToken}`
-          }
-        }
-      );
+    // Use documents, not undefined file1/file2/file3/file4
+    formData.append("aadhaarFront", documents.aadharFront);
+    formData.append("aadhaarBack", documents.aadharBack);
+    formData.append("panCard", documents.panCard);
+    formData.append("bankPassbook", documents.bankPassbook);
 
-      if (response.data.success) {
-        toast.success('Documents uploaded successfully! 🎉');
-        
-        // Now complete the login
-        sessionStorage.setItem('isAuthenticated', 'true');
-        sessionStorage.setItem('userType', 'user');
-        sessionStorage.setItem('authToken', tempToken);
-        sessionStorage.setItem('userData', JSON.stringify(userInfo));
-
-        setTimeout(() => router.push('/user/dashboard'), 1000);
+    // SAVE THE RESPONSE
+    const response = await axios.post(
+      `${API_URL}/api/auth/user/student/upload-documents`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${tempToken}`,
+          "Content-Type": "multipart/form-data",
+        },
       }
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to upload documents';
-      toast.error(errorMessage);
-    } finally {
-      setUploadingDocument(false);
+    );
+
+    if (response.data.success) {
+      toast.success("Documents uploaded successfully! 🎉");
+
+      // Complete login
+      sessionStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("userType", "user");
+      sessionStorage.setItem("authToken", tempToken);
+      sessionStorage.setItem("userData", JSON.stringify(userInfo));
+
+      setTimeout(() => router.push("/user/dashboard"), 1000);
     }
-  };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Failed to upload documents";
+    toast.error(errorMessage);
+    console.log(error);
+  } finally {
+    setUploadingDocument(false);
+  }
+};
 
   const removeSelectedDocument = (documentType) => {
-    setDocuments(prev => ({
+    setDocuments((prev) => ({
       ...prev,
-      [documentType]: null
+      [documentType]: null,
     }));
-    setDocumentPreviews(prev => ({
+    setDocumentPreviews((prev) => ({
       ...prev,
-      [documentType]: null
+      [documentType]: null,
     }));
   };
 
   // ========== FORGOT PASSWORD - SEND OTP ==========
   const handleForgotPasswordSendOtp = async () => {
     if (!forgotPasswordPhone) {
-      toast.error('Please enter your phone number');
+      toast.error("Please enter your phone number");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/user/forgot-password`, {
-        phone: forgotPasswordPhone
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/user/forgot-password`,
+        {
+          phone: forgotPasswordPhone,
+        }
+      );
 
       if (response.data.success) {
-        toast.success('OTP sent to your WhatsApp! 📱');
+        toast.success("OTP sent to your WhatsApp! 📱");
         setShowForgotPassword(false);
         setShowForgotPasswordOtp(true);
-        setForgotPasswordOtp('');
+        setForgotPasswordOtp("");
         startResendTimer();
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to send OTP';
+      const errorMessage =
+        error.response?.data?.message || "Failed to send OTP";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -491,26 +528,29 @@ export default function LoginPage() {
   // ========== FORGOT PASSWORD - VERIFY OTP ==========
   const handleForgotPasswordVerifyOtp = async () => {
     if (!forgotPasswordOtp || forgotPasswordOtp.length !== 6) {
-      toast.error('Please enter 6-digit OTP');
+      toast.error("Please enter 6-digit OTP");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/user/verify-reset-otp`, {
-        phone: forgotPasswordPhone,
-        otp: forgotPasswordOtp
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/user/verify-reset-otp`,
+        {
+          phone: forgotPasswordPhone,
+          otp: forgotPasswordOtp,
+        }
+      );
 
       if (response.data.success) {
-        toast.success('OTP verified! Set your new password');
+        toast.success("OTP verified! Set your new password");
         setResetToken(response.data.resetToken);
         setShowForgotPasswordOtp(false);
         setShowResetPassword(true);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Invalid OTP';
+      const errorMessage = error.response?.data?.message || "Invalid OTP";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -520,17 +560,17 @@ export default function LoginPage() {
   // ========== FORGOT PASSWORD - RESET PASSWORD ==========
   const handleResetPassword = async () => {
     if (!resetNewPassword || !resetConfirmPassword) {
-      toast.error('Please enter both passwords');
+      toast.error("Please enter both passwords");
       return;
     }
 
     if (resetNewPassword !== resetConfirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
     if (resetNewPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -541,28 +581,29 @@ export default function LoginPage() {
         `${API_URL}/api/auth/user/reset-password`,
         {
           password: resetNewPassword,
-          confirmPassword: resetConfirmPassword
+          confirmPassword: resetConfirmPassword,
         },
         {
           headers: {
-            Authorization: `Bearer ${resetToken}`
-          }
+            Authorization: `Bearer ${resetToken}`,
+          },
         }
       );
 
       if (response.data.success) {
-        toast.success('Password reset successful! Please login');
-        
+        toast.success("Password reset successful! Please login");
+
         // Reset all forgot password states
         setShowResetPassword(false);
-        setForgotPasswordPhone('');
-        setForgotPasswordOtp('');
-        setResetToken('');
-        setResetNewPassword('');
-        setResetConfirmPassword('');
+        setForgotPasswordPhone("");
+        setForgotPasswordOtp("");
+        setResetToken("");
+        setResetNewPassword("");
+        setResetConfirmPassword("");
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to reset password';
+      const errorMessage =
+        error.response?.data?.message || "Failed to reset password";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -572,21 +613,24 @@ export default function LoginPage() {
   // ========== RESEND FORGOT PASSWORD OTP ==========
   const handleResendForgotPasswordOtp = async () => {
     if (resendTimer > 0) return;
-    
+
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/user/forgot-password`, {
-        phone: forgotPasswordPhone
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/user/forgot-password`,
+        {
+          phone: forgotPasswordPhone,
+        }
+      );
 
       if (response.data.success) {
-        toast.success('New OTP sent! 📱');
-        setForgotPasswordOtp('');
+        toast.success("New OTP sent! 📱");
+        setForgotPasswordOtp("");
         startResendTimer();
       }
     } catch (error) {
-      toast.error('Failed to resend OTP');
+      toast.error("Failed to resend OTP");
     } finally {
       setLoading(false);
     }
@@ -595,28 +639,28 @@ export default function LoginPage() {
   // ========== CANCEL HANDLERS ==========
   const cancelForgotPassword = () => {
     setShowForgotPassword(false);
-    setForgotPasswordPhone('');
+    setForgotPasswordPhone("");
   };
 
   const cancelForgotPasswordOtp = () => {
     setShowForgotPasswordOtp(false);
-    setForgotPasswordOtp('');
-    setForgotPasswordPhone('');
+    setForgotPasswordOtp("");
+    setForgotPasswordPhone("");
   };
 
   const cancelResetPassword = () => {
     setShowResetPassword(false);
-    setResetToken('');
-    setResetNewPassword('');
-    setResetConfirmPassword('');
-    setForgotPasswordPhone('');
+    setResetToken("");
+    setResetNewPassword("");
+    setResetConfirmPassword("");
+    setForgotPasswordPhone("");
   };
 
   // ========== MAIN SUBMIT HANDLER ==========
   const handleSubmit = async () => {
     if (isSuperAdmin) {
       handleSuperAdminLogin();
-    } else if (loginType === 'admin') {
+    } else if (loginType === "admin") {
       handleAdminLogin();
     } else {
       if (password) {
@@ -628,7 +672,7 @@ export default function LoginPage() {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       if (showOtpScreen) {
         handleVerifyOtp();
       } else if (isFirstLogin) {
@@ -648,14 +692,14 @@ export default function LoginPage() {
   const toggleLoginType = (type) => {
     setLoginType(type);
     setIsSuperAdmin(false);
-    setUsername('');
-    setPassword('');
+    setUsername("");
+    setPassword("");
     setShowOtpScreen(false);
-    setOtp('');
+    setOtp("");
     setIsFirstLogin(false);
-    setTempToken('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setTempToken("");
+    setNewPassword("");
+    setConfirmPassword("");
     setShowForgotPassword(false);
     setShowForgotPasswordOtp(false);
     setShowResetPassword(false);
@@ -663,14 +707,14 @@ export default function LoginPage() {
 
   const toggleSuperAdmin = () => {
     setIsSuperAdmin(!isSuperAdmin);
-    setUsername('');
-    setPassword('');
+    setUsername("");
+    setPassword("");
     setShowOtpScreen(false);
-    setOtp('');
+    setOtp("");
     setIsFirstLogin(false);
-    setTempToken('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setTempToken("");
+    setNewPassword("");
+    setConfirmPassword("");
     setShowForgotPassword(false);
     setShowForgotPasswordOtp(false);
     setShowResetPassword(false);
@@ -678,16 +722,16 @@ export default function LoginPage() {
 
   const cancelOtpFlow = () => {
     setShowOtpScreen(false);
-    setOtp('');
-    setTempToken('');
+    setOtp("");
+    setTempToken("");
     setUserInfo(null);
   };
 
   const cancelPasswordSetup = () => {
     setIsFirstLogin(false);
-    setTempToken('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setTempToken("");
+    setNewPassword("");
+    setConfirmPassword("");
     setUserInfo(null);
   };
 
@@ -696,12 +740,18 @@ export default function LoginPage() {
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/30 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-300/30 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/20 dark:bg-blue-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div
+          className="absolute bottom-0 right-0 w-96 h-96 bg-blue-300/30 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/20 dark:bg-blue-400/5 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
       <Toaster position="top-right" />
-      
+
       {/* DOCUMENT UPLOAD MODAL */}
       <AnimatePresence>
         {showDocumentUpload && (
@@ -709,7 +759,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 "
             onClick={(e) => e.target === e.currentTarget && !uploadingDocument}
           >
             <motion.div
@@ -722,7 +772,7 @@ export default function LoginPage() {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1, rotate: 360 }}
-                  transition={{ type: 'spring', duration: 0.8 }}
+                  transition={{ type: "spring", duration: 0.8 }}
                   className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
                 >
                   <Upload className="w-10 h-10 text-white" />
@@ -755,7 +805,7 @@ export default function LoginPage() {
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,application/pdf"
-                        onChange={(e) => handleDocumentSelect(e, 'aadharFront')}
+                        onChange={(e) => handleDocumentSelect(e, "aadharFront")}
                         className="hidden"
                         disabled={uploadingDocument}
                       />
@@ -763,7 +813,8 @@ export default function LoginPage() {
                   ) : (
                     <div className="border-2 border-blue-500 dark:border-blue-400 rounded-xl p-3 bg-blue-50 dark:bg-blue-900/20">
                       <div className="flex items-start gap-2">
-                        {documentPreviews.aadharFront && documentPreviews.aadharFront !== 'pdf' ? (
+                        {documentPreviews.aadharFront &&
+                        documentPreviews.aadharFront !== "pdf" ? (
                           <img
                             src={documentPreviews.aadharFront}
                             alt="Aadhar Front"
@@ -783,11 +834,13 @@ export default function LoginPage() {
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <CheckCircle className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-600 dark:text-green-400">Uploaded</span>
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Uploaded
+                            </span>
                           </div>
                         </div>
                         <button
-                          onClick={() => removeSelectedDocument('aadharFront')}
+                          onClick={() => removeSelectedDocument("aadharFront")}
                           disabled={uploadingDocument}
                           className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50 flex-shrink-0"
                         >
@@ -817,7 +870,7 @@ export default function LoginPage() {
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,application/pdf"
-                        onChange={(e) => handleDocumentSelect(e, 'aadharBack')}
+                        onChange={(e) => handleDocumentSelect(e, "aadharBack")}
                         className="hidden"
                         disabled={uploadingDocument}
                       />
@@ -825,7 +878,8 @@ export default function LoginPage() {
                   ) : (
                     <div className="border-2 border-blue-500 dark:border-blue-400 rounded-xl p-3 bg-blue-50 dark:bg-blue-900/20">
                       <div className="flex items-start gap-2">
-                        {documentPreviews.aadharBack && documentPreviews.aadharBack !== 'pdf' ? (
+                        {documentPreviews.aadharBack &&
+                        documentPreviews.aadharBack !== "pdf" ? (
                           <img
                             src={documentPreviews.aadharBack}
                             alt="Aadhar Back"
@@ -845,11 +899,13 @@ export default function LoginPage() {
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <CheckCircle className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-600 dark:text-green-400">Uploaded</span>
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Uploaded
+                            </span>
                           </div>
                         </div>
                         <button
-                          onClick={() => removeSelectedDocument('aadharBack')}
+                          onClick={() => removeSelectedDocument("aadharBack")}
                           disabled={uploadingDocument}
                           className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50 flex-shrink-0"
                         >
@@ -879,7 +935,7 @@ export default function LoginPage() {
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,application/pdf"
-                        onChange={(e) => handleDocumentSelect(e, 'panCard')}
+                        onChange={(e) => handleDocumentSelect(e, "panCard")}
                         className="hidden"
                         disabled={uploadingDocument}
                       />
@@ -887,7 +943,8 @@ export default function LoginPage() {
                   ) : (
                     <div className="border-2 border-blue-500 dark:border-blue-400 rounded-xl p-3 bg-blue-50 dark:bg-blue-900/20">
                       <div className="flex items-start gap-2">
-                        {documentPreviews.panCard && documentPreviews.panCard !== 'pdf' ? (
+                        {documentPreviews.panCard &&
+                        documentPreviews.panCard !== "pdf" ? (
                           <img
                             src={documentPreviews.panCard}
                             alt="PAN Card"
@@ -907,11 +964,13 @@ export default function LoginPage() {
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <CheckCircle className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-600 dark:text-green-400">Uploaded</span>
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Uploaded
+                            </span>
                           </div>
                         </div>
                         <button
-                          onClick={() => removeSelectedDocument('panCard')}
+                          onClick={() => removeSelectedDocument("panCard")}
                           disabled={uploadingDocument}
                           className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50 flex-shrink-0"
                         >
@@ -941,7 +1000,9 @@ export default function LoginPage() {
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,application/pdf"
-                        onChange={(e) => handleDocumentSelect(e, 'bankPassbook')}
+                        onChange={(e) =>
+                          handleDocumentSelect(e, "bankPassbook")
+                        }
                         className="hidden"
                         disabled={uploadingDocument}
                       />
@@ -949,7 +1010,8 @@ export default function LoginPage() {
                   ) : (
                     <div className="border-2 border-blue-500 dark:border-blue-400 rounded-xl p-3 bg-blue-50 dark:bg-blue-900/20">
                       <div className="flex items-start gap-2">
-                        {documentPreviews.bankPassbook && documentPreviews.bankPassbook !== 'pdf' ? (
+                        {documentPreviews.bankPassbook &&
+                        documentPreviews.bankPassbook !== "pdf" ? (
                           <img
                             src={documentPreviews.bankPassbook}
                             alt="Bank Passbook"
@@ -969,11 +1031,13 @@ export default function LoginPage() {
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <CheckCircle className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-600 dark:text-green-400">Uploaded</span>
+                            <span className="text-xs text-green-600 dark:text-green-400">
+                              Uploaded
+                            </span>
                           </div>
                         </div>
                         <button
-                          onClick={() => removeSelectedDocument('bankPassbook')}
+                          onClick={() => removeSelectedDocument("bankPassbook")}
                           disabled={uploadingDocument}
                           className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50 flex-shrink-0"
                         >
@@ -989,19 +1053,41 @@ export default function LoginPage() {
                 whileHover={{ scale: uploadingDocument ? 1 : 1.02 }}
                 whileTap={{ scale: uploadingDocument ? 1 : 0.98 }}
                 onClick={handleDocumentUpload}
-                disabled={uploadingDocument || !documents.aadharFront || !documents.aadharBack || !documents.panCard || !documents.bankPassbook}
+                disabled={
+                  uploadingDocument ||
+                  !documents.aadharFront ||
+                  !documents.aadharBack ||
+                  !documents.panCard ||
+                  !documents.bankPassbook
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploadingDocument ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Uploading Documents...
                   </span>
                 ) : (
-                  'Upload All & Continue to Dashboard'
+                  "Upload All & Continue to Dashboard"
                 )}
               </motion.button>
 
@@ -1014,7 +1100,7 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1032,7 +1118,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ type: 'spring', duration: 0.8 }}
+                transition={{ type: "spring", duration: 0.8 }}
                 className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
               >
                 <Lock className="w-10 h-10 text-white" />
@@ -1075,7 +1161,7 @@ export default function LoginPage() {
                 disabled={loading || !forgotPasswordPhone}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Sending...' : 'Send OTP'}
+                {loading ? "Sending..." : "Send OTP"}
               </motion.button>
             </div>
           </motion.div>
@@ -1090,7 +1176,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ type: 'spring', duration: 0.8 }}
+                transition={{ type: "spring", duration: 0.8 }}
                 className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
               >
                 <Smartphone className="w-10 h-10 text-white" />
@@ -1115,7 +1201,9 @@ export default function LoginPage() {
                 inputMode="numeric"
                 maxLength={6}
                 value={forgotPasswordOtp}
-                onChange={(e) => setForgotPasswordOtp(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) =>
+                  setForgotPasswordOtp(e.target.value.replace(/\D/g, ""))
+                }
                 onKeyPress={handleKeyPress}
                 disabled={loading}
                 className="w-full px-4 py-3 text-center text-2xl tracking-widest font-bold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50"
@@ -1126,7 +1214,10 @@ export default function LoginPage() {
             <div className="text-center">
               {resendTimer > 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Resend OTP in <span className="font-bold text-blue-600 dark:text-blue-400">{resendTimer}s</span>
+                  Resend OTP in{" "}
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {resendTimer}s
+                  </span>
                 </p>
               ) : (
                 <button
@@ -1154,7 +1245,7 @@ export default function LoginPage() {
                 disabled={loading || forgotPasswordOtp.length !== 6}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Verifying...' : 'Verify OTP'}
+                {loading ? "Verifying..." : "Verify OTP"}
               </motion.button>
             </div>
           </motion.div>
@@ -1169,7 +1260,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ type: 'spring', duration: 0.8 }}
+                transition={{ type: "spring", duration: 0.8 }}
                 className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
               >
                 <Lock className="w-10 h-10 text-white" />
@@ -1188,7 +1279,7 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showResetNewPassword ? 'text' : 'password'}
+                  type={showResetNewPassword ? "text" : "password"}
                   value={resetNewPassword}
                   onChange={(e) => setResetNewPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -1201,7 +1292,11 @@ export default function LoginPage() {
                   onClick={() => setShowResetNewPassword(!showResetNewPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  {showResetNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showResetNewPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -1212,7 +1307,7 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showResetConfirmPassword ? 'text' : 'password'}
+                  type={showResetConfirmPassword ? "text" : "password"}
                   value={resetConfirmPassword}
                   onChange={(e) => setResetConfirmPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -1222,15 +1317,25 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                  onClick={() =>
+                    setShowResetConfirmPassword(!showResetConfirmPassword)
+                  }
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  {showResetConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showResetConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
-              {resetNewPassword && resetConfirmPassword && resetNewPassword !== resetConfirmPassword && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">Passwords do not match</p>
-              )}
+              {resetNewPassword &&
+                resetConfirmPassword &&
+                resetNewPassword !== resetConfirmPassword && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    Passwords do not match
+                  </p>
+                )}
             </div>
 
             <div className="flex gap-3">
@@ -1245,10 +1350,15 @@ export default function LoginPage() {
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
                 onClick={handleResetPassword}
-                disabled={loading || !resetNewPassword || !resetConfirmPassword || resetNewPassword !== resetConfirmPassword}
+                disabled={
+                  loading ||
+                  !resetNewPassword ||
+                  !resetConfirmPassword ||
+                  resetNewPassword !== resetConfirmPassword
+                }
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Resetting...' : 'Reset Password'}
+                {loading ? "Resetting..." : "Reset Password"}
               </motion.button>
             </div>
           </motion.div>
@@ -1263,7 +1373,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ type: 'spring', duration: 0.8 }}
+                transition={{ type: "spring", duration: 0.8 }}
                 className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
               >
                 <Smartphone className="w-10 h-10 text-white" />
@@ -1288,7 +1398,7 @@ export default function LoginPage() {
                 inputMode="numeric"
                 maxLength={6}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
                 className="w-full px-4 py-3 text-center text-2xl tracking-widest font-bold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50"
@@ -1302,7 +1412,10 @@ export default function LoginPage() {
             <div className="text-center">
               {resendTimer > 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Resend OTP in <span className="font-bold text-blue-600 dark:text-blue-400">{resendTimer}s</span>
+                  Resend OTP in{" "}
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {resendTimer}s
+                  </span>
                 </p>
               ) : (
                 <button
@@ -1332,14 +1445,30 @@ export default function LoginPage() {
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Verifying...
                   </span>
                 ) : (
-                  'Verify OTP'
+                  "Verify OTP"
                 )}
               </motion.button>
             </div>
@@ -1353,7 +1482,7 @@ export default function LoginPage() {
         ) : !isFirstLogin ? (
           <>
             {/* Super Admin Toggle - Shows above main toggle */}
-            {(loginType === 'admin' || isSuperAdmin) && (
+            {(loginType === "admin" || isSuperAdmin) && (
               <div className="mb-4">
                 <button
                   onClick={toggleSuperAdmin}
@@ -1379,24 +1508,24 @@ export default function LoginPage() {
             {!isSuperAdmin && (
               <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
                 <button
-                  onClick={() => toggleLoginType('admin')}
+                  onClick={() => toggleLoginType("admin")}
                   disabled={loading}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    loginType === 'admin'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    loginType === "admin"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Shield className="w-5 h-5" />
                   Admin
                 </button>
                 <button
-                  onClick={() => toggleLoginType('user')}
+                  onClick={() => toggleLoginType("user")}
                   disabled={loading}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    loginType === 'user'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    loginType === "user"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <User className="w-5 h-5" />
@@ -1407,51 +1536,67 @@ export default function LoginPage() {
 
             <AnimatePresence mode="wait">
               <motion.div
-                key={isSuperAdmin ? 'superadmin' : loginType}
-                initial={{ opacity: 0, x: isSuperAdmin ? 0 : (loginType === 'admin' ? -20 : 20) }}
+                key={isSuperAdmin ? "superadmin" : loginType}
+                initial={{
+                  opacity: 0,
+                  x: isSuperAdmin ? 0 : loginType === "admin" ? -20 : 20,
+                }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isSuperAdmin ? 0 : (loginType === 'admin' ? 20 : -20) }}
+                exit={{
+                  opacity: 0,
+                  x: isSuperAdmin ? 0 : loginType === "admin" ? 20 : -20,
+                }}
                 transition={{ duration: 0.3 }}
               >
                 <div className="text-center mb-8">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: 'spring' }}
+                    transition={{ delay: 0.2, type: "spring" }}
                     className={`w-20 h-20 ${
                       isSuperAdmin
-                        ? 'bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
-                        : 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700'
+                        ? "bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700"
+                        : "bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700"
                     } rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl`}
                   >
                     {isSuperAdmin ? (
                       <Lock className="w-10 h-10 text-white" />
-                    ) : loginType === 'admin' ? (
+                    ) : loginType === "admin" ? (
                       <Shield className="w-10 h-10 text-white" />
                     ) : (
                       <User className="w-10 h-10 text-white" />
                     )}
                   </motion.div>
-                  <h1 className={`text-3xl font-bold mb-2 ${
-                    isSuperAdmin
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-blue-600 dark:text-blue-400'
-                  }`}>
-                    {isSuperAdmin ? 'Super Admin Portal' : loginType === 'admin' ? 'Admin Portal' : 'User Portal'}
+                  <h1
+                    className={`text-3xl font-bold mb-2 ${
+                      isSuperAdmin
+                        ? "text-purple-600 dark:text-purple-400"
+                        : "text-blue-600 dark:text-blue-400"
+                    }`}
+                  >
+                    {isSuperAdmin
+                      ? "Super Admin Portal"
+                      : loginType === "admin"
+                      ? "Admin Portal"
+                      : "User Portal"}
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400">
                     {isSuperAdmin
-                      ? 'Sign in with super admin credentials'
-                      : loginType === 'admin'
-                      ? 'Sign in to access admin dashboard'
-                      : 'Sign in to access your certificates'}
+                      ? "Sign in with super admin credentials"
+                      : loginType === "admin"
+                      ? "Sign in to access admin dashboard"
+                      : "Sign in to access your certificates"}
                   </p>
                 </div>
 
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {isSuperAdmin ? 'Super Admin Username' : loginType === 'admin' ? 'Admin Username' : 'Phone Number'}
+                      {isSuperAdmin
+                        ? "Super Admin Username"
+                        : loginType === "admin"
+                        ? "Admin Username"
+                        : "Phone Number"}
                     </label>
                     <input
                       type="text"
@@ -1460,9 +1605,15 @@ export default function LoginPage() {
                       onKeyPress={handleKeyPress}
                       disabled={loading}
                       className="w-full px-4 py-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder={isSuperAdmin ? 'Enter super admin username' : loginType === 'admin' ? 'Enter admin username' : 'Enter phone number (e.g., 9876543210)'}
+                      placeholder={
+                        isSuperAdmin
+                          ? "Enter super admin username"
+                          : loginType === "admin"
+                          ? "Enter admin username"
+                          : "Enter phone number (e.g., 9876543210)"
+                      }
                     />
-                    {loginType === 'user' && !isSuperAdmin && (
+                    {loginType === "user" && !isSuperAdmin && (
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         📱 Enter 10-digit phone number (without +91)
                       </p>
@@ -1471,11 +1622,16 @@ export default function LoginPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Password {loginType === 'user' && !isSuperAdmin && <span className="text-xs text-gray-500">(if already set)</span>}
+                      Password{" "}
+                      {loginType === "user" && !isSuperAdmin && (
+                        <span className="text-xs text-gray-500">
+                          (if already set)
+                        </span>
+                      )}
                     </label>
                     <div className="relative">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         onKeyPress={handleKeyPress}
@@ -1488,15 +1644,19 @@ export default function LoginPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                       >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
-                    {loginType === 'user' && !password && !isSuperAdmin && (
+                    {loginType === "user" && !password && !isSuperAdmin && (
                       <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                         💡 First time? Just enter phone number to receive OTP
                       </p>
                     )}
-                    {loginType === 'user' && !isSuperAdmin && (
+                    {loginType === "user" && !isSuperAdmin && (
                       <button
                         onClick={() => setShowForgotPassword(true)}
                         className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
@@ -1513,20 +1673,42 @@ export default function LoginPage() {
                     disabled={loading}
                     className={`w-full ${
                       isSuperAdmin
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 hover:from-purple-600 hover:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
-                        : 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800'
+                        ? "bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 hover:from-purple-600 hover:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800"
+                        : "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800"
                     } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
-                        {loginType === 'user' && !password && !isSuperAdmin ? 'Sending OTP...' : 'Signing In...'}
+                        {loginType === "user" && !password && !isSuperAdmin
+                          ? "Sending OTP..."
+                          : "Signing In..."}
                       </span>
                     ) : (
-                      `${loginType === 'user' && !password && !isSuperAdmin ? 'Send OTP' : 'Sign In'}`
+                      `${
+                        loginType === "user" && !password && !isSuperAdmin
+                          ? "Send OTP"
+                          : "Sign In"
+                      }`
                     )}
                   </motion.button>
                 </div>
@@ -1540,7 +1722,7 @@ export default function LoginPage() {
                     <Lock className="w-4 h-4 inline mr-1" />
                     Super Admin access only • Highest level privileges
                   </>
-                ) : loginType === 'admin' ? (
+                ) : loginType === "admin" ? (
                   <>
                     <Shield className="w-4 h-4 inline mr-1" />
                     Admin access only • No signup available
@@ -1565,7 +1747,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ type: 'spring', duration: 0.8 }}
+                transition={{ type: "spring", duration: 0.8 }}
                 className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
               >
                 <Lock className="w-10 h-10 text-white" />
@@ -1587,7 +1769,7 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -1600,7 +1782,11 @@ export default function LoginPage() {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showNewPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -1611,7 +1797,7 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -1624,19 +1810,39 @@ export default function LoginPage() {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
-              {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">Passwords do not match</p>
-              )}
+              {newPassword &&
+                confirmPassword &&
+                newPassword !== confirmPassword && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    Passwords do not match
+                  </p>
+                )}
             </div>
 
             {newPassword && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs">
-                  <div className={`w-2 h-2 rounded-full ${newPassword.length >= 6 ? 'bg-blue-500 dark:bg-blue-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                  <span className={newPassword.length >= 6 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      newPassword.length >= 6
+                        ? "bg-blue-500 dark:bg-blue-400"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  ></div>
+                  <span
+                    className={
+                      newPassword.length >= 6
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-gray-500 dark:text-gray-400"
+                    }
+                  >
                     At least 6 characters
                   </span>
                 </div>
@@ -1655,19 +1861,40 @@ export default function LoginPage() {
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
                 onClick={handleSetPassword}
-                disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                disabled={
+                  loading ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  newPassword !== confirmPassword
+                }
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Setting Password...
                   </span>
                 ) : (
-                  'Continue'
+                  "Continue"
                 )}
               </motion.button>
             </div>

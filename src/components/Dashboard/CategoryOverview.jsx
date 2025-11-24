@@ -217,7 +217,7 @@ export default function CategoryOverview() {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/templates')}
-          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 group mt-10"
         >
           <FileText size={24} className="group-hover:rotate-12 transition-transform duration-300" />
           <span>Manage Templates</span>

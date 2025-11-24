@@ -55,7 +55,7 @@ export default function ViewDocuments() {
       }
 
       const response = await axios.get(
-        `${API_URL}/api/admin/students/documents`,
+        `${API_URL}/api/documents/students/documents`,
         {
           params: {
             page: 1,
@@ -68,9 +68,54 @@ export default function ViewDocuments() {
         }
       );
 
-      if (response.data.success) {
-        setStudents(response.data.students);
-      }
+      console.log(response);
+
+        if (response.data.success) {
+          const formatted = response.data.students.map((student) => {
+            const docs = student.documents || {};
+
+            return {
+              ...student,
+              hasDocuments:
+                docs.aadhaarFront ||
+                docs.aadhaarBack ||
+                docs.panCard ||
+                docs.bankPassbook,
+
+              documents: {
+                aadharFront: docs.aadhaarFront
+                  ? {
+                      filename: docs.aadhaarFront.split("/").pop(),
+                      path: docs.aadhaarFront,
+                    }
+                  : null,
+
+                aadharBack: docs.aadhaarBack
+                  ? {
+                      filename: docs.aadhaarBack.split("/").pop(),
+                      path: docs.aadhaarBack,
+                    }
+                  : null,
+
+                panCard: docs.panCard
+                  ? {
+                      filename: docs.panCard.split("/").pop(),
+                      path: docs.panCard,
+                    }
+                  : null,
+
+                bankPassbook: docs.bankPassbook
+                  ? {
+                      filename: docs.bankPassbook.split("/").pop(),
+                      path: docs.bankPassbook,
+                    }
+                  : null,
+              },
+            };
+          });
+
+          setStudents(formatted);
+        }
     } catch (error) {
       console.error("❌ Error fetching documents:", error);
       toast.error("Failed to load documents");
@@ -80,7 +125,9 @@ export default function ViewDocuments() {
   };
 
   // Get unique users for filter
-  const uniqueUsers = Array.from(new Set(students.map((student) => student.name)));
+  const uniqueUsers = Array.from(
+    new Set(students.map((student) => student.name))
+  );
 
   // Filter students
   const filteredStudents = students.filter((student) => {
@@ -209,7 +256,7 @@ export default function ViewDocuments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
       <Toaster position="top-right" />
-      
+
       <div className="max-w-7xl mx-auto">
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -295,7 +342,9 @@ export default function ViewDocuments() {
           </div>
 
           {/* Active Filters */}
-          {(selectedUser !== "all" || verificationFilter !== "all" || searchTerm) && (
+          {(selectedUser !== "all" ||
+            verificationFilter !== "all" ||
+            searchTerm) && (
             <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 Active Filters:
@@ -370,7 +419,8 @@ export default function ViewDocuments() {
                         {student.phone} • {student.email || "No email"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                        Category: {student.category} {student.batch && `• Batch: ${student.batch}`}
+                        Category: {student.category}{" "}
+                        {student.batch && `• Batch: ${student.batch}`}
                       </p>
                     </div>
                   </div>
@@ -418,7 +468,11 @@ export default function ViewDocuments() {
                           <div className="flex gap-2">
                             <button
                               onClick={() =>
-                                handlePreview(student.id, docType, docData.filename)
+                                handlePreview(
+                                  student.id,
+                                  docType,
+                                  docData.filename
+                                )
                               }
                               className="flex-1 flex items-center justify-center gap-1 px-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs"
                             >
@@ -427,7 +481,11 @@ export default function ViewDocuments() {
                             </button>
                             <button
                               onClick={() =>
-                                handleDownload(student.id, docType, docData.filename)
+                                handleDownload(
+                                  student.id,
+                                  docType,
+                                  docData.filename
+                                )
                               }
                               className="flex-1 flex items-center justify-center gap-1 px-2 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-xs"
                             >
@@ -445,11 +503,16 @@ export default function ViewDocuments() {
                 <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => handleVerifyDocuments(student.id, true)}
-                    disabled={verifyingStudent === student.id || student.documentsVerified}
+                    disabled={
+                      verifyingStudent === student.id ||
+                      student.documentsVerified
+                    }
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-semibold"
                   >
                     <CheckCircle className="w-5 h-5" />
-                    {student.documentsVerified ? "Already Verified" : "Verify Documents"}
+                    {student.documentsVerified
+                      ? "Already Verified"
+                      : "Verify Documents"}
                   </button>
                   {student.documentsVerified && (
                     <button
