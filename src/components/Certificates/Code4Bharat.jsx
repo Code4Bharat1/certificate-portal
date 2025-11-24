@@ -4,18 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Download, 
-  FileText, 
-  Trash2, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
-  Loader2 
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Trash2,
+  Search,
+  Filter,
+  ChevronDown,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -149,7 +149,7 @@ export default function Code4BharatPage() {
   // Handle Download JPG (only for certificates)
   const handleDownloadJPG = async (item) => {
     if (item.type !== 'certificate') return;
-    
+
     setProcessingItem(item._id);
     try {
       const token = sessionStorage.getItem('authToken');
@@ -190,7 +190,7 @@ export default function Code4BharatPage() {
   const updateItemStatus = async (id, status, type) => {
     try {
       const token = sessionStorage.getItem('authToken');
-      
+
       let endpoint = '';
       if (type === 'letter') {
         endpoint = `${API_URL}/api/letters/${id}/status`;
@@ -260,7 +260,7 @@ export default function Code4BharatPage() {
 
   // Sort items
   const sortedItems = [...items].sort((a, b) => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'name-asc':
         return a.name.localeCompare(b.name);
       case 'name-desc':
@@ -335,7 +335,7 @@ export default function Code4BharatPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 w-full md:w-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex flex-col items-center justify-center">
@@ -392,8 +392,8 @@ export default function Code4BharatPage() {
           >
             <Filter className="w-5 h-5" />
             <span>Filters</span>
-            <ChevronDown 
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} 
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
             />
           </motion.button>
 
@@ -432,20 +432,19 @@ export default function Code4BharatPage() {
                         <button
                           key={status}
                           onClick={() => setStatusFilter(status)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                            statusFilter === status
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
                               ? status === 'downloaded'
                                 ? 'bg-green-500 text-white'
                                 : status === 'pending'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-emerald-600 text-white'
+                                  ? 'bg-amber-500 text-white'
+                                  : 'bg-emerald-600 text-white'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
+                            }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                           <span className="ml-1 text-xs">
-                            ({status === 'all' 
-                              ? items.length 
+                            ({status === 'all'
+                              ? items.length
                               : items.filter(it => it.status === status).length})
                           </span>
                         </button>
@@ -494,9 +493,9 @@ export default function Code4BharatPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex justify-end">
-                  <button 
+                  <button
                     onClick={clearFilters}
                     className="text-emerald-600 dark:text-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-400 text-sm font-medium"
                   >
@@ -535,11 +534,10 @@ export default function Code4BharatPage() {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate">
                         {it.name}
                       </h3>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                        it.type === 'letter' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${it.type === 'letter'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                           : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                      }`}>
+                        }`}>
                         {it.type === 'letter' ? 'Letter' : 'Certificate'}
                       </span>
                     </div>
@@ -547,11 +545,10 @@ export default function Code4BharatPage() {
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${
-                      it.status === 'downloaded'
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${it.status === 'downloaded'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
                         : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
-                    }`}
+                      }`}
                   >
                     {it.status === 'downloaded' ? (
                       <CheckCircle className="w-3 h-3" />
@@ -567,18 +564,18 @@ export default function Code4BharatPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{it.type === 'letter' ? 'Letter ID:' : 'Certificate ID:'}</span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
-                      {it.type === 'letter' 
+                      {it.type === 'letter'
                         ? (it.letterId || it.lettertId || it.certificateId || it._id)
                         : (it.certificateId || it.letterId || it._id)}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200">
                       {it.issueDate ? new Date(it.issueDate).toLocaleDateString('en-GB', {
-                        day: '2-digit', 
-                        month: 'short', 
+                        day: '2-digit',
+                        month: 'short',
                         year: 'numeric'
                       }) : '—'}
                     </span>
@@ -597,6 +594,26 @@ export default function Code4BharatPage() {
                       </span>
                     </div>
                   )}
+
+                  {/* Signature Status (only for letters) */}
+                  {it.type === 'letter' && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">Signature:</span>
+
+                      {it.signedUploaded ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold">
+                          <CheckCircle className="w-3 h-3" />
+                          Uploaded
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 rounded-md text-xs font-semibold">
+                          <AlertCircle className="w-3 h-3" />
+                          Missing
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Card Actions */}
@@ -650,7 +667,7 @@ export default function Code4BharatPage() {
 
         {/* Empty State */}
         {!loading && filteredItems.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700"
@@ -658,12 +675,12 @@ export default function Code4BharatPage() {
             <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No items found</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' || letterType || subLetterType ? 
-                "Try adjusting your filters or search criteria" : 
+              {searchTerm || statusFilter !== 'all' || letterType || subLetterType ?
+                "Try adjusting your filters or search criteria" :
                 "No certificates or letters have been created yet"}
             </p>
             {(searchTerm || statusFilter !== 'all' || letterType || subLetterType) && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-2"
               >
@@ -681,7 +698,7 @@ export default function Code4BharatPage() {
               Showing <span className="font-semibold text-gray-800 dark:text-white">{filteredItems.length}</span> of {items.length} items
             </p>
             {filteredItems.length !== items.length && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className="text-emerald-600 dark:text-emerald-500 text-sm font-medium hover:text-emerald-700 dark:hover:text-emerald-400"
               >
