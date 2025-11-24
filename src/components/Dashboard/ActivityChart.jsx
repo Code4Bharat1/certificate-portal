@@ -26,38 +26,38 @@ const getActivityColor = (type) => {
   switch (type) {
     case 'bulk_created':
       return {
-        bg: 'from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-950',
+        bg: 'from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-900',
         dot: 'bg-blue-500 shadow-blue-500/50',
-        icon: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400',
-        badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+        icon: 'bg-blue-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400',
+        badge: 'bg-blue-100 text-blue-700 dark:bg-gray-700 dark:text-blue-300'
       };
     case 'bulk_downloaded':
       return {
-        bg: 'from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-950',
-        dot: 'bg-orange-500 shadow-orange-500/50',
-        icon: 'bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-400',
-        badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300'
+        bg: 'from-indigo-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900',
+        dot: 'bg-indigo-500 shadow-indigo-500/50',
+        icon: 'bg-indigo-100 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400',
+        badge: 'bg-indigo-100 text-indigo-700 dark:bg-gray-700 dark:text-indigo-300'
       };
     case 'created':
       return {
-        bg: 'from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950',
+        bg: 'from-blue-50 to-cyan-100 dark:from-gray-800 dark:to-gray-900',
         dot: 'bg-blue-600 shadow-blue-600/50',
-        icon: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400',
-        badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
+        icon: 'bg-blue-100 text-blue-700 dark:bg-gray-700 dark:text-blue-400',
+        badge: 'bg-blue-100 text-blue-800 dark:bg-gray-700 dark:text-blue-300'
       };
     case 'downloaded':
       return {
-        bg: 'from-orange-50 to-red-100 dark:from-orange-950 dark:to-red-950',
-        dot: 'bg-orange-600 shadow-orange-600/50',
-        icon: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400',
-        badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
+        bg: 'from-cyan-50 to-blue-100 dark:from-gray-800 dark:to-gray-900',
+        dot: 'bg-cyan-600 shadow-cyan-600/50',
+        icon: 'bg-cyan-100 text-cyan-700 dark:bg-gray-700 dark:text-cyan-400',
+        badge: 'bg-cyan-100 text-cyan-800 dark:bg-gray-700 dark:text-cyan-300'
       };
     case 'deleted':
       return {
-        bg: 'from-red-50 to-red-100 dark:from-red-950 dark:to-red-950',
+        bg: 'from-red-50 to-red-100 dark:from-gray-800 dark:to-gray-900',
         dot: 'bg-red-500 shadow-red-500/50',
-        icon: 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400',
-        badge: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+        icon: 'bg-red-100 text-red-600 dark:bg-gray-700 dark:text-red-400',
+        badge: 'bg-red-100 text-red-700 dark:bg-gray-700 dark:text-red-300'
       };
     default:
       return {
@@ -197,14 +197,14 @@ export default function ActivityChart() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-blue-800 p-6"
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-gray-700 p-6"
       >
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-blue-600 to-orange-600 p-2.5 rounded-xl shadow-md">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2.5 rounded-xl shadow-md">
               <Activity className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-700 to-orange-600 dark:from-blue-400 dark:to-orange-400 bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
               Recent Activity
             </h3>
           </div>
@@ -230,7 +230,7 @@ export default function ActivityChart() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6 }}
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-700 dark:to-orange-800 text-white px-4 py-2 rounded-xl shadow-md"
+              className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 text-white px-4 py-2 rounded-xl shadow-md"
             >
               <Layers className="w-5 h-5" />
               <div className="text-left">
@@ -243,14 +243,14 @@ export default function ActivityChart() {
         
         {activityLog.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <div className="bg-gradient-to-br from-blue-100 to-orange-100 dark:from-blue-900/30 dark:to-orange-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-gray-800 dark:to-gray-700 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Activity className="w-10 h-10 opacity-30" />
             </div>
             <p className="text-lg font-medium">No recent activity</p>
             <p className="text-sm mt-2">Activity will appear here once certificates are created</p>
             <button
               onClick={fetchData}
-              className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transition inline-flex items-center gap-2"
+              className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:shadow-lg transition inline-flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh Data
@@ -332,7 +332,7 @@ export default function ActivityChart() {
               <span>Bulk Created</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-orange-500 shadow-sm"></div>
+              <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-sm"></div>
               <span>Bulk Downloaded</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -340,7 +340,7 @@ export default function ActivityChart() {
               <span>Created</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-orange-600 shadow-sm"></div>
+              <div className="w-2 h-2 rounded-full bg-cyan-600 shadow-sm"></div>
               <span>Downloaded</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -360,11 +360,11 @@ export default function ActivityChart() {
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #3b82f6, #f97316);
+          background: linear-gradient(to bottom, #3b82f6, #6366f1);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #2563eb, #ea580c);
+          background: linear-gradient(to bottom, #2563eb, #4f46e5);
         }
         
         @media (prefers-color-scheme: dark) {

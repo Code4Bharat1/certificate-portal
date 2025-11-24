@@ -48,10 +48,10 @@ export default function ManagePeople() {
   const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
   const closeBatchModal = () => setIsBatchModalOpen(false);
   const openBatchModal = () => setIsBatchModalOpen(true);
-//   // For Add Category Modal
-// const [showAddCategory, setShowAddCategory] = useState(false);
-// const [newCategoryName, setNewCategoryName] = useState("");
-// const [newCategoryDesc, setNewCategoryDesc] = useState("");
+  //   // For Add Category Modal
+  // const [showAddCategory, setShowAddCategory] = useState(false);
+  // const [newCategoryName, setNewCategoryName] = useState("");
+  // const [newCategoryDesc, setNewCategoryDesc] = useState("");
 
 
   const [batchForm, setBatchForm] = useState({
@@ -208,20 +208,20 @@ export default function ManagePeople() {
       toast.error("Failed to delete batch");
     }
   };
-// const handleAddCategory = () => {
-//   if (!newCategoryName.trim()) {
-//     return toast.error("Category name is required");
-//   }
+  // const handleAddCategory = () => {
+  //   if (!newCategoryName.trim()) {
+  //     return toast.error("Category name is required");
+  //   }
 
-//   toast.success(`Category "${newCategoryName}" added successfully`);
+  //   toast.success(`Category "${newCategoryName}" added successfully`);
 
-//   // Close modal
-//   setShowAddCategory(false);
+  //   // Close modal
+  //   setShowAddCategory(false);
 
-//   // Reset fields
-//   setNewCategoryName("");
-//   setNewCategoryDesc("");
-// };
+  //   // Reset fields
+  //   setNewCategoryName("");
+  //   setNewCategoryDesc("");
+  // };
 
   /* --------------------- CRUD Handlers --------------------- */
 
@@ -620,11 +620,10 @@ export default function ManagePeople() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("active")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "active"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "active"
                     ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <UserCheck className="w-4 h-4" />
                 Active ({activePeople})
@@ -634,11 +633,10 @@ export default function ManagePeople() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("disabled")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "disabled"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "disabled"
                     ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <UserX className="w-4 h-4" />
                 Disabled ({disabledPeople})
@@ -648,11 +646,10 @@ export default function ManagePeople() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("all")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  viewMode === "all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "all"
                     ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <Users className="w-4 h-4" />
                 All ({totalPeople})
@@ -729,21 +726,20 @@ export default function ManagePeople() {
           <p className="text-gray-600">
             Showing{" "}
             <span
-              className={`font-bold ${
-                viewMode === "active"
+              className={`font-bold ${viewMode === "active"
                   ? "text-green-600"
                   : viewMode === "disabled"
-                  ? "text-red-600"
-                  : "text-blue-600"
-              }`}
+                    ? "text-red-600"
+                    : "text-blue-600"
+                }`}
             >
               {filteredPeople.length}
             </span>{" "}
             {viewMode === "active"
               ? "active"
               : viewMode === "disabled"
-              ? "disabled"
-              : "total"}{" "}
+                ? "disabled"
+                : "total"}{" "}
             {filteredPeople.length === 1 ? "person" : "people"}
             <span className="text-gray-400 mx-2">•</span>
             <span className="text-gray-500">
@@ -760,11 +756,10 @@ export default function ManagePeople() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${
-                person.disabled
+              className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${person.disabled
                   ? "border-red-200 opacity-75"
                   : "border-gray-100"
-              }`}
+                }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <span
@@ -782,9 +777,8 @@ export default function ManagePeople() {
               </div>
 
               <h3
-                className={`text-xl font-bold mb-2 ${
-                  person.disabled ? "text-gray-500" : "text-gray-800"
-                }`}
+                className={`text-xl font-bold mb-2 ${person.disabled ? "text-gray-500" : "text-gray-800"
+                  }`}
               >
                 {person.name}
               </h3>
@@ -799,11 +793,11 @@ export default function ManagePeople() {
                 <div className="text-sm text-gray-600 font-mono">
                   {person.phone}
                 </div>
-                {/* {person.email && ( */}
+                {person.email && (
                   <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
                     Email: {person.email}
                   </div>
-                {/* )} */}
+                )}
                 {person.aadhaarCard && (
                   <div className="text-xs bg-indigo-50 px-2 py-1 rounded-md text-indigo-600 font-semibold">
                     🆔 Aadhaar: {person.aadhaarCard}
@@ -837,11 +831,10 @@ export default function ManagePeople() {
                 </button>
                 <button
                   onClick={() => handleToggleDisable(person)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${
-                    person.disabled
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${person.disabled
                       ? "bg-green-50 text-green-600 hover:bg-green-100"
                       : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                  }`}
+                    }`}
                 >
                   {person.disabled ? (
                     <>
@@ -949,7 +942,7 @@ export default function ManagePeople() {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    // required
+                  // required
                   />
                 </div>
 
@@ -1633,7 +1626,7 @@ export default function ManagePeople() {
       </AnimatePresence>
 
 
-      
+
       {/* <AnimatePresence>
         {showAddCategory && (
           <motion.div

@@ -240,7 +240,7 @@ export default function FsdPage() {
 
       if (response.data.success) {
         setCertificates(certificates.filter(cert => cert._id !== id));
-        toast.success('Certificate deleted successfully');
+        toast.success('Letter deleted successfully');
       } else {
         toast.error('Delete failed');
       }

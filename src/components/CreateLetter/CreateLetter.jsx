@@ -59,7 +59,22 @@ export default function CreateLetter() {
     uncover: "",
     subjectName: "",
     projectName: "",
-    auditDate: ""
+    auditDate: "",
+    //
+    trainingStartDate: "",
+    trainingEndDate: "",
+    officialStartDate: "",
+    completionDate: "",
+    responsibilities: "",
+    amount: "",
+    effectiveFrom: "",
+    timelineStage: "",
+    timelineProjectName: "",
+    timelineDueDate: "",
+    timelineNewDate: "",
+    genderPronoun: "",
+    month: "",
+    year: "",
   });
 
   // Data Lists
@@ -93,14 +108,14 @@ export default function CreateLetter() {
     if (category === "code4bharat") {
       return {
         "Appreciation Letter": [
-          "Appreciation for Best Performance",
-          "Appreciation for Consistent Performance",
-          "Appreciation for Detecting Errors and Debugging",
-          "Appreciation for Outstanding Performance",
+          // "Appreciation for Best Performance",
+          // "Appreciation for Consistent Performance",
+          // "Appreciation for Detecting Errors and Debugging",
+          // "Appreciation for Outstanding Performance",
         ],
         "Experience Certificate": [
-          "Experience Certificate - Junior Software Developer",
-          "Experience Certificate - Junior Cyber Security Analyst",
+          // "Experience Certificate - Junior Software Developer",
+          // "Experience Certificate - Junior Cyber Security Analyst",
         ],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
@@ -109,16 +124,19 @@ export default function CreateLetter() {
         // "Memo": [],
         "Non-Disclosure Agreement": [],
         // "Other": [],
-        "Promotion Letter": [],
+        "Promotion Letter": [
+          "Non Paid to Paid",
+          "Stipend Revision",
+        ],
         "Timeline Letter": [],
       };
     } else if (category === "marketing-junction") {
       return {
         "Appreciation Letter": [
-          "Appreciation for Best Performance",
-          "Appreciation for Consistent Performance",
-          "Appreciation for Detecting Errors and Debugging",
-          "Appreciation for Outstanding Performance",
+          // "Appreciation for Best Performance",
+          // "Appreciation for Consistent Performance",
+          // "Appreciation for Detecting Errors and Debugging",
+          // "Appreciation for Outstanding Performance",
         ],
         "Experience Certificate": [
           // "Experience Certificate - Video Editing",
@@ -148,7 +166,7 @@ export default function CreateLetter() {
         "Concern Letter-Audit Interview Performance": [],
         "Internship Experience Certificate": [],
         "Live Project Agreement": [],
-        "Non-Disclosure Agreement": [],
+        // "Non-Disclosure Agreement": [],
         "Offer Letter": [],
         // "Other": [],
         "Warning Letter": [
@@ -206,18 +224,21 @@ export default function CreateLetter() {
     } else if (category === "HR" || category === "OD") {
       return {
         "Appreciation Letter": [
-          "Appreciation for Best Attendance",
-          "Appreciation for Outstanding Performance",
-          "Appreciation for Consistent Performance",
+          // "Appreciation for Best Attendance",
+          // "Appreciation for Outstanding Performance",
+          // "Appreciation for Consistent Performance",
         ],
-        "Internship Experience Certificate": [],
+        "Experience Certificate": [],
         // "Live Project Agreement": [],
         "Non-Disclosure Agreement": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        "Promotion Letter": [],
+        "Promotion Letter": [
+          "Non Paid to Paid",
+          "Stipend Revision",
+        ],
         "Timeline Letter": [],
       };
     }
@@ -259,13 +280,19 @@ export default function CreateLetter() {
       ];
     } else if (category === "HR") {
       return [
-        "HR Intern",
-        "HR Operations Intern",
-        "Talent Acquisition Intern",
-        "Training & Development Intern",
+        "HR Assistant",
       ];
-    } else if (category === "FSD") {
+    }
+    else if (category === "OD") {
+      return [
+        "Operations Intern",
+      ];
+    }
+    else if (category === "FSD") {
       return ["Full Stack Developer"];
+    }
+    else if (category === "DM") {
+      return ["Digital Marketing"];
     }
     return [];
   };
@@ -308,20 +335,27 @@ export default function CreateLetter() {
   const needsAuditDate = () =>
     formData.course === "Concern Letter-Audit Interview Performance";
 
-  // Check if subject field is needed
-  // const needsSubject = () => {
-  //   return (
-  //     formData.letterType === "Appreciation Letter" ||
-  //     formData.letterType === "Warning Letter" ||
-  //     formData.course === "Memo"
-  //   );
-  // };
+  const needsDuration = () =>
+    formData.course === "Non-Disclosure Agreement";
+
+  const needsSubject = () =>
+    (formData.course === "Appreciation Letter");
+
+  const needsDescription = () =>
+    (formData.course === "Appreciation Letter");
+
+  const needsMonthAndYear = () =>
+    (formData.course === "Appreciation Letter");
+
+  const needsGenderPronoun = () =>
+    (formData.course === "Experience Certificate");
 
   // Check if role field is needed
   const needsRole = () => {
     return (
       formData.course === "Internship Joining Letter - Unpaid" ||
-      formData.course === "Internship Joining Letter - Paid"
+      formData.course === "Internship Joining Letter - Paid" ||
+      formData.course === "Non-Disclosure Agreement"
     );
   };
 
@@ -329,6 +363,21 @@ export default function CreateLetter() {
   const needsDates = () => {
     return formData.course === "Offer Letter";
   };
+
+  const needsAmount = () => {
+    return formData.course === "Stipend Revision";
+  }
+
+  const needsEffectiveDate = () => {
+    return (formData.course === "Stipend Revision" || formData.course === "Non Paid to Paid");
+  }
+
+  const isInternshipUnpaid = () =>
+    formData.course === "Internship Joining Letter - Unpaid";
+
+  const isInternshipPaid = () =>
+    (formData.course === "Internship Joining Letter - Paid");
+
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -397,9 +446,10 @@ export default function CreateLetter() {
       }
 
       if (response.data.success && Array.isArray(response.data.names)) {
-        const enabled = response.data.names.filter(
-          (person) => !person.disabled
-        );
+        const enabled = response.data.names
+          .filter((person) => !person.disabled)
+          .sort((a, b) => a.name.localeCompare(b.name));
+
         setNamesList(enabled);
       } else {
         setNamesList([]);
@@ -505,10 +555,69 @@ export default function CreateLetter() {
       toast.error("Description cannot exceed 1000 characters");
       return false;
     }
+    // Timeline Letter Validation
+    if (formData.letterType === "Timeline Letter") {
+      if (!formData.timelineStage) {
+        toast.error("Please select timeline stage");
+        return false;
+      }
+      if (!formData.timelineProjectName.trim()) {
+        toast.error("Please enter project name");
+        return false;
+      }
+      if (!formData.timelineDueDate) {
+        toast.error("Please enter due deadline date");
+        return false;
+      }
+      if (!formData.timelineNewDate) {
+        toast.error("Please enter new deadline date");
+        return false;
+      }
+    }
+
+    if (
+      (formData.course === "Experience Certificate")
+    ) {
+      if (!formData.genderPronoun) {
+        toast.error("Please select His/Her");
+        return false;
+      }
+    }
+
+
     if (!formData.issueDate) {
       toast.error("Please select issue date");
       return false;
     }
+    if (isInternshipPaid() || isInternshipUnpaid()) {
+      if (!formData.trainingStartDate || !formData.trainingEndDate) {
+        toast.error("Please enter training start and end date");
+        return false;
+      }
+      if (!formData.officialStartDate || !formData.completionDate) {
+        toast.error("Please enter official internship start & completion dates");
+        return false;
+      }
+      if (!formData.responsibilities.trim()) {
+        toast.error("Please enter responsibilities");
+        return false;
+      }
+      if (formData.responsibilities.length > 500) {
+        toast.error("Responsibilities cannot exceed 500 characters");
+        return false;
+      }
+    }
+    if (isInternshipPaid()) {
+      if (!formData.amount) {
+        toast.error("Please enter stipend amount");
+        return false;
+      }
+      if (!formData.effectiveFrom) {
+        toast.error("Please enter effective from date");
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -563,25 +672,25 @@ export default function CreateLetter() {
         return;
       }
 
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919892398976",
+          otp: otpCode,
+        },
+        { headers: getAuthHeaders() }
+      );
 
-      // if (response.data.success) {
+      if (response.data.success) {
       toast.success("OTP Verified Successfully!");
       setOtpVerified(true);
       setShowOtpModal(false);
       setShowPreview(true);
       generatePreview();
-      // } else {
-      // toast.error("Invalid OTP");
-      // setOtp(["", "", "", "", "", ""]);
-      // }
+      } else {
+      toast.error("Invalid OTP");
+      setOtp(["", "", "", "", "", ""]);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -631,6 +740,7 @@ export default function CreateLetter() {
     setIsCreating(true);
     try {
       const payload = { ...formData };
+      console.log(payload);
       const response = await axios.post(`${API_URL}/api/letters`, payload, {
         headers: getAuthHeaders(),
       });
@@ -911,22 +1021,25 @@ export default function CreateLetter() {
                         />
                       </div>
                     </div>
-                    {/* <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Duration (e.g., 3 months, 6 months)
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.duration}
-                        onChange={(e) =>
-                          handleInputChange("duration", e.target.value)
-                        }
-                        placeholder="Enter duration"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      />
-                    </div> */}
                   </>
                 )}
+
+                {needsDuration() &&
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Duration (e.g., 3 months, 6 months)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.duration}
+                      onChange={(e) =>
+                        handleInputChange("duration", e.target.value)
+                      }
+                      placeholder="Enter duration"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    />
+                  </div>
+                }
 
                 {/* Description — hidden only for BVOC */}
                 {/* {formData.category !== "BVOC" && (
@@ -1132,62 +1245,65 @@ export default function CreateLetter() {
                 {((formData.category === "FSD" &&
                   formData.course === "Internship Experience Certificate")
                   ||
-                  (formData.category === "marketing-junction" &&
-                  formData.course === "Experience Certificate"))
+                  (formData.course === "Experience Certificate")
+                  ||
+                  (formData.category === "DM" &&
+                    formData.course === "Internship Experience Certificate")
+                )
                   && (
-                  <>
-                    {/* Role */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <Award className="w-4 h-4 inline mr-2" />
-                        Role *
-                      </label>
-                      <select
-                        value={formData.role}
-                        onChange={(e) => handleInputChange("role", e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      >
-                        <option value="">Select Role</option>
-                        {getRoles(formData.category).map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Start Date */}
-                    <div className="grid grid-cols-2 gap-4 mt-4">
+                    <>
+                      {/* Role */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          <Calendar className="w-4 h-4 inline mr-2" />
-                          Start Date *
+                          <Award className="w-4 h-4 inline mr-2" />
+                          Role *
                         </label>
-                        <input
-                          type="date"
-                          value={formData.startDate}
-                          onChange={(e) => handleInputChange("startDate", e.target.value)}
+                        <select
+                          value={formData.role}
+                          onChange={(e) => handleInputChange("role", e.target.value)}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        />
+                        >
+                          <option value="">Select Role</option>
+                          {getRoles(formData.category).map((role) => (
+                            <option key={role} value={role}>
+                              {role}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
-                      {/* End Date */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          <Calendar className="w-4 h-4 inline mr-2" />
-                          End Date *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.endDate}
-                          onChange={(e) => handleInputChange("endDate", e.target.value)}
-                          min={formData.startDate}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        />
+                      {/* Start Date */}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <Calendar className="w-4 h-4 inline mr-2" />
+                            Start Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.startDate}
+                            onChange={(e) => handleInputChange("startDate", e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* End Date */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <Calendar className="w-4 h-4 inline mr-2" />
+                            End Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.endDate}
+                            onChange={(e) => handleInputChange("endDate", e.target.value)}
+                            min={formData.startDate}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
 
                 {needsAuditDate() && (
                   <div>
@@ -1207,12 +1323,234 @@ export default function CreateLetter() {
                   </div>
                 )}
 
+                {/* Marketing Junction Internship Paid / Unpaid Fields */}
+                {(isInternshipPaid() || isInternshipUnpaid()) && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Training Start Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Training Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.trainingStartDate}
+                          onChange={(e) => handleInputChange("trainingStartDate", e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+        outline-none transition-all"
+                        />
+                      </div>
+
+                      {/* Training End Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Training End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.trainingEndDate}
+                          onChange={(e) => handleInputChange("trainingEndDate", e.target.value)}
+                          min={formData.trainingStartDate}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+        outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Official Internship Start Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Official Internship Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.officialStartDate}
+                          onChange={(e) => handleInputChange("officialStartDate", e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+        outline-none transition-all"
+                        />
+                      </div>
+                      {/* Internship Completion Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Internship Completion Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.completionDate}
+                          onChange={(e) => handleInputChange("completionDate", e.target.value)}
+                          min={formData.officialStartDate}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+        outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+
+                      </div>
+                    </div>
+
+                    {/* Roles & Responsibilities */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <FileText className="w-4 h-4 inline mr-2" />
+                        Roles & Responsibilities (Max 400 chars) *
+                      </label>
+                      <p
+                        className={`text-xs mb-2 ${formData.responsibilities.length > 400
+                          ? "text-red-500"
+                          : "text-gray-500"
+                          }`}
+                      >
+                        {formData.responsibilities.length}/400 characters
+                      </p>
+                      <textarea
+                        value={formData.responsibilities}
+                        onChange={(e) =>
+                          handleInputChange("responsibilities", e.target.value)
+                        }
+                        placeholder="Enter responsibilities (1 paragraph)"
+                        maxLength={400}
+                        rows={4}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
+        transition-all"
+                      />
+                    </div>
+
+                    {/* Paid Internship Only Fields */}
+                    {isInternshipPaid() && (
+                      <>
+                        {/* Amount */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <Tag className="w-4 h-4 inline mr-2" />
+                            Stipend Amount (INR) *
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.amount}
+                            onChange={(e) => handleInputChange("amount", e.target.value)}
+                            min={0}
+                            placeholder="Enter amount"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
+            transition-all"
+                          />
+                        </div>
+
+                        {/* Effective From Date */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <Calendar className="w-4 h-4 inline mr-2" />
+                            Effective From Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.effectiveFrom}
+                            onChange={(e) => handleInputChange("effectiveFrom", e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
+            transition-all"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {needsSubject() && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Subject (max 50 chars) *
+                      </label>
+                      <p className={`text-xs mb-2 ${formData.subject.length > 50
+                        ? "text-red-500 font-semibold"
+                        : "text-gray-500"
+                        }`}>
+                        {formData.subject.length}/50 characters
+                        {formData.subject.length > 50 && " - Exceeds limit!"}
+                      </p>
+                      <input
+                        type="text"
+                        maxLength={50}
+                        value={formData.subject || ""}
+                        onChange={(e) => handleInputChange("subject", e.target.value)}
+                        placeholder="Enter subject"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {needsGenderPronoun() && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Pronoun (His / Her) *
+                    </label>
+                    <select
+                      value={formData.genderPronoun}
+                      onChange={(e) =>
+                        handleInputChange("genderPronoun", e.target.value)
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+    focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    >
+                      <option value="">Select Pronoun</option>
+                      <option value="his">His</option>
+                      <option value="her">Her</option>
+                    </select>
+                  </div>
+                )}
+
+                {needsMonthAndYear() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Month *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.month || ""}
+                        onChange={(e) => handleInputChange("month", e.target.value)}
+                        placeholder="e.g. January"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Year *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.year || ""}
+                        onChange={(e) => handleInputChange("year", e.target.value)}
+                        placeholder="e.g. 2025"
+                        min={new Date().getFullYear()}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* ✅✅✅ Description for FSD Internship Experience Certificate ✅✅✅ */}
                 {((formData.category === "FSD" &&
                   formData.course === "Internship Experience Certificate")
                   ||
-                  (formData.category === "marketing-junction" &&
-                  formData.course === "Experience Certificate"))
+                  (formData.course === "Experience Certificate")
+                  ||
+                  (formData.category === "DM" &&
+                    formData.course === "Internship Experience Certificate")
+                )
                   && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1253,6 +1591,178 @@ export default function CreateLetter() {
                       </div>
                     </div>
                   )}
+
+                {/* --------------------------------------------- */}
+                {/*            TIMELINE LETTER FIELDS            */}
+                {/* --------------------------------------------- */}
+                {formData.letterType === "Timeline Letter" && (
+                  <div className="space-y-6">
+
+                    {/* 1. Timeline Stage Dropdown */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Timeline Stage *
+                      </label>
+                      <select
+                        value={formData.timelineStage}
+                        onChange={(e) =>
+                          handleInputChange("timelineStage", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">Select Stage</option>
+                        <option value="First">First</option>
+                        <option value="Second">Second</option>
+                        <option value="Final">Final</option>
+                      </select>
+                    </div>
+
+                    {/* 2. Project Name (Max 15 characters) */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Project Name (max 15 chars) *
+                      </label>
+                      <p className={`text-xs mb-2 ${formData.timelineProjectName.length > 15
+                        ? "text-red-500 font-semibold"
+                        : "text-gray-500"
+                        }`}>
+                        {formData.timelineProjectName.length}/15 characters
+                        {formData.timelineProjectName.length > 15 && " - Exceeds limit!"}
+                      </p>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={formData.timelineProjectName}
+                        onChange={(e) =>
+                          handleInputChange("timelineProjectName", e.target.value)
+                        }
+                        placeholder="Enter project name"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+
+                    {/* 3. Due Deadline Date */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Due Deadline Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.timelineDueDate}
+                        onChange={(e) =>
+                          handleInputChange("timelineDueDate", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+
+                    {/* 4. New Deadline Date */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        New Deadline Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.timelineNewDate}
+                        onChange={(e) =>
+                          handleInputChange("timelineNewDate", e.target.value)
+                        }
+                        min={formData.timelineDueDate}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+
+                  </div>
+                )}
+
+                {needsAmount() && (
+                  <>
+                    {/* Amount */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Tag className="w-4 h-4 inline mr-2" />
+                        Stipend Amount (INR) *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.amount}
+                        onChange={(e) => handleInputChange("amount", e.target.value)}
+                        min={0}
+                        placeholder="Enter amount"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
+            transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {needsEffectiveDate() && (
+                  <>
+                    {/* Effective From Date */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Calendar className="w-4 h-4 inline mr-2" />
+                        Effective From Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.effectiveFrom}
+                        onChange={(e) => handleInputChange("effectiveFrom", e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
+            transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {needsDescription() && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <FileText className="w-4 h-4 inline mr-2" />
+                        Description (2 Paragraphs) *
+                      </label>
+                      <p className={`text-xs mb-2 ${formData.description.length > 1000
+                        ? "text-red-500 font-semibold"
+                        : "text-gray-500"
+                        }`}>
+                        {formData.description.length}/1000 characters
+                        {formData.description.length > 1000 && " - Exceeds limit!"}
+                      </p>
+                      <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
+                        💡 Write 2 paragraphs separated by a blank line (press Enter twice).
+                        This will appear in the certificate's content area.
+                      </p>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => handleInputChange("description", e.target.value)}
+                        placeholder="Enter Description"
+                        maxLength={1000}
+                        rows={8}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${formData.description.length > 1000
+                          ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                          : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                          }`}
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xs text-gray-500">
+                          📝 Tip: Press <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> twice to create a new paragraph
+                        </p>
+                        {/* {formData.description.trim() && (
+                          <p className="text-xs text-green-600 font-medium">
+                            ✓ {formData.description.split(/\n\s*\n/).filter(p => p.trim()).length} paragraph(s)
+                          </p>
+                        )} */}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Issue Date */}
                 <div>
@@ -1428,7 +1938,6 @@ export default function CreateLetter() {
                       className="w-full h-[80vh] border shadow-lg"
                       style={{ border: "none" }}
                     ></iframe>
-
                   )}
                 </>
               )}
@@ -1522,6 +2031,33 @@ export default function CreateLetter() {
                         </span>
                       </div>
                     )}
+
+                  {formData.letterType === "Timeline Letter" && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Stage:</span>
+                        <span className="font-semibold text-gray-900">{formData.timelineStage}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Project:</span>
+                        <span className="font-semibold text-gray-900">{formData.timelineProjectName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Due Date:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(formData.timelineDueDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">New Deadline:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(formData.timelineNewDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">

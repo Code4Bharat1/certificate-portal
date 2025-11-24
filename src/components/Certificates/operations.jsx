@@ -17,6 +17,7 @@ import {
   Settings,
   X
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function OperationsPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function OperationsPage() {
                `${API_URL}/api/certificates`,
                {
                  headers: { Authorization: `Bearer ${token}` },
-                 params: { category: 'DM' },
+                 params: { category: 'OD' },
                }
              );
    
@@ -395,10 +396,10 @@ export default function OperationsPage() {
 
                 <div className="space-y-3 mb-4 text-sm">
                  <div className="flex justify-between items-center">
-                    <span className="text-gray-800 dark:text-gray-400">
+                    <span className="text-gray-800 dark:text-black-400">
                       {cert.type === 'certificate' ? 'Certificate ID:' : 'Letter ID:'}
                     </span>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
+                    <span className="font-semibold text-gray-800 dark:text-black-200 text-right break-all">
                       {cert.certificateId || cert.letterId || cert._id}
                     </span>
                   </div>

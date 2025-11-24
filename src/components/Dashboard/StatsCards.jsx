@@ -1,25 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Megaphone,
-  Settings,
-  Calendar, 
-  TrendingUp, 
-  Download, 
-  Clock, 
-  RefreshCw, 
-  Layers, 
-  Package,
-  BarChart3,
-  Code2,
-  Rocket,
-  GraduationCap,
-  Zap,
-  Users,
-  ChevronRight
-} from 'lucide-react';
+import { Megaphone, Settings, Calendar, TrendingUp, Download, Clock, RefreshCw, Layers, Package, BarChart3, Code2, Rocket, GraduationCap, Zap, Users, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -46,86 +28,70 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
     return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
 
-  return <span>{count}</span>;
+  return <>{count}</>;
 };
 
-const StatCard = ({
-  title,
-  icon: Icon,
-  total,
-  mj,
-  c4b,
-  fsd,
-  hr,
-  bc,
-  bvoc,
-  dm,
-  operations,
-  monthlyReport,
-  gradient,
-  bg,
-  iconBg,
-  glowColor,
-  index,
-  router,
-  categories
-}) => {
+const StatCard = ({ title, icon: Icon, total, mj, c4b, fsd, hr, bc, bvoc, dm, operations, monthlyReport, gradient, bg, iconBg, glowColor, index, router, categories }) => {
   const getCategory = (key) => categories.find(cat => cat.key.toLowerCase() === key.toLowerCase());
-  
+
   const createCategoryRow = (label, value, key, categoryGradient) => {
     const category = getCategory(key);
     return (
-      <div 
-        className="flex justify-between items-center p-2.5 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl cursor-pointer transition-all duration-200 group border border-transparent hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-sm"
-        onClick={() => category && router.push(category.route)}
+      <motion.div
+        key={key}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.1 + 0.2 }}
+        className={`flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-300 ${
+          value > 0 ? 'bg-white/60 dark:bg-gray-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer hover:shadow-md' : 'bg-gray-50/50 dark:bg-gray-800/30'
+        }`}
+        onClick={() => category && value > 0 && router.push(category.route)}
       >
-        <span className="text-gray-700 dark:text-gray-300 font-medium">{label}:</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}:</span>
         <div className="flex items-center gap-2">
-          <span className={`font-bold text-lg ${value > 0 ? `bg-gradient-to-r ${categoryGradient} bg-clip-text text-transparent` : 'text-gray-400'}`}>
+          <span className={`text-sm font-bold ${value > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
             {value}
           </span>
           {value > 0 && (
-            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-500 dark:text-orange-500" />
+            <ChevronRight className="w-4 h-4 text-blue-500 dark:text-blue-400" />
           )}
         </div>
-      </div>
+      </motion.div>
     );
   };
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className={`${bg} rounded-2xl shadow-lg p-6 border-2 ${glowColor} relative overflow-hidden group`}
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-      
-      <div className="relative z-10">
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className={`${iconBg} p-3.5 rounded-xl flex items-center justify-center shadow-md relative overflow-hidden`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-20`}></div>
-            <Icon className="w-6 h-6 text-gray-800 dark:text-white relative z-10" />
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-white/20 dark:bg-white/10 rounded-xl backdrop-blur-sm">
+              <Icon className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">{title}</h3>
           </div>
         </div>
-
-        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">{title}</h3>
-
-        <div className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-6 drop-shadow-sm`}>
+        
+        <div className="text-4xl font-bold text-white mb-2">
           <AnimatedCounter value={total} />
         </div>
+        <p className="text-blue-100 dark:text-blue-200 text-sm font-medium">Total Certificates</p>
+      </div>
 
-        <div className="space-y-2">
-          {createCategoryRow("MJ", mj, "marketing-junction", "from-blue-600 to-cyan-500")}
-          {createCategoryRow("C4B", c4b, "code4bharat", "from-orange-500 to-amber-500")}
-          {createCategoryRow("FSD", fsd, "fsd", "from-blue-500 to-indigo-600")}
-          {createCategoryRow("HR", hr, "hr", "from-orange-600 to-red-500")}
-          {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-blue-600 to-purple-600")}
-          {createCategoryRow("BVOC", bvoc, "bvoc", "from-orange-500 to-pink-600")}
-          {createCategoryRow("DM", dm, "dm", "from-cyan-500 to-blue-600")}
-          {createCategoryRow("Operations", operations, "operations", "from-gray-600 to-gray-800")}
-        </div>
+      <div className="p-5 space-y-2 bg-gray-50/50 dark:bg-gray-900/50">
+        {createCategoryRow("MJ", mj, "marketing-junction", "from-blue-600 to-cyan-500")}
+        {createCategoryRow("C4B", c4b, "code4bharat", "from-orange-500 to-amber-500")}
+        {createCategoryRow("FSD", fsd, "fsd", "from-blue-500 to-indigo-600")}
+        {createCategoryRow("HR", hr, "hr", "from-orange-600 to-red-500")}
+        {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-blue-600 to-purple-600")}
+        {createCategoryRow("BVOC", bvoc, "bvoc", "from-orange-500 to-pink-600")}
+        {createCategoryRow("DM", dm, "dm", "from-cyan-500 to-blue-600")}
+        {createCategoryRow("Operations", operations, "operations", "from-gray-600 to-gray-800")}
       </div>
     </motion.div>
   );
@@ -136,39 +102,34 @@ const BulkStatCard = ({ title, icon: Icon, operations, certificates, gradient, b
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1 }}
-    whileHover={{ y: -8, transition: { duration: 0.3 } }}
-    className={`${bg} rounded-2xl shadow-lg p-6 border-2 ${glowColor} relative overflow-hidden group`}
+    className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
   >
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-    
-    <div className="relative z-10">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`${iconBg} p-3.5 rounded-xl flex items-center justify-center shadow-md relative overflow-hidden`}>
-          <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-20`}></div>
-          <Icon className="w-6 h-6 text-gray-800 dark:text-white relative z-10" />
+    <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-3 bg-white/20 dark:bg-white/10 rounded-xl backdrop-blur-sm">
+          <Icon className="w-6 h-6 text-white" />
         </div>
+        <h3 className="text-lg font-bold text-white">{title}</h3>
       </div>
-
-      <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">{title}</h3>
-
-      <div className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-2 drop-shadow-sm`}>
-        <AnimatedCounter value={operations} />
-        <span className="text-lg text-gray-500 dark:text-gray-400 ml-2 font-medium">ops</span>
+      
+      <div className="flex items-baseline gap-2 mb-2">
+        <div className="text-4xl font-bold text-white">
+          <AnimatedCounter value={operations} />
+        </div>
+        <span className="text-blue-100 dark:text-blue-200 text-sm font-medium">ops</span>
       </div>
+    </div>
 
-      <div className="space-y-3 mt-4">
-        <div className="flex justify-between items-center p-2.5 bg-white/50 dark:bg-gray-700/40 rounded-xl">
-          <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">Total Certificates</span>
-          <span className={`font-bold text-xl bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
-            {certificates}
-          </span>
-        </div>
-        <div className="flex justify-between items-center p-2.5 bg-white/50 dark:bg-gray-700/40 rounded-xl">
-          <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">Avg per operation</span>
-          <span className={`font-bold text-xl bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
-            {operations > 0 ? Math.round(certificates / operations) : 0}
-          </span>
-        </div>
+    <div className="p-5 space-y-3 bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Certificates</span>
+        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{certificates}</span>
+      </div>
+      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Avg per operation</span>
+        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+          {operations > 0 ? Math.round(certificates / operations) : 0}
+        </span>
       </div>
     </div>
   </motion.div>
@@ -192,70 +153,60 @@ const CreationRatioCard = ({ individual, bulk, total, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className="bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50 dark:from-slate-900 dark:via-blue-950 dark:to-orange-950 rounded-2xl shadow-lg p-6 border-2 border-blue-200 dark:border-blue-800 relative overflow-hidden group"
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
     >
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400 rounded-full filter blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-orange-400 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="bg-gradient-to-br from-blue-500 to-orange-500 p-3.5 rounded-xl flex items-center justify-center shadow-md">
-            <Package className="w-6 h-6 text-white relative z-10" />
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-white/20 dark:bg-white/10 rounded-xl backdrop-blur-sm">
+            <Layers className="w-6 h-6 text-white" />
           </div>
+          <h3 className="text-lg font-bold text-white">Creation Ratio</h3>
         </div>
-
-        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">Creation Ratio</h3>
-
-        <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent mb-6 drop-shadow-sm">
+        
+        <div className="text-4xl font-bold text-white mb-2">
           <AnimatedCounter value={total} />
         </div>
+        <p className="text-blue-100 dark:text-blue-200 text-sm font-medium">Total Created</p>
+      </div>
 
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Individual</span>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{individual}</span>
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">
-                  {individualPercentage}%
-                </span>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${individualPercentage}%` }}
-                transition={{ duration: 1, delay: 0.5 }}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full shadow-md relative"
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              </motion.div>
+      <div className="p-5 space-y-4 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Individual</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{individual}</span>
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+                {individualPercentage}%
+              </span>
             </div>
           </div>
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${individualPercentage}%` }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-full"
+            />
+          </div>
+        </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Bulk</span>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">{bulk}</span>
-                <span className="text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full">
-                  {bulkPercentage}%
-                </span>
-              </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bulk</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{bulk}</span>
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+                {bulkPercentage}%
+              </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 overflow-hidden shadow-inner">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${bulkPercentage}%` }}
-                transition={{ duration: 1, delay: 0.7 }}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full shadow-md relative"
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              </motion.div>
-            </div>
+          </div>
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${bulkPercentage}%` }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="h-full bg-gradient-to-r from-blue-400 to-cyan-500 dark:from-blue-300 dark:to-cyan-400 rounded-full"
+            />
           </div>
         </div>
       </div>
@@ -326,93 +277,26 @@ export default function StatsCards() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const categories = [
-    {
-      title: 'Marketing Junction',
-      key: 'marketing-junction',
-      gradient: 'from-blue-600 to-cyan-500',
-      buttonTextColor: 'text-blue-600',
-      route: '/certificates/marketing-junction',
-      icon: BarChart3
-    },
-    {
-      title: 'Code4Bharat',
-      key: 'code4bharat',
-      gradient: 'from-orange-500 to-amber-500',
-      buttonTextColor: 'text-orange-600',
-      route: '/certificates/code4bharat',
-      icon: Code2
-    },
-    {
-      title: 'BootCamp',
-      key: 'BootCamp',
-      gradient: 'from-blue-600 to-purple-600',
-      buttonTextColor: 'text-blue-600',
-      route: '/certificates/bootcamp',
-      icon: Rocket
-    },
-    {
-      title: 'BVOC',
-      key: 'BVOC',
-      gradient: 'from-orange-500 to-pink-600',
-      buttonTextColor: 'text-orange-600',
-      route: '/certificates/bvoc',
-      icon: GraduationCap
-    },
-    {
-      title: 'FSD',
-      key: 'FSD',
-      gradient: 'from-blue-500 to-indigo-600',
-      buttonTextColor: 'text-blue-600',
-      route: '/certificates/fsd',
-      icon: Zap
-    },
-    {
-      title: 'HR',
-      key: 'HR',
-      gradient: 'from-orange-600 to-red-500',
-      buttonTextColor: 'text-orange-600',
-      route: '/certificates/hr',
-      icon: Users
-    },
-    {
-      title: 'Digital Marketing',
-      key: 'DM',
-      gradient: 'from-cyan-500 to-blue-600',
-      buttonTextColor: 'text-cyan-600',
-      route: '/certificates/dm',
-      icon: Megaphone
-    },
-    {
-      title: 'Operations Department',
-      key: 'Operations',
-      gradient: 'from-gray-600 to-gray-800',
-      buttonTextColor: 'text-gray-600',
-      route: '/certificates/operations',
-      icon: Settings
-    },
-    {
-      title: 'Monthly Report',
-      key: 'MonthlyReport',
-      gradient: 'from-teal-500 to-emerald-600',
-      buttonTextColor: 'text-teal-600',
-      route: '/certificates/monthly-report',
-      icon: Calendar
-    }
+    { title: 'Marketing Junction', key: 'marketing-junction', gradient: 'from-blue-600 to-cyan-500', buttonTextColor: 'text-blue-600', route: '/certificates/marketing-junction', icon: BarChart3 },
+    { title: 'Code4Bharat', key: 'code4bharat', gradient: 'from-orange-500 to-amber-500', buttonTextColor: 'text-orange-600', route: '/certificates/code4bharat', icon: Code2 },
+    { title: 'BootCamp', key: 'BootCamp', gradient: 'from-blue-600 to-purple-600', buttonTextColor: 'text-blue-600', route: '/certificates/bootcamp', icon: Rocket },
+    { title: 'BVOC', key: 'BVOC', gradient: 'from-orange-500 to-pink-600', buttonTextColor: 'text-orange-600', route: '/certificates/bvoc', icon: GraduationCap },
+    { title: 'FSD', key: 'FSD', gradient: 'from-blue-500 to-indigo-600', buttonTextColor: 'text-blue-600', route: '/certificates/fsd', icon: Zap },
+    { title: 'HR', key: 'HR', gradient: 'from-orange-600 to-red-500', buttonTextColor: 'text-orange-600', route: '/certificates/hr', icon: Users },
+    { title: 'Digital Marketing', key: 'DM', gradient: 'from-cyan-500 to-blue-600', buttonTextColor: 'text-cyan-600', route: '/certificates/dm', icon: Megaphone },
+    { title: 'Operations Department', key: 'Operations', gradient: 'from-gray-600 to-gray-800', buttonTextColor: 'text-gray-600', route: '/certificates/operations', icon: Settings },
+    { title: 'Monthly Report', key: 'MonthlyReport', gradient: 'from-teal-500 to-emerald-600', buttonTextColor: 'text-teal-600', route: '/certificates/monthly-report', icon: Calendar }
   ];
 
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
-
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
     try {
-      const token = typeof window !== 'undefined'
-        ? sessionStorage.getItem('authToken')
-        : null;
-
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
       const response = await axios.get(`${API_URL}/api/stats/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -504,7 +388,6 @@ export default function StatsCards() {
       if (data.creationRatio) {
         setCreationRatio(data.creationRatio);
       }
-
     } catch (err) {
       console.error('Error fetching stats:', err);
       setError(err.response?.data?.message || 'Failed to load statistics');
@@ -520,37 +403,21 @@ export default function StatsCards() {
   if (loading) {
     return (
       <>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
-            >
-              <div className="h-14 bg-gray-300 dark:bg-gray-700 rounded-xl mb-4"></div>
-              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-1/2"></div>
-              <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
-              </div>
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-pulse border border-gray-200 dark:border-gray-700">
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
             </div>
           ))}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={`bulk-${i}`}
-              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-6 border-2 border-gray-300 dark:border-gray-700 animate-pulse"
-            >
-              <div className="h-14 bg-gray-300 dark:bg-gray-700 rounded-xl mb-4"></div>
-              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-1/2"></div>
-              <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded"></div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-pulse border border-gray-200 dark:border-gray-700">
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
             </div>
           ))}
         </div>
@@ -560,14 +427,11 @@ export default function StatsCards() {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-2 border-red-300 dark:border-red-700 rounded-2xl p-8 text-center shadow-lg">
-        <div className="bg-red-100 dark:bg-red-900/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-          <RefreshCw className="w-8 h-8 text-red-600 dark:text-red-400" />
-        </div>
-        <p className="text-red-700 dark:text-red-300 mb-6 text-lg font-semibold">{error}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center border border-gray-200 dark:border-gray-700">
+        <div className="text-red-500 dark:text-red-400 mb-4">{error}</div>
         <button
           onClick={fetchStats}
-          className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl font-medium transition-colors duration-200"
         >
           <RefreshCw className="w-5 h-5" />
           Retry
@@ -578,57 +442,40 @@ export default function StatsCards() {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
-          <StatCard 
-            key={stat.title} 
-            {...stat} 
-            index={index} 
-            router={router}
-            categories={categories}
-          />
+          <StatCard key={stat.title} {...stat} index={index} router={router} categories={categories} />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <BulkStatCard
-          title="Bulk Generated (7D)"
-          icon={Layers}
+          title="Last 7 Days Bulk"
+          icon={Package}
           operations={bulkStats.last7Days.operations}
           certificates={bulkStats.last7Days.certificates}
-          gradient="from-cyan-500 to-blue-600"
-          bg="bg-gradient-to-br from-cyan-50 via-blue-50 to-cyan-100 dark:from-cyan-950 dark:via-blue-950 dark:to-cyan-900"
-          iconBg="bg-cyan-100 dark:bg-cyan-900/50"
-          glowColor="border-cyan-200 dark:border-cyan-800"
+          gradient="from-blue-600 to-cyan-500"
+          bg="bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900"
+          iconBg="bg-blue-100 dark:bg-blue-900/50"
+          glowColor="border-blue-200 dark:border-blue-800"
           index={0}
         />
         <BulkStatCard
-          title="Bulk Generated (30D)"
-          icon={Layers}
+          title="Last Month Bulk"
+          icon={Package}
           operations={bulkStats.lastMonth.operations}
           certificates={bulkStats.lastMonth.certificates}
-          gradient="from-orange-500 to-amber-600"
-          bg="bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900"
-          iconBg="bg-orange-100 dark:bg-orange-900/50"
-          glowColor="border-orange-200 dark:border-orange-800"
-          index={1}
-        />
-        <BulkStatCard
-          title="Bulk Downloads"
-          icon={Download}
-          operations={bulkStats.downloads.operations}
-          certificates={bulkStats.downloads.certificates}
-          gradient="from-blue-600 to-indigo-600"
-          bg="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950 dark:via-indigo-950 dark:to-blue-900"
+          gradient="from-blue-600 to-cyan-500"
+          bg="bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900"
           iconBg="bg-blue-100 dark:bg-blue-900/50"
           glowColor="border-blue-200 dark:border-blue-800"
-          index={2}
+          index={1}
         />
         <CreationRatioCard
           individual={creationRatio.individual}
           bulk={creationRatio.bulk}
           total={creationRatio.total}
-          index={3}
+          index={2}
         />
       </div>
     </>

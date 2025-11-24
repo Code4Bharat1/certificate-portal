@@ -210,7 +210,7 @@ export default function VerifyCertificate() {
             Verification Portal
           </h1>
           <p className="text-gray-600 mt-3 text-sm sm:text-base md:text-lg">
-            Verify certificates and letters issued by <strong>Code4Bharat</strong> under{" "}
+            Verify certificates and letters issued by 
             <strong className="text-emerald-600">Nexcore Alliance</strong>.
           </p>
         </div>
@@ -392,7 +392,7 @@ export default function VerifyCertificate() {
                 <>
                   <p className="text-gray-700 mb-5">
                     Verified successfully! Issued by{" "}
-                    <strong>Code4Bharat</strong> under{" "}
+                    
                     <strong>Nexcore Alliance</strong>.
                   </p>
 
@@ -477,7 +477,7 @@ export default function VerifyCertificate() {
         <div className="overflow-hidden relative">
           <div className="flex animate-scroll-x space-x-12 items-center">
             {[
-              "Code4Bharat",
+              
               "Marketiq Junction",
               "Student Alliance",
               "Edu Momentum",
@@ -498,7 +498,7 @@ export default function VerifyCertificate() {
       <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 backdrop-blur-md bg-white/70 border border-emerald-100 rounded-full px-6 py-2 shadow-lg flex items-center gap-2 text-sm text-gray-700">
         <Shield className="w-4 h-4 text-emerald-500" />
         <span>
-          Secured by Nexcore Alliance | Code4Bharat © {new Date().getFullYear()}
+          Secured by Nexcore Alliance  © {new Date().getFullYear()}
         </span>
       </footer>
     </div>

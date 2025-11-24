@@ -4,18 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Download, 
-  FileText, 
-  Trash2, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
-  Loader2 
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Trash2,
+  Search,
+  Filter,
+  ChevronDown,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -82,7 +82,7 @@ export default function MarketingJunctionPage() {
 
   // Sort items
   const sortedItems = [...certificates].sort((a, b) => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'name-asc':
         return a.name?.localeCompare(b.name || '') || 0;
       case 'name-desc':
@@ -98,8 +98,8 @@ export default function MarketingJunctionPage() {
   // ✅ Filtering logic (search + status)
   const filteredCertificates = sortedItems.filter(cert => {
     const search = searchTerm.trim().toLowerCase();
-    
-    const matchesSearch = !search || 
+
+    const matchesSearch = !search ||
       (cert.name?.toLowerCase().includes(search)) ||
       (cert.certificateId?.toLowerCase().includes(search)) ||
       (cert.letterId?.toLowerCase().includes(search)) ||
@@ -117,6 +117,7 @@ export default function MarketingJunctionPage() {
 
   const handleDownloadPDF = async (cert) => {
     setProcessingItem(cert._id);
+    console.log(cert);
     try {
       const token = sessionStorage.getItem('authToken');
       if (!token) {
@@ -125,7 +126,7 @@ export default function MarketingJunctionPage() {
       }
 
       let url = `${API_URL}/api/certificates/${cert._id}/download/pdf`;
-      
+
       // Handle different endpoint for letters if needed
       if (cert.type === 'letter') {
         url = `${API_URL}/api/letters/${cert._id}/download.pdf`;
@@ -212,7 +213,7 @@ export default function MarketingJunctionPage() {
   const updateItemStatus = async (id, status, type) => {
     try {
       const token = sessionStorage.getItem('authToken');
-      
+
       let endpoint = '';
       if (type === 'letter') {
         endpoint = `${API_URL}/api/letters/${id}/status`;
@@ -258,7 +259,8 @@ export default function MarketingJunctionPage() {
 
       if (response.data.success) {
         setCertificates(certificates.filter(item => item._id !== id));
-        toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`);
+        // toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`);
+        toast.success('Letter deleted successfully');
       } else {
         toast.error('Delete failed');
       }
@@ -304,7 +306,7 @@ export default function MarketingJunctionPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 w-full md:w-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex flex-col items-center justify-center">
@@ -319,7 +321,7 @@ export default function MarketingJunctionPage() {
                 <span className="text-sm text-blue-100">Letters</span>
                 <span className="text-xl font-bold">{stats.letters}</span>
               </div>
-              
+
             </div>
           </div>
         </div>
@@ -358,8 +360,8 @@ export default function MarketingJunctionPage() {
           >
             <Filter className="w-5 h-5" />
             <span>Filters</span>
-            <ChevronDown 
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} 
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
             />
           </motion.button>
 
@@ -398,20 +400,19 @@ export default function MarketingJunctionPage() {
                         <button
                           key={status}
                           onClick={() => setStatusFilter(status)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                            statusFilter === status
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
                               ? status === 'downloaded'
                                 ? 'bg-green-500 text-white'
                                 : status === 'pending'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                  ? 'bg-amber-500 text-white'
+                                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
+                            }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                           <span className="ml-1 text-xs">
-                            ({status === 'all' 
-                              ? certificates.length 
+                            ({status === 'all'
+                              ? certificates.length
                               : certificates.filter(it => it.status === status).length})
                           </span>
                         </button>
@@ -419,9 +420,9 @@ export default function MarketingJunctionPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
-                  <button 
+                  <button
                     onClick={clearFilters}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
                   >
@@ -449,7 +450,7 @@ export default function MarketingJunctionPage() {
               Showing <span className="font-semibold text-gray-800 dark:text-white">{filteredCertificates.length}</span> of {certificates.length} items
             </p>
             {filteredCertificates.length !== certificates.length && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
               >
@@ -477,11 +478,10 @@ export default function MarketingJunctionPage() {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate">
                         {cert.name}
                       </h3>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                        cert.type === 'letter' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300' 
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${cert.type === 'letter'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300'
                           : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'
-                      }`}>
+                        }`}>
                         {cert.type === 'letter' ? 'Letter' : 'Certificate'}
                       </span>
                     </div>
@@ -489,11 +489,10 @@ export default function MarketingJunctionPage() {
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${
-                      cert.status === 'downloaded'
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${cert.status === 'downloaded'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
                         : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
-                    }`}
+                      }`}
                   >
                     {cert.status === 'downloaded' ? (
                       <CheckCircle className="w-3 h-3" />
@@ -512,13 +511,13 @@ export default function MarketingJunctionPage() {
                       {cert.certificateId || cert.letterId || cert._id}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200">
                       {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('en-GB', {
-                        day: '2-digit', 
-                        month: 'short', 
+                        day: '2-digit',
+                        month: 'short',
                         year: 'numeric'
                       }) : '—'}
                     </span>
@@ -576,7 +575,7 @@ export default function MarketingJunctionPage() {
 
         {/* Empty State */}
         {!loading && filteredCertificates.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700"
@@ -584,12 +583,12 @@ export default function MarketingJunctionPage() {
             <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No items found</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' ? 
-                "Try adjusting your filters or search criteria" : 
+              {searchTerm || statusFilter !== 'all' ?
+                "Try adjusting your filters or search criteria" :
                 "No certificates or letters have been created yet"}
             </p>
             {(searchTerm || statusFilter !== 'all') && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition inline-flex items-center gap-2"
               >
@@ -600,7 +599,7 @@ export default function MarketingJunctionPage() {
           </motion.div>
         )}
 
-        
+
       </div>
 
       {/* Delete Confirmation Modal */}

@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Download, 
-  FileText, 
-  Trash2, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Trash2,
+  Search,
+  Filter,
+  ChevronDown,
+  Clock,
+  AlertCircle,
+  CheckCircle,
   Loader2,
   Users
 } from 'lucide-react';
@@ -58,11 +58,19 @@ export default function HrPage() {
           );
 
           if (res.data.success) {
-            // Keep newest first
+            // defend against missing arrays
             const certificates = Array.isArray(res.data.data) ? res.data.data : [];
-            certificates.sort((a, b) => new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate));
-            
-            setCertificates(certificates);
+            const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+
+            const combined = [
+              ...certificates.map((c) => ({ ...c, type: 'certificate' })),
+              ...letters.map((l) => ({ ...l, type: 'letter' })),
+            ];
+
+            // keep newest first (api already sorts but safe)
+            combined.sort((a, b) => new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate));
+
+            setCertificates(combined);
           } else {
             toast.error('Failed to fetch certificates');
           }
@@ -80,7 +88,7 @@ export default function HrPage() {
 
   // Sort items
   const sortedCertificates = [...certificates].sort((a, b) => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'name-asc':
         return a.name?.localeCompare(b.name || '') || 0;
       case 'name-desc':
@@ -96,10 +104,11 @@ export default function HrPage() {
   // ✅ Filtering logic (search + status)
   const filteredCertificates = sortedCertificates.filter(cert => {
     const search = searchTerm.trim().toLowerCase();
-    
-    const matchesSearch = !search || 
+
+    const matchesSearch = !search ||
       (cert.name?.toLowerCase().includes(search)) ||
       (cert.certificateId?.toLowerCase().includes(search)) ||
+      (cert.letterId?.toLowerCase().includes(search)) ||
       (cert.course?.toLowerCase().includes(search));
 
     const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
@@ -116,18 +125,19 @@ export default function HrPage() {
     setProcessingItem(cert._id);
     try {
       const token = sessionStorage.getItem('authToken');
-      if (!token) {
-        router.push('/login');
-        return;
+      if (!token) return router.push('/login');
+
+      let url;
+      if (cert.type === 'letter') {
+        url = `${API_URL}/api/letters/${cert._id}/download.pdf`;
+      } else {
+        url = `${API_URL}/api/certificates/download/${cert._id}`;
       }
 
-      const response = await axios.get(
-        `${API_URL}/api/certificates/${cert._id}/download/pdf`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -139,7 +149,6 @@ export default function HrPage() {
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
 
-      // Update status to 'downloaded' if it's not already
       if (cert.status !== 'downloaded') {
         await updateCertificateStatus(cert._id, 'downloaded');
       }
@@ -152,6 +161,7 @@ export default function HrPage() {
       setProcessingItem(null);
     }
   };
+
 
   const handleDownloadJPG = async (cert) => {
     setProcessingItem(cert._id);
@@ -198,7 +208,7 @@ export default function HrPage() {
   const updateCertificateStatus = async (id, status) => {
     try {
       const token = sessionStorage.getItem('authToken');
-      
+
       await axios.put(
         `${API_URL}/api/certificates/${id}/status`,
         { status },
@@ -276,7 +286,7 @@ export default function HrPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Stats - Only show total certificates */}
             <div className="flex gap-2 md:gap-3">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2">
@@ -331,8 +341,8 @@ export default function HrPage() {
           >
             <Filter className="w-5 h-5" />
             <span>Filters</span>
-            <ChevronDown 
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} 
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
             />
           </motion.button>
 
@@ -371,20 +381,19 @@ export default function HrPage() {
                         <button
                           key={status}
                           onClick={() => setStatusFilter(status)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                            statusFilter === status
-                              ? status === 'downloaded'
-                                ? 'bg-green-500 text-white'
-                                : status === 'pending'
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
+                            ? status === 'downloaded'
+                              ? 'bg-green-500 text-white'
+                              : status === 'pending'
                                 ? 'bg-amber-500 text-white'
                                 : `bg-gradient-to-r ${themeGradient} text-white`
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                           <span className="ml-1 text-xs">
-                            ({status === 'all' 
-                              ? certificates.length 
+                            ({status === 'all'
+                              ? certificates.length
                               : certificates.filter(cert => cert.status === status).length})
                           </span>
                         </button>
@@ -392,9 +401,9 @@ export default function HrPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
-                  <button 
+                  <button
                     onClick={clearFilters}
                     className={`${themeTextColor} dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 text-sm font-medium`}
                   >
@@ -433,19 +442,24 @@ export default function HrPage() {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate">
                         {cert.name}
                       </h3>
-                      <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300">
-                        HR
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium 
+                        ${cert.type === 'certificate'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                          : 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-300'
+                        }`}
+                      >
+                        {cert.type === 'certificate' ? 'Certificate' : 'Letter'}
                       </span>
+
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{cert.course}</p>
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${
-                      cert.status === 'downloaded'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${cert.status === 'downloaded'
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
+                      }`}
                   >
                     {cert.status === 'downloaded' ? (
                       <CheckCircle className="w-3 h-3" />
@@ -459,18 +473,21 @@ export default function HrPage() {
                 {/* Card Body */}
                 <div className="space-y-3 mb-4 text-sm flex-grow">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Certificate ID:</span>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
-                      {cert.certificateId || cert._id}
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {cert.type === 'certificate' ? 'Certificate ID:' : 'Letter ID:'}
                     </span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
+                      {cert.certificateId || cert.letterId || cert._id}
+                    </span>
+
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200">
                       {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('en-GB', {
-                        day: '2-digit', 
-                        month: 'short', 
+                        day: '2-digit',
+                        month: 'short',
                         year: 'numeric'
                       }) : '—'}
                     </span>
@@ -494,20 +511,23 @@ export default function HrPage() {
                     PDF
                   </motion.button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    disabled={processingItem === cert._id}
-                    onClick={() => handleDownloadJPG(cert)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-pink-600 dark:bg-pink-700 text-white py-2.5 rounded-lg hover:bg-pink-700 dark:hover:bg-pink-600 transition text-sm font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {processingItem === cert._id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    JPG
-                  </motion.button>
+                  {cert.type !== 'letter' && (
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      disabled={processingItem === cert._id}
+                      onClick={() => handleDownloadJPG(cert)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-pink-600 dark:bg-pink-700 text-white py-2.5 rounded-lg hover:bg-pink-700 dark:hover:bg-pink-600 transition text-sm font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {processingItem === cert._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      JPG
+                    </motion.button>
+                  )}
+
 
                   <motion.button
                     whileHover={{ scale: 1.03 }}
@@ -526,7 +546,7 @@ export default function HrPage() {
 
         {/* Empty State */}
         {!loading && filteredCertificates.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700"
@@ -534,12 +554,12 @@ export default function HrPage() {
             <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No certificates found</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' ? 
-                "Try adjusting your filters or search criteria" : 
+              {searchTerm || statusFilter !== 'all' ?
+                "Try adjusting your filters or search criteria" :
                 "No certificates have been created yet"}
             </p>
             {(searchTerm || statusFilter !== 'all') && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className={`mt-4 px-4 py-2 bg-gradient-to-r ${themeGradient} text-white rounded-lg hover:opacity-90 transition inline-flex items-center gap-2`}
               >
@@ -557,7 +577,7 @@ export default function HrPage() {
               Showing <span className="font-semibold text-gray-800 dark:text-white">{filteredCertificates.length}</span> of {certificates.length} certificates
             </p>
             {filteredCertificates.length !== certificates.length && (
-              <button 
+              <button
                 onClick={clearFilters}
                 className={`${themeTextColor} dark:text-rose-400 text-sm font-medium hover:text-rose-700 dark:hover:text-rose-300`}
               >
