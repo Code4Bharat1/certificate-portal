@@ -121,11 +121,13 @@ export default function Code4BharatPage() {
         responseType: 'blob',
       });
 
+      const Id = item.type === "letter" ? item.letterId : item.certificateId;
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `${item.name}_${item.type}.pdf`;
+      link.download = `${item.name}_${Id}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -156,7 +158,7 @@ export default function Code4BharatPage() {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/certificates/download/${item._id}/jpg`, {
+      const response = await axios.get(`${API_URL}/api/certificates/${item._id}/download/jpg`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       });
