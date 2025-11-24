@@ -780,7 +780,7 @@ export default function UserDashboard() {
         </motion.div>
 
         {/* Progress Overview */}
-        <motion.div
+      <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mt-8 border-2 border-blue-200 dark:border-gray-700"
@@ -852,6 +852,15 @@ export default function UserDashboard() {
                 ></motion.div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => window.location.href = '/termsandconditions/C4B/t&c'}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+            >
+              <span>Accept Terms and Conditions</span>
+            </button>
           </div>
         </motion.div>
       </div>
