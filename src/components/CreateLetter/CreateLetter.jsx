@@ -27,6 +27,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 export default function CreateLetter() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
+    const [dynamicCategories, setDynamicCategories] = useState([]);
   const [loadingNames, setLoadingNames] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -93,14 +94,13 @@ export default function CreateLetter() {
 
   const [pdfPreview, setPdfPreview] = useState(null);
 
-  const categoryConfig = {
-    code4bharat: { label: "Code4Bharat", batches: [] },
-    "marketing-junction": { label: "Marketing Junction", batches: [] },
-    FSD: { label: "FSD", batches: batches.FSD || [] },
-    HR: { label: "HR", batches: [] },
-    BVOC: { label: "BVOC", batches: batches.BVOC || [] },
-    DM: { label: "Digital Marketing", batches: [] },
-    OD: { label: "Operations Department", batches: [] },
+  const loadCategories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/categories`);
+      if (res.data.success) setDynamicCategories(res.data.categories);
+    } catch (err) {
+      console.error("❌ Error loading categories:", err);
+    }
   };
 
   // Letter types and subtypes configuration
@@ -392,6 +392,7 @@ export default function CreateLetter() {
       }
     };
     fetchBatches();
+    loadCategories();
   }, []);
 
   // OTP Timer
@@ -820,9 +821,9 @@ export default function CreateLetter() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
+                    {dynamicCategories.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
                       </option>
                     ))}
                   </select>

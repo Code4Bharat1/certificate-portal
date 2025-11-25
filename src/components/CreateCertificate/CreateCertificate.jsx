@@ -26,6 +26,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateCertificate() {
   const router = useRouter();
+    const [dynamicCategories, setDynamicCategories] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [loadingNames, setLoadingNames] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(false);
@@ -85,6 +86,7 @@ export default function CreateCertificate() {
       }
     };
     fetchBatches();
+    loadCategories();
   }, []);
 
   // OTP Timer - ONLY ONE useEffect for resendTimer
@@ -130,6 +132,7 @@ export default function CreateCertificate() {
       formData.issueDate
     ) {
       generatePreview();
+      
     }
   }, [otpVerified]);
 
@@ -216,6 +219,14 @@ export default function CreateCertificate() {
       setLoadingCourses(false);
     }
   };
+  const loadCategories = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/categories`);
+        if (res.data.success) setDynamicCategories(res.data.categories);
+      } catch (err) {
+        console.error("❌ Error loading categories:", err);
+      }
+    };
 
   const handleInputChange = (field, value) => {
     if (field === "category") {
@@ -360,25 +371,25 @@ export default function CreateCertificate() {
         return;
       }
 
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919892398976",
+          otp: otpCode,
+        },
+        { headers: getAuthHeaders() }
+      );
 
-      // if (response.data.success) {
+      if (response.data.success) {
         toast.success("✅ OTP Verified Successfully!");
         setOtpVerified(true);
         setShowOtpModal(false);
         setShowPreview(true);
         // generatePreview will be called by useEffect
-      // } else {
-      //   toast.error("Invalid OTP");
-      //   setOtp(["", "", "", "", "", ""]);
-      // }
+      } else {
+        toast.error("Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -537,9 +548,9 @@ export default function CreateCertificate() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
+                    {dynamicCategories.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
                       </option>
                     ))}
                   </select>
