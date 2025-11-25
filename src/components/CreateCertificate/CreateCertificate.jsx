@@ -26,7 +26,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateCertificate() {
   const router = useRouter();
-    const [dynamicCategories, setDynamicCategories] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [loadingNames, setLoadingNames] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(false);
@@ -86,7 +85,6 @@ export default function CreateCertificate() {
       }
     };
     fetchBatches();
-    loadCategories();
   }, []);
 
   // OTP Timer - ONLY ONE useEffect for resendTimer
@@ -132,7 +130,6 @@ export default function CreateCertificate() {
       formData.issueDate
     ) {
       generatePreview();
-      
     }
   }, [otpVerified]);
 
@@ -219,14 +216,6 @@ export default function CreateCertificate() {
       setLoadingCourses(false);
     }
   };
-  const loadCategories = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/categories`);
-        if (res.data.success) setDynamicCategories(res.data.categories);
-      } catch (err) {
-        console.error("❌ Error loading categories:", err);
-      }
-    };
 
   const handleInputChange = (field, value) => {
     if (field === "category") {
@@ -548,9 +537,9 @@ export default function CreateCertificate() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
-                    {dynamicCategories.map((cat) => (
-                      <option key={cat._id} value={cat.name}>
-                        {cat.name}
+                    {Object.entries(categoryConfig).map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.label}
                       </option>
                     ))}
                   </select>
