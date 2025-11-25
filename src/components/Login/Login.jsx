@@ -503,7 +503,7 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/user/forgot-password`,
+        `${API_URL}/api/auth/forgot-password`,
         {
           phone: forgotPasswordPhone,
         }

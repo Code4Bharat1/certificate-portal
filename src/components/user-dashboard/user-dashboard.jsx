@@ -107,7 +107,7 @@ useEffect(() => {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.get(`${API_URL}/api/student/profile`, {
+      const response = await axios.get(`${API_URL}/api/student/student/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -131,7 +131,7 @@ useEffect(() => {
   const fetchStatistics = async () => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const response = await axios.get(`${API_URL}/api/student/statistics`, {
+      const response = await axios.get(`${API_URL}/api/student/student/statistics`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -151,7 +151,7 @@ useEffect(() => {
     try {
       const token = sessionStorage.getItem("authToken");
       const response = await axios.get(
-        `${API_URL}/api/student/letters/recent`,
+        `${API_URL}/api/student/student/letters/recent`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -300,7 +300,7 @@ useEffect(() => {
     try {
       const token = sessionStorage.getItem("authToken");
       const response = await axios.post(
-        `${API_URL}/api/student/upload-signed?letterId=${selectedLetter.credentialId}`,
+        `${API_URL}/api/student/student/upload-signed?letterId=${selectedLetter.credentialId}`,
         formData,
         {
           headers: {
