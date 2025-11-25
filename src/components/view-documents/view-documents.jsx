@@ -35,6 +35,9 @@ export default function ViewDocuments() {
   const [verificationFilter, setVerificationFilter] = useState("all");
   const [previewDocument, setPreviewDocument] = useState(null);
   const [verifyingStudent, setVerifyingStudent] = useState(null);
+  const [rejectModal, setRejectModal] = useState(null);
+const [rejectReason, setRejectReason] = useState("");
+
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
@@ -70,52 +73,52 @@ export default function ViewDocuments() {
 
       console.log(response);
 
-        if (response.data.success) {
-          const formatted = response.data.students.map((student) => {
-            const docs = student.documents || {};
+      if (response.data.success) {
+        const formatted = response.data.students.map((student) => {
+          const docs = student.documents || {};
 
-            return {
-              ...student,
-              hasDocuments:
-                docs.aadhaarFront ||
-                docs.aadhaarBack ||
-                docs.panCard ||
-                docs.bankPassbook,
+          return {
+            ...student,
+            hasDocuments:
+              docs.aadhaarFront ||
+              docs.aadhaarBack ||
+              docs.panCard ||
+              docs.bankPassbook,
 
-              documents: {
-                aadharFront: docs.aadhaarFront
-                  ? {
-                      filename: docs.aadhaarFront.split("/").pop(),
-                      path: docs.aadhaarFront,
-                    }
-                  : null,
+            documents: {
+              aadharFront: docs.aadhaarFront
+                ? {
+                    filename: docs.aadhaarFront.split("/").pop(),
+                    path: docs.aadhaarFront,
+                  }
+                : null,
 
-                aadharBack: docs.aadhaarBack
-                  ? {
-                      filename: docs.aadhaarBack.split("/").pop(),
-                      path: docs.aadhaarBack,
-                    }
-                  : null,
+              aadharBack: docs.aadhaarBack
+                ? {
+                    filename: docs.aadhaarBack.split("/").pop(),
+                    path: docs.aadhaarBack,
+                  }
+                : null,
 
-                panCard: docs.panCard
-                  ? {
-                      filename: docs.panCard.split("/").pop(),
-                      path: docs.panCard,
-                    }
-                  : null,
+              panCard: docs.panCard
+                ? {
+                    filename: docs.panCard.split("/").pop(),
+                    path: docs.panCard,
+                  }
+                : null,
 
-                bankPassbook: docs.bankPassbook
-                  ? {
-                      filename: docs.bankPassbook.split("/").pop(),
-                      path: docs.bankPassbook,
-                    }
-                  : null,
-              },
-            };
-          });
+              bankPassbook: docs.bankPassbook
+                ? {
+                    filename: docs.bankPassbook.split("/").pop(),
+                    path: docs.bankPassbook,
+                  }
+                : null,
+            },
+          };
+        });
 
-          setStudents(formatted);
-        }
+        setStudents(formatted);
+      }
     } catch (error) {
       console.error("❌ Error fetching documents:", error);
       toast.error("Failed to load documents");
@@ -178,7 +181,7 @@ export default function ViewDocuments() {
   const handleDownload = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const url = `${API_URL}/api/admin/students/${studentId}/documents/${docType}/view`;
+      const url = `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`;
 
       // Open in new tab
       window.open(url + `?token=${token}`, "_blank");
@@ -192,7 +195,7 @@ export default function ViewDocuments() {
   const handlePreview = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const url = `${API_URL}/api/admin/students/${studentId}/documents/${docType}/view`;
+      const url = `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`;
 
       setPreviewDocument({
         studentId,
@@ -438,6 +441,7 @@ export default function ViewDocuments() {
                 </div>
 
                 {/* Documents Grid */}
+                {/* Documents Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                   {Object.entries(student.documents || {}).map(
                     ([docType, docData]) => {
@@ -461,11 +465,44 @@ export default function ViewDocuments() {
                               <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                                 {docData.filename}
                               </p>
+
+                              {/* Status Badge */}
+                              {docData.status && (
+                                <span
+                                  className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                                    docData.status === "approved"
+                                      ? "bg-green-200 text-green-700"
+                                      : docData.status === "rejected"
+                                      ? "bg-red-200 text-red-700"
+                                      : "bg-yellow-200 text-yellow-700"
+                                  }`}
+                                >
+                                  {docData.status === "approved" && (
+                                    <CheckCircle className="w-3 h-3" />
+                                  )}
+                                  {docData.status === "rejected" && (
+                                    <XCircle className="w-3 h-3" />
+                                  )}
+                                  {docData.status === "pending" && (
+                                    <Clock className="w-3 h-3" />
+                                  )}
+                                  {docData.status.charAt(0).toUpperCase() +
+                                    docData.status.slice(1)}
+                                </span>
+                              )}
+
+                              {/* Rejection Reason */}
+                              {docData.status === "rejected" &&
+                                docData.rejectionReason && (
+                                  <p className="text-red-400 text-xs mt-1">
+                                    Reason: {docData.rejectionReason}
+                                  </p>
+                                )}
                             </div>
                           </div>
 
                           {/* Actions */}
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 mt-2">
                             <button
                               onClick={() =>
                                 handlePreview(
@@ -479,6 +516,7 @@ export default function ViewDocuments() {
                               <Eye className="w-3 h-3" />
                               View
                             </button>
+
                             <button
                               onClick={() =>
                                 handleDownload(
@@ -491,6 +529,43 @@ export default function ViewDocuments() {
                             >
                               <Download className="w-3 h-3" />
                               Download
+                            </button>
+                          </div>
+
+                          {/* Approval / Rejection Buttons */}
+                          <div className="flex gap-2 mt-3 pt-2 border-t border-gray-300 dark:border-gray-600">
+                            <button
+                              onClick={() =>
+                                handleApproveDocument(student.id, docType)
+                              }
+                              disabled={docData.status === "approved"}
+                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
+                                docData.status === "approved"
+                                  ? "bg-green-400 text-white"
+                                  : "bg-green-600 hover:bg-green-700 text-white"
+                              }`}
+                            >
+                              <CheckCircle className="w-3 h-3" />
+                              {docData.status === "approved"
+                                ? "Approved"
+                                : "Approve"}
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                openRejectModal(student.id, docType)
+                              }
+                              disabled={docData.status === "rejected"}
+                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
+                                docData.status === "rejected"
+                                  ? "bg-red-400 text-white"
+                                  : "bg-red-600 hover:bg-red-700 text-white"
+                              }`}
+                            >
+                              <XCircle className="w-3 h-3" />
+                              {docData.status === "rejected"
+                                ? "Rejected"
+                                : "Reject"}
                             </button>
                           </div>
                         </motion.div>
@@ -528,6 +603,45 @@ export default function ViewDocuments() {
               </motion.div>
             ))}
           </div>
+        )}
+        {rejectModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setRejectModal(null)}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">
+                Reject Document
+              </h3>
+
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Enter rejection reason..."
+                className="w-full p-3 border rounded-lg dark:bg-gray-700"
+              />
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setRejectModal(null)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectDocument}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Preview Modal */}

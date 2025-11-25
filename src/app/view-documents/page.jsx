@@ -1,12 +1,14 @@
-import ViewDocuments from '@/components/view-documents/view-documents'
-import React from 'react'
+import dynamic from "next/dynamic";
 
-const page = () => {
+const ViewDocuments = dynamic(
+  () => import("@/components/view-documents/view-documents"),
+  { ssr: false }
+);
+
+export default function Page() {
   return (
     <div>
-        <ViewDocuments/>
+      <ViewDocuments />
     </div>
-  )
+  );
 }
-
-export default page

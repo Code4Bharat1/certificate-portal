@@ -26,12 +26,15 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+
 export default function ManagePeople() {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // const [viewMode, setViewMode] = useState("active");
   const [people, setPeople] = useState([]);
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+
   const [filteredPeople, setFilteredPeople] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -48,11 +51,10 @@ export default function ManagePeople() {
   const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
   const closeBatchModal = () => setIsBatchModalOpen(false);
   const openBatchModal = () => setIsBatchModalOpen(true);
-  //   // For Add Category Modal
-  // const [showAddCategory, setShowAddCategory] = useState(false);
-  // const [newCategoryName, setNewCategoryName] = useState("");
-  // const [newCategoryDesc, setNewCategoryDesc] = useState("");
-
+  // For Add Category Modal
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDesc, setNewCategoryDesc] = useState("");
 
   const [batchForm, setBatchForm] = useState({
     category: "FSD",
@@ -81,16 +83,15 @@ export default function ManagePeople() {
   const MAX_NAME_LENGTH = 50;
   const MAX_ADDRESS_LENGTH = 200;
 
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "code4bharat", label: "Code4Bharat" },
-    { value: "marketing-junction", label: "Marketing Junction" },
-    { value: "FSD", label: "FSD" },
-    { value: "BVOC", label: "BVOC" },
-    { value: "HR", label: "HR" },
-    { value: "DM", label: "Digital Marketing" },
-    { value: "OD", label: "Operations Department" },
-  ];
+  const loadCategories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/categories`);
+      if (res.data.success) setDynamicCategories(res.data.categories);
+    } catch (err) {
+      console.error("❌ Error loading categories:", err);
+    }
+  };
+
 
   const closeBulkUpload = () => {
     setShowBulkUpload(false);
@@ -105,6 +106,7 @@ export default function ManagePeople() {
       setApiError("API URL not configured");
     } else {
       fetchPeople();
+      loadCategories();
       loadBatchesFromBackend();
     }
   }, [API_URL]);
@@ -208,20 +210,35 @@ export default function ManagePeople() {
       toast.error("Failed to delete batch");
     }
   };
-  // const handleAddCategory = () => {
-  //   if (!newCategoryName.trim()) {
-  //     return toast.error("Category name is required");
-  //   }
+  const handleAddCategory = async () => {
+  if (!newCategoryName.trim()) {
+    return toast.error("Category name is required");
+  }
 
-  //   toast.success(`Category "${newCategoryName}" added successfully`);
+  try {
+    const res = await axios.post(`${API_URL}/api/categories`, {
+      name: newCategoryName.trim(),
+      description: newCategoryDesc.trim(),
+    });
 
-  //   // Close modal
-  //   setShowAddCategory(false);
+    if (res.data.success) {
+      toast.success(`Category "${newCategoryName}" added successfully`);
 
-  //   // Reset fields
-  //   setNewCategoryName("");
-  //   setNewCategoryDesc("");
-  // };
+      // Reload fresh category list from backend
+      loadCategories();
+
+      // Close modal
+      setShowAddCategory(false);
+
+      // Reset fields
+      setNewCategoryName("");
+      setNewCategoryDesc("");
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to add category");
+  }
+};
+
 
   /* --------------------- CRUD Handlers --------------------- */
 
@@ -237,7 +254,7 @@ export default function ManagePeople() {
       aadhaarCard,
       address,
       email,
-      parentEmail
+      parentEmail,
     } = formData;
 
     if (!name || !category || !phone)
@@ -605,7 +622,7 @@ export default function ManagePeople() {
               Manage Batches
             </motion.button>
             {/* ⭐ NEW BUTTON — ADD CATEGORY */}
-            {/* <motion.button
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowAddCategory(true)}
@@ -613,17 +630,18 @@ export default function ManagePeople() {
             >
               <Tag className="w-5 h-5" />
               Add Category
-            </motion.button> */}
+            </motion.button>
 
             <div className="flex gap-2 bg-white rounded-xl p-1 shadow-lg border border-gray-200">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("active")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "active"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                  viewMode === "active"
                     ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 <UserCheck className="w-4 h-4" />
                 Active ({activePeople})
@@ -633,10 +651,11 @@ export default function ManagePeople() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("disabled")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "disabled"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                  viewMode === "disabled"
                     ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 <UserX className="w-4 h-4" />
                 Disabled ({disabledPeople})
@@ -646,10 +665,11 @@ export default function ManagePeople() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setViewMode("all")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${viewMode === "all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                  viewMode === "all"
                     ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 <Users className="w-4 h-4" />
                 All ({totalPeople})
@@ -672,22 +692,26 @@ export default function ManagePeople() {
               </div>
 
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setSelectedBatch("all");
-                  }}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+
+  <select
+    value={selectedCategory}
+    onChange={(e) => {
+      setSelectedCategory(e.target.value);
+      setSelectedBatch("all");
+    }}
+    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl"
+  >
+    <option value="all">All Categories</option>
+
+    {dynamicCategories.map((cat) => (
+      <option key={cat._id} value={cat.name}>
+        {cat.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
               <div className="relative">
                 <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -726,20 +750,21 @@ export default function ManagePeople() {
           <p className="text-gray-600">
             Showing{" "}
             <span
-              className={`font-bold ${viewMode === "active"
+              className={`font-bold ${
+                viewMode === "active"
                   ? "text-green-600"
                   : viewMode === "disabled"
-                    ? "text-red-600"
-                    : "text-blue-600"
-                }`}
+                  ? "text-red-600"
+                  : "text-blue-600"
+              }`}
             >
               {filteredPeople.length}
             </span>{" "}
             {viewMode === "active"
               ? "active"
               : viewMode === "disabled"
-                ? "disabled"
-                : "total"}{" "}
+              ? "disabled"
+              : "total"}{" "}
             {filteredPeople.length === 1 ? "person" : "people"}
             <span className="text-gray-400 mx-2">•</span>
             <span className="text-gray-500">
@@ -756,10 +781,11 @@ export default function ManagePeople() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${person.disabled
+              className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 border ${
+                person.disabled
                   ? "border-red-200 opacity-75"
                   : "border-gray-100"
-                }`}
+              }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <span
@@ -777,8 +803,9 @@ export default function ManagePeople() {
               </div>
 
               <h3
-                className={`text-xl font-bold mb-2 ${person.disabled ? "text-gray-500" : "text-gray-800"
-                  }`}
+                className={`text-xl font-bold mb-2 ${
+                  person.disabled ? "text-gray-500" : "text-gray-800"
+                }`}
               >
                 {person.name}
               </h3>
@@ -831,10 +858,11 @@ export default function ManagePeople() {
                 </button>
                 <button
                   onClick={() => handleToggleDisable(person)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${person.disabled
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium ${
+                    person.disabled
                       ? "bg-green-50 text-green-600 hover:bg-green-100"
                       : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                    }`}
+                  }`}
                 >
                   {person.disabled ? (
                     <>
@@ -919,15 +947,11 @@ export default function ManagePeople() {
                     required
                   >
                     <option value="">Select</option>
-                    <option value="code4bharat">Code4Bharat</option>
-                    <option value="marketing-junction">
-                      Marketing Junction
-                    </option>
-                    <option value="FSD">FSD</option>
-                    <option value="BVOC">BVOC</option>
-                    <option value="HR">HR</option>
-                    <option value="DM">Digital Marketing</option>
-                    <option value="OD">Operations Department</option>
+                    {dynamicCategories.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -942,7 +966,7 @@ export default function ManagePeople() {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                  // required
+                    // required
                   />
                 </div>
 
@@ -1625,84 +1649,84 @@ export default function ManagePeople() {
         )}
       </AnimatePresence>
 
-
-
-      {/* <AnimatePresence>
-        {showAddCategory && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-            onClick={() => setShowAddCategory(false)}
-          >
+      {
+        <AnimatePresence>
+          {showAddCategory && (
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+              onClick={() => setShowAddCategory(false)}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Add Category
-                </h2>
-                <button
-                  onClick={() => setShowAddCategory(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <label className="block mb-1 font-semibold text-gray-700">
-                    Category Name *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter category name"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800">
+                    Add Category
+                  </h2>
+                  <button
+                    onClick={() => setShowAddCategory(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block mb-1 font-semibold text-gray-700">
-                    Description (optional)
-                  </label>
-                  <textarea
-                    placeholder="Short description..."
-                    value={newCategoryDesc}
-                    onChange={(e) => setNewCategoryDesc(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-24"
-                  ></textarea>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block mb-1 font-semibold text-gray-700">
+                      Category Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter category name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 font-semibold text-gray-700">
+                      Description (optional)
+                    </label>
+                    <textarea
+                      placeholder="Short description..."
+                      value={newCategoryDesc}
+                      onChange={(e) => setNewCategoryDesc(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-24"
+                    ></textarea>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => setShowAddCategory(false)}
-                  className="w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    onClick={() => setShowAddCategory(false)}
+                    className="w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
 
-                <button
-                  onClick={() => {
-                    handleAddCategory();
-                  }}
-                  className="w-1/2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition"
-                >
-                  Add Category
-                </button>
-              </div>
+                  <button
+                    onClick={() => {
+                      handleAddCategory();
+                    }}
+                    className="w-1/2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition"
+                  >
+                    Add Category
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence> */}
+          )}
+        </AnimatePresence>
+      }
     </div>
   );
 }

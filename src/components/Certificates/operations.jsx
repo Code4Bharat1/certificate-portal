@@ -413,6 +413,38 @@ export default function OperationsPage() {
                       })}
                     </span>
                   </div>
+                  {it.type === 'letter' && it.letterType && (
+                    <div className="flex justify-between items-start">
+                      <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200 text-right">
+                        {it.letterType}
+                        {it.letterSubType && (
+                          <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal">
+                            {it.letterSubType}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Signature Status (only for letters) */}
+                  {it.type === 'letter' && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">Signature:</span>
+
+                      {it.signedUploaded ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold">
+                          <CheckCircle className="w-3 h-3" />
+                          Uploaded
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 rounded-md text-xs font-semibold">
+                          <AlertCircle className="w-3 h-3" />
+                          Missing
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                <div className="flex gap-2 mt-auto">
