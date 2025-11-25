@@ -50,6 +50,13 @@ export default function AdminOnboardingRequests() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [selectedForOffboard, setSelectedForOffboard] = useState(null);
+  const [showOffboardModal, setShowOffboardModal] = useState(false);
+  const [offboardChecklist, setOffboardChecklist] = useState({
+  returnAssets: false,
+  submitDocs: false,
+  handoverCompleted: false,
+});
 
   // Checklist master list
   const checklistItems = [
@@ -99,6 +106,37 @@ export default function AdminOnboardingRequests() {
     );
   };
 
+  const openOffboardForm = (req) => {
+  setSelectedForOffboard(req);
+  setOffboardChecklist({
+    returnAssets: false,
+    submitDocs: false,
+    handoverCompleted: false,
+  });
+  setShowOffboardModal(true);
+};
+
+const openOffboardModal = (req) => {
+  setSelectedOffboardUser(req);
+
+  // If user already has previous offboard checklist, use it
+  setOffboardChecklist(
+    req.offboardDetails?.length > 0
+      ? req.offboardDetails
+      : checklistItems.map((label) => ({ label, checked: false }))
+  );
+
+  setShowOffboardModal(true);
+};
+const toggleOffboardItem = (index) => {
+  setOffboardChecklist((prev) => {
+    const copy = [...prev];
+    copy[index] = { ...copy[index], checked: !copy[index].checked };
+    return copy;
+  });
+};
+
+
   // ---------- Auth + fetch helpers
   const checkAuth = () => {
     const token = sessionStorage.getItem("authToken");
@@ -139,33 +177,47 @@ export default function AdminOnboardingRequests() {
     }
   };
 
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      const token = sessionStorage.getItem("authToken");
-      if (!token) throw new Error("No authentication token found");
+const fetchAllData = async () => {
+  try {
+    setLoading(true);
+    const token = sessionStorage.getItem("authToken");
+    if (!token) throw new Error("No authentication token found");
 
-      const res = await axios.get(`${API_URL}/api/onboarding-request`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const res = await axios.get(`${API_URL}/api/onboarding-request`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (res.data?.success) {
-        setRequests(res.data.requests || []);
-      } else {
-        throw new Error(res.data?.message || "Failed to load requests");
-      }
-    } catch (err) {
-      console.error("fetchAllData error:", err);
-      if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-        handleLogout();
-      } else {
-        toast.error("Failed to load onboarding requests");
-      }
-    } finally {
-      setLoading(false);
+    if (res.data?.success) {
+      let allRequests = res.data.requests || [];
+
+      // merge with any static offboarded users in localStorage
+      try {
+        const stored = JSON.parse(localStorage.getItem("requests") || "[]");
+        if (Array.isArray(stored)) {
+          allRequests = allRequests.map((r) => {
+            const offboarded = stored.find((s) => s._id === r._id && s.offboarded);
+            return offboarded ? { ...r, ...offboarded } : r;
+          });
+        }
+      } catch {}
+
+      setRequests(allRequests);
+    } else {
+      throw new Error(res.data?.message || "Failed to load requests");
     }
-  };
+  } catch (err) {
+    console.error("fetchAllData error:", err);
+    if (err?.response?.status === 401) {
+      toast.error("Session expired. Please login again.");
+      handleLogout();
+    } else {
+      toast.error("Failed to load onboarding requests");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // initial load
   useEffect(() => {
@@ -378,7 +430,7 @@ export default function AdminOnboardingRequests() {
     }
   };
 
-  // ---------- Edit feature ---------------------------------------------------
+  // Edit feature
   const handleEdit = (req) => {
     setSelectedRequest(req);
     setFormData({
@@ -445,49 +497,39 @@ export default function AdminOnboardingRequests() {
     }
   };
 
-  // ---------- Offboard feature (new) ----------------------------------------
-  const offboardRequest = async (req) => {
-    if (!confirm(`Offboard ${req.name}? This will mark the user as offboarded.`)) return;
+const staticOffboard = (req) => {
+  setRequests((prev) =>
+    prev.map((item) =>
+      item._id === req._id
+        ? {
+            ...item,
+            status: "offboarded",
+            offboardDetails: offboardChecklist,
+            offboarded: true,      // ✅ new flag
+          }
+        : item
+    )
+  );
 
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      toast.error("Not authenticated.");
-      return;
-    }
-
-    // snapshot for rollback
-    const snapshot = [...requests];
-
-    // optimistic update - set a new status 'offboarded'
-    setRequests((prev) =>
-      prev.map((r) => (r._id === req._id ? { ...r, status: "offboarded", offboardedAt: new Date().toISOString() } : r))
+  // save to localStorage so refresh keeps it
+  try {
+    const stored = JSON.parse(localStorage.getItem("requests") || "[]");
+    const updated = stored.map((item) =>
+      item._id === req._id
+        ? {
+            ...item,
+            status: "offboarded",
+            offboardDetails: offboardChecklist,
+            offboarded: true,
+          }
+        : item
     );
+    localStorage.setItem("requests", JSON.stringify(updated));
+  } catch {}
+  
+  toast.success("User offboarded (static)");
+};
 
-    try {
-      const res = await axios.post(
-        `${API_URL}/api/onboarding-request/offboard/${req._id}`,
-        { offboardedBy: JSON.parse(localStorage.getItem("user"))?.name || "admin" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (!res.data?.success) {
-        setRequests(snapshot);
-        toast.error(res.data?.message || "Offboard failed");
-        return;
-      }
-
-      toast.success("User offboarded successfully");
-    } catch (err) {
-      console.error("offboardRequest error:", err);
-      setRequests(snapshot);
-      if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-        handleLogout();
-      } else {
-        toast.error("Offboard failed");
-      }
-    }
-  };
 
   // ---------- Skeleton row for loading state
   const SkeletonRows = ({ rows = 5 }) => (
@@ -566,7 +608,7 @@ export default function AdminOnboardingRequests() {
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
-              <option value="offboarded">Offboarded</option>
+        
             </select>
 
             <select
@@ -628,8 +670,8 @@ export default function AdminOnboardingRequests() {
                             ? "bg-emerald-100 text-emerald-700"
                             : (r.status || "").toLowerCase() === "rejected"
                             ? "bg-red-100 text-red-700"
-                            : (r.status || "").toLowerCase() === "offboarded"
-                            ? "bg-slate-100 text-slate-700"
+                  
+                      
                             : "bg-amber-100 text-amber-700"
                         }`}
                       >
@@ -665,15 +707,17 @@ export default function AdminOnboardingRequests() {
                         )}
 
                         {/* Offboard button appears only when approved AND T&C accepted */}
-                        {( (r.status || "").toLowerCase() === "approved" && hasAcceptedTnC(r)) && (
-                          <button
-                            onClick={() => offboardRequest(r)}
-                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"
-                            title="Offboard user"
-                          >
-                            Offboard
-                          </button>
-                        )}
+                       
+{r.status === "approved" && (
+  <button
+    onClick={() => openOffboardForm(r)}
+    className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+  >
+    Offboard
+  </button>
+)}
+
+                    
 
                         {/* View signature / form */}
                         <a
@@ -845,6 +889,140 @@ export default function AdminOnboardingRequests() {
           </motion.div>
         </div>
       )}
+
+{showOffboardModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center text-white justify-center z-50">
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      className="bg-white dark:bg-black p-6 rounded-xl max-w-md w-full shadow-xl"
+    >
+      <h2 className="text-lg font-semibold text-red-600">
+        Offboard {selectedForOffboard?.firstName} {selectedForOffboard?.lastName}
+      </h2>
+
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        Please complete the offboarding checklist before confirming.
+      </p>
+
+      {/* CHECKBOXES */}
+      <div className="mt-5 space-y-4">
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.returnAssets}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                returnAssets: e.target.checked,
+              })
+            }
+          />
+         Transfer ongoing work responsibilities and prepare required documents.
+        </label>
+
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.submitDocs}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                submitDocs: e.target.checked,
+              })
+            }
+          />
+          Collect office assets (ID card, company documents).
+        </label>
+
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.handoverCompleted}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                handoverCompleted: e.target.checked,
+              })
+            }
+          />
+        Revoke access to emails, software, and internal systems.
+        </label>
+               <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.handoverCompleted}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                handoverCompleted: e.target.checked,
+              })
+            }
+          />
+       Inform teams about the transition.
+        </label>
+               <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.handoverCompleted}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                handoverCompleted: e.target.checked,
+              })
+            }
+          />
+      Biometric Removal.
+        </label>
+               <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={offboardChecklist.handoverCompleted}
+            onChange={(e) =>
+              setOffboardChecklist({
+                ...offboardChecklist,
+                handoverCompleted: e.target.checked,
+              })
+            }
+          />
+        Revoke access to emails, software, and internal systems.
+        </label>
+      </div>
+
+      {/* BUTTONS */}
+      <div className="mt-6 flex justify-end gap-3">
+        <button
+          onClick={() => setShowOffboardModal(false)}
+          className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          disabled={
+            !offboardChecklist.returnAssets ||
+            !offboardChecklist.submitDocs ||
+            !offboardChecklist.handoverCompleted
+          }
+          onClick={() => {
+            staticOffboard(selectedForOffboard);
+            setShowOffboardModal(false);
+          }}
+          className={`px-4 py-2 rounded text-white ${
+            !offboardChecklist.returnAssets ||
+            !offboardChecklist.submitDocs ||
+            !offboardChecklist.handoverCompleted
+              ? "bg-red-300 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
+          }`}
+        >
+          Confirm Offboard
+        </button>
+      </div>
+    </motion.div>
+  </div>
+)}
+
     </div>
   );
 }
