@@ -636,9 +636,9 @@ export default function CreateLetter() {
       );
 
       if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
-        setOtpSent(true);
-        setResendTimer(60);
+      toast.success("OTP sent to your WhatsApp! 📱");
+      setOtpSent(true);
+      setResendTimer(60);
       } else {
         toast.error(response.data.message || "Failed to send OTP");
       }
@@ -1518,13 +1518,26 @@ export default function CreateLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Month *
                       </label>
-                      <input
-                        type="text"
+
+                      <select
                         value={formData.month || ""}
                         onChange={(e) => handleInputChange("month", e.target.value)}
-                        placeholder="e.g. January"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      />
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white"
+                      >
+                        <option value="" disabled>Select Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1535,7 +1548,7 @@ export default function CreateLetter() {
                         value={formData.year || ""}
                         onChange={(e) => handleInputChange("year", e.target.value)}
                         placeholder="e.g. 2025"
-                        min={new Date().getFullYear()}
+                        min={(new Date().getFullYear()) - 1}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
                     </div>
@@ -1621,18 +1634,18 @@ export default function CreateLetter() {
                     {/* 2. Project Name (Max 15 characters) */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Project Name (max 15 chars) *
+                        Project Name (max 30 chars) *
                       </label>
-                      <p className={`text-xs mb-2 ${formData.timelineProjectName.length > 15
+                      <p className={`text-xs mb-2 ${formData.timelineProjectName.length > 30
                         ? "text-red-500 font-semibold"
                         : "text-gray-500"
                         }`}>
-                        {formData.timelineProjectName.length}/15 characters
-                        {formData.timelineProjectName.length > 15 && " - Exceeds limit!"}
+                        {formData.timelineProjectName.length}/30 characters
+                        {formData.timelineProjectName.length > 30 && " - Exceeds limit!"}
                       </p>
                       <input
                         type="text"
-                        maxLength={15}
+                        maxLength={30}
                         value={formData.timelineProjectName}
                         onChange={(e) =>
                           handleInputChange("timelineProjectName", e.target.value)
