@@ -1,67 +1,84 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { PlusCircle, Search, Sparkles, Users, FileText, ScrollText, FolderOpen } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { motion } from "framer-motion";
+import {
+  PlusCircle,
+  Search,
+  Sparkles,
+  Users,
+  FileText,
+  ScrollText,
+  FolderOpen,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function QuickActions() {
   const router = useRouter();
 
-  const handleCreateClick = () => router.push('/create-certificate');
-  const handleVerifyClick = () => router.push('/verify-certificate');
-  const handleManagePeopleClick = () => router.push('/manage-people');
-  const handleCreateLetterClick = () => router.push('/create-letter');
-  const handleViewTCClick = () => router.push('/verify-t&c');
-  const handleViewDocumentsClick = () => router.push('/view-documents');
+  const handleCreateClick = () => router.push("/create-certificate");
+  const handleVerifyClick = () => router.push("/verify-certificate");
+  const handleManagePeopleClick = () => router.push("/manage-people");
+  const handleCreateLetterClick = () => router.push("/create-letter");
+  const handleViewTCClick = () => router.push("/verify-t&c");
+  const handleViewDocumentsClick = () => router.push("/view-documents");
+  const handleClientDocumentsClick = () => router.push("/Client");
 
   const actions = [
     {
-      title: 'Create Certificate',
-      description: 'Generate new certificates for completed courses',
+      title: "Create Certificate",
+      description: "Generate new certificates for completed courses",
       icon: PlusCircle,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleCreateClick,
-      iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
+      iconAnimation: "group-hover:scale-110 group-hover:rotate-90",
     },
     {
-      title: 'Verify Certificate',
-      description: 'Verify the authenticity of issued certificates',
+      title: "Verify Certificate",
+      description: "Verify the authenticity of issued certificates",
       icon: Search,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleVerifyClick,
-      iconAnimation: 'group-hover:rotate-12 group-hover:scale-110',
+      iconAnimation: "group-hover:rotate-12 group-hover:scale-110",
     },
     {
-      title: 'Manage People',
-      description: 'Add, edit, view, and remove participants',
+      title: "Manage People",
+      description: "Add, edit, view, and remove participants",
       icon: Users,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleManagePeopleClick,
-      iconAnimation: 'group-hover:scale-110',
+      iconAnimation: "group-hover:scale-110",
     },
     {
-      title: 'Create Letter',
-      description: 'Design and generate official letters with ease',
+      title: "Create Letter",
+      description: "Design and generate official letters with ease",
       icon: FileText,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleCreateLetterClick,
-      iconAnimation: 'group-hover:rotate-6 group-hover:scale-110',
+      iconAnimation: "group-hover:rotate-6 group-hover:scale-110",
     },
     {
-      title: 'View T&C',
-      description: 'Review the terms and conditions for certificate issuance',
+      title: "View T&C",
+      description: "Review the terms and conditions for certificate issuance",
       icon: ScrollText,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleViewTCClick,
-      iconAnimation: 'group-hover:scale-110 group-hover:rotate-90',
+      iconAnimation: "group-hover:scale-110 group-hover:rotate-90",
     },
     {
-      title: 'View Documents',
-      description: 'Access and review all user submitted documents',
+      title: "View Documents",
+      description: "Access and review all user submitted documents",
       icon: FolderOpen,
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleViewDocumentsClick,
-      iconAnimation: 'group-hover:scale-110 group-hover:-rotate-12',
+      iconAnimation: "group-hover:scale-110 group-hover:-rotate-12",
+    },
+    {
+      title: "Client Documents",
+      description: "Access and create all client related documents",
+      icon: FolderOpen,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      onClick: handleClientDocumentsClick,
+      iconAnimation: "group-hover:scale-110 group-hover:-rotate-12",
     },
   ];
 
@@ -92,8 +109,8 @@ export default function QuickActions() {
           </h2>
         </div>
 
-        {/* Action Buttons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+        {/* Action Buttons Grid - Responsive 4-column layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {actions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -118,9 +135,14 @@ export default function QuickActions() {
                 </div>
 
                 {/* Title */}
-                <span className="relative z-10 text-center leading-tight font-bold text-gray-800 dark:text-gray-100">
+                <span className="relative z-10 text-center leading-tight font-bold text-gray-800 dark:text-gray-100 text-sm">
                   {action.title}
                 </span>
+
+                {/* Description inside button */}
+                <p className="relative z-10 text-xs text-gray-600 dark:text-gray-400 leading-relaxed px-2 font-medium text-center">
+                  {action.description}
+                </p>
 
                 {/* Shine effect */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300">
@@ -130,28 +152,6 @@ export default function QuickActions() {
             );
           })}
         </div>
-
-        {/* Descriptions aligned below cards */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-6 gap-6"
-        >
-          {actions.map((action, index) => (
-            <motion.div
-              key={action.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
-              className="text-center"
-            >
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed px-2 font-medium">
-                {action.description}
-              </p>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
     </motion.div>
   );

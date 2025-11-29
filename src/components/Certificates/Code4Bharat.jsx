@@ -55,7 +55,7 @@ export default function Code4BharatPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
-  const category = 'code4bharat';
+  const category = "IT-Nexcore";
   const letterConfig = getLetterTypesConfig(category);
   const letterMainTypes = Object.keys(letterConfig);
 
@@ -322,14 +322,14 @@ export default function Code4BharatPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push("/dashboard")}
                 className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition"
                 aria-label="Go back to dashboard"
               >
                 <ArrowLeft className="w-6 h-6" />
               </motion.button>
               <div>
-                <h1 className="text-3xl font-bold">Code4Bharat</h1>
+                <h1 className="text-3xl font-bold">IT-Nexcore</h1>
                 <p className="text-teal-100">
                   Manage all certificates & letters
                 </p>
@@ -375,7 +375,7 @@ export default function Code4BharatPage() {
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => setSearchTerm("")}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
               >
                 ×
@@ -393,7 +393,9 @@ export default function Code4BharatPage() {
             <Filter className="w-5 h-5" />
             <span>Filters</span>
             <ChevronDown
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 transition-transform ${
+                showFilters ? "rotate-180" : ""
+              }`}
             />
           </motion.button>
 
@@ -418,7 +420,7 @@ export default function Code4BharatPage() {
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden mb-6"
@@ -426,26 +428,32 @@ export default function Code4BharatPage() {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap gap-4 mb-4">
                   <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Status
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {['all', 'downloaded', 'pending'].map((status) => (
+                      {["all", "downloaded", "pending"].map((status) => (
                         <button
                           key={status}
                           onClick={() => setStatusFilter(status)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
-                              ? status === 'downloaded'
-                                ? 'bg-green-500 text-white'
-                                : status === 'pending'
-                                  ? 'bg-amber-500 text-white'
-                                  : 'bg-emerald-600 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            }`}
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                            statusFilter === status
+                              ? status === "downloaded"
+                                ? "bg-green-500 text-white"
+                                : status === "pending"
+                                ? "bg-amber-500 text-white"
+                                : "bg-emerald-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                           <span className="ml-1 text-xs">
-                            ({status === 'all'
+                            (
+                            {status === "all"
                               ? items.length
-                              : items.filter(it => it.status === status).length})
+                              : items.filter((it) => it.status === status)
+                                  .length}
+                            )
                           </span>
                         </button>
                       ))}
@@ -453,14 +461,16 @@ export default function Code4BharatPage() {
                   </div>
 
                   {/* Letter Type Filter */}
-                  {items.some((it) => it.type === 'letter') && (
+                  {items.some((it) => it.type === "letter") && (
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Letter Type</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Letter Type
+                      </label>
                       <select
                         value={letterType}
                         onChange={(e) => {
                           setLetterType(e.target.value);
-                          setSubLetterType('');
+                          setSubLetterType("");
                         }}
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       >
@@ -477,7 +487,9 @@ export default function Code4BharatPage() {
                   {/* Letter Subtype Filter */}
                   {letterType && letterConfig[letterType].length > 0 && (
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Letter Subtype</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Letter Subtype
+                      </label>
                       <select
                         value={subLetterType}
                         onChange={(e) => setSubLetterType(e.target.value)}
@@ -511,8 +523,12 @@ export default function Code4BharatPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-emerald-600 dark:text-emerald-500 animate-spin mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Loading...</h3>
-            <p className="text-gray-600 dark:text-gray-400">Fetching all certificates and letters</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+              Loading...
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Fetching all certificates and letters
+            </p>
           </div>
         )}
 
@@ -534,56 +550,73 @@ export default function Code4BharatPage() {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate">
                         {it.name}
                       </h3>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${it.type === 'letter'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                        }`}>
-                        {it.type === 'letter' ? 'Letter' : 'Certificate'}
+                      <span
+                        className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                          it.type === "letter"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                            : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+                        }`}
+                      >
+                        {it.type === "letter" ? "Letter" : "Certificate"}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{it.course}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {it.course}
+                    </p>
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${it.status === 'downloaded'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
-                      }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${
+                      it.status === "downloaded"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400"
+                    }`}
                   >
-                    {it.status === 'downloaded' ? (
+                    {it.status === "downloaded" ? (
                       <CheckCircle className="w-3 h-3" />
                     ) : (
                       <Clock className="w-3 h-3" />
                     )}
-                    {it.status || 'pending'}
+                    {it.status || "pending"}
                   </span>
                 </div>
 
                 {/* Card Body */}
                 <div className="space-y-3 mb-4 text-sm flex-grow">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">{it.type === 'letter' ? 'Letter ID:' : 'Certificate ID:'}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {it.type === "letter" ? "Letter ID:" : "Certificate ID:"}
+                    </span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
-                      {it.type === 'letter'
-                        ? (it.letterId || it.lettertId || it.certificateId || it._id)
-                        : (it.certificateId || it.letterId || it._id)}
+                      {it.type === "letter"
+                        ? it.letterId ||
+                          it.lettertId ||
+                          it.certificateId ||
+                          it._id
+                        : it.certificateId || it.letterId || it._id}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Issue Date:
+                    </span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200">
-                      {it.issueDate ? new Date(it.issueDate).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      }) : '—'}
+                      {it.issueDate
+                        ? new Date(it.issueDate).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </span>
                   </div>
 
-                  {it.type === 'letter' && it.letterType && (
+                  {it.type === "letter" && it.letterType && (
                     <div className="flex justify-between items-start">
-                      <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Type:
+                      </span>
                       <span className="font-semibold text-gray-800 dark:text-gray-200 text-right">
                         {it.letterType}
                         {it.letterSubType && (
@@ -596,9 +629,11 @@ export default function Code4BharatPage() {
                   )}
 
                   {/* Signature Status (only for letters) */}
-                  {it.type === 'letter' && (
+                  {it.type === "letter" && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Signature:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Signature:
+                      </span>
 
                       {it.signedUploaded ? (
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold">
@@ -613,7 +648,6 @@ export default function Code4BharatPage() {
                       )}
                     </div>
                   )}
-
                 </div>
 
                 {/* Card Actions */}
@@ -633,7 +667,7 @@ export default function Code4BharatPage() {
                     PDF
                   </motion.button>
 
-                  {it.type !== 'letter' && (
+                  {it.type !== "letter" && (
                     <motion.button
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
@@ -673,13 +707,21 @@ export default function Code4BharatPage() {
             className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700"
           >
             <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No items found</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+              No items found
+            </h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' || letterType || subLetterType ?
-                "Try adjusting your filters or search criteria" :
-                "No certificates or letters have been created yet"}
+              {searchTerm ||
+              statusFilter !== "all" ||
+              letterType ||
+              subLetterType
+                ? "Try adjusting your filters or search criteria"
+                : "No certificates or letters have been created yet"}
             </p>
-            {(searchTerm || statusFilter !== 'all' || letterType || subLetterType) && (
+            {(searchTerm ||
+              statusFilter !== "all" ||
+              letterType ||
+              subLetterType) && (
               <button
                 onClick={clearFilters}
                 className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-2"
@@ -695,7 +737,11 @@ export default function Code4BharatPage() {
         {!loading && filteredItems.length > 0 && (
           <div className="mt-8 flex justify-between items-center bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Showing <span className="font-semibold text-gray-800 dark:text-white">{filteredItems.length}</span> of {items.length} items
+              Showing{" "}
+              <span className="font-semibold text-gray-800 dark:text-white">
+                {filteredItems.length}
+              </span>{" "}
+              of {items.length} items
             </p>
             {filteredItems.length !== items.length && (
               <button
@@ -733,11 +779,17 @@ export default function Code4BharatPage() {
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                   {(() => {
                     const it = items.find((x) => x._id === deleteConfirm);
-                    return `${it?.type === 'letter' ? 'Delete Letter?' : 'Delete Certificate?'}`;
+                    return `${
+                      it?.type === "letter"
+                        ? "Delete Letter?"
+                        : "Delete Certificate?"
+                    }`;
                   })()}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Are you sure you want to delete this {items.find((x) => x._id === deleteConfirm)?.type || 'item'}? This action cannot be undone.
+                  Are you sure you want to delete this{" "}
+                  {items.find((x) => x._id === deleteConfirm)?.type || "item"}?
+                  This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                   <button

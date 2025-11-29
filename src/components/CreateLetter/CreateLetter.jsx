@@ -94,7 +94,7 @@ export default function CreateLetter() {
   const [pdfPreview, setPdfPreview] = useState(null);
 
   const categoryConfig = {
-    code4bharat: { label: "Code4Bharat", batches: [] },
+    "IT-Nexcore": { label: "IT-Nexcore", batches: [] },
     "marketing-junction": { label: "Marketing Junction", batches: [] },
     FSD: { label: "FSD", batches: batches.FSD || [] },
     HR: { label: "HR", batches: [] },
@@ -105,7 +105,7 @@ export default function CreateLetter() {
 
   // Letter types and subtypes configuration
   const getLetterTypesConfig = (category) => {
-    if (category === "code4bharat") {
+    if (category === "IT-Nexcore") {
       return {
         "Appreciation Letter": [
           // "Appreciation for Best Performance",
@@ -265,7 +265,7 @@ export default function CreateLetter() {
 
   // Roles based on category
   const getRoles = (category) => {
-    if (category === "code4bharat") {
+    if (category === "IT-Nexcore") {
       return ["Cyber Security Analyst", "Junior Software Developer"];
     } else if (category === "marketing-junction") {
       return [
@@ -431,7 +431,7 @@ export default function CreateLetter() {
     try {
       let response;
       if (
-        formData.category === "code4bharat" ||
+        formData.category === "IT-Nexcore" ||
         formData.category === "marketing-junction"
       ) {
         response = await axios.get(`${API_URL}/api/people/`, {
@@ -1870,7 +1870,7 @@ export default function CreateLetter() {
                 <div className="space-y-3 text-sm text-gray-700">
                   <div>
                     <p className="font-semibold text-gray-900">
-                      Code4Bharat, Marketing Junction, HR:
+                      IT-Nexcore, Marketing Junction, HR:
                     </p>
                     <p className="text-xs mt-1">
                       Appreciation, Experience, Internship Joining, Memo, NDA, Promotion, Timeline
