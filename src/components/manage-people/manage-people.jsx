@@ -26,7 +26,6 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-
 export default function ManagePeople() {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -63,20 +62,24 @@ export default function ManagePeople() {
     year: "2025",
   });
 
-  const [formData, setFormData] = useState({
-    originalName: "",
-    originalPhone: "",
-    name: "",
-    category: "",
-    batch: "",
-    phone: "",
-    parentPhone1: "",
-    parentPhone2: "",
-    aadhaarCard: "",
-    address: "",
-    email: "",
-    parentEmail: "",
-  });
+ const [formData, setFormData] = useState({
+   originalName: "",
+   originalPhone: "",
+   name: "",
+   category: "",
+   batch: "",
+   phone: "",
+   parentPhone1: "",
+   parentPhone2: "",
+   aadhaarCard: "",
+   address: "",
+   email: "",
+   parentEmail: "",
+   clientEmail1: "",
+   clientEmail2: "",
+   clientPhone1: "",
+   clientPhone2: "",
+ });
 
   const [viewMode, setViewMode] = useState("active");
 
@@ -91,7 +94,6 @@ export default function ManagePeople() {
       console.error("❌ Error loading categories:", err);
     }
   };
-
 
   const closeBulkUpload = () => {
     setShowBulkUpload(false);
@@ -211,72 +213,80 @@ export default function ManagePeople() {
     }
   };
   const handleAddCategory = async () => {
-  if (!newCategoryName.trim()) {
-    return toast.error("Category name is required");
-  }
-
-  try {
-    const res = await axios.post(`${API_URL}/api/categories`, {
-      name: newCategoryName.trim(),
-      description: newCategoryDesc.trim(),
-    });
-
-    if (res.data.success) {
-      toast.success(`Category "${newCategoryName}" added successfully`);
-
-      // Reload fresh category list from backend
-      loadCategories();
-
-      // Close modal
-      setShowAddCategory(false);
-
-      // Reset fields
-      setNewCategoryName("");
-      setNewCategoryDesc("");
+    if (!newCategoryName.trim()) {
+      return toast.error("Category name is required");
     }
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Failed to add category");
-  }
-};
 
+    try {
+      const res = await axios.post(`${API_URL}/api/categories`, {
+        name: newCategoryName.trim(),
+        description: newCategoryDesc.trim(),
+      });
+
+      if (res.data.success) {
+        toast.success(`Category "${newCategoryName}" added successfully`);
+
+        // Reload fresh category list from backend
+        loadCategories();
+
+        // Close modal
+        setShowAddCategory(false);
+
+        // Reset fields
+        setNewCategoryName("");
+        setNewCategoryDesc("");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to add category");
+    }
+  };
 
   /* --------------------- CRUD Handlers --------------------- */
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const {
-      name,
-      category,
-      batch,
-      phone,
-      parentPhone1,
-      parentPhone2,
-      aadhaarCard,
-      address,
-      email,
-      parentEmail,
-    } = formData;
+  e.preventDefault();
+  const {
+    name,
+    category,
+    batch,
+    phone,
+    parentPhone1,
+    parentPhone2,
+    aadhaarCard,
+    address,
+    email,
+    parentEmail,
+    // ⭐ NEW: Extract client fields
+    clientEmail1,
+    clientEmail2,
+    clientPhone1,
+    clientPhone2,
+  } = formData;
 
-    if (!name || !category || !phone)
-      return toast.error("Missing required fields");
-    if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
+  if (!name || !category || !phone)
+    return toast.error("Missing required fields");
+  if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
 
-    if ((category === "FSD" || category === "BVOC") && !batch)
-      return toast.error("Select a batch for this category");
+  if ((category === "FSD" || category === "BVOC") && !batch)
+    return toast.error("Select a batch for this category");
 
-    const payload = {
-      name: name.trim(),
-      category,
-      batch: batch || null,
-      phone,
-      parentPhone1: parentPhone1 || null,
-      parentPhone2: parentPhone2 || null,
-      aadhaarCard: aadhaarCard || null,
-      address: address?.trim() || null,
-      email: email || null,
-      parentEmail: parentEmail || null,
-    };
-
+  const payload = {
+    name: name.trim(),
+    category,
+    batch: batch || null,
+    phone,
+    parentPhone1: parentPhone1 || null,
+    parentPhone2: parentPhone2 || null,
+    aadhaarCard: aadhaarCard || null,
+    address: address?.trim() || null,
+    email: email || null,
+    parentEmail: parentEmail || null,
+    // ⭐ NEW: Add client fields to payload
+    clientEmail1: clientEmail1 || null,
+    clientEmail2: clientEmail2 || null,
+    clientPhone1: clientPhone1 || null,
+    clientPhone2: clientPhone2 || null,
+  };
     try {
       setLoading(true);
       if (isEditMode) {
@@ -375,23 +385,29 @@ export default function ManagePeople() {
 
   /* --------------------- Misc --------------------- */
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setFormData({
-      originalName: "",
-      originalPhone: "",
-      name: "",
-      category: "",
-      batch: "",
-      phone: "",
-      parentPhone1: "",
-      parentPhone2: "",
-      aadhaarCard: "",
-      address: "",
-    });
-  };
-
+const closeModal = () => {
+  setIsModalOpen(false);
+  setIsEditMode(false);
+  setFormData({
+    originalName: "",
+    originalPhone: "",
+    name: "",
+    category: "",
+    batch: "",
+    phone: "",
+    parentPhone1: "",
+    parentPhone2: "",
+    aadhaarCard: "",
+    address: "",
+    email: "",
+    parentEmail: "",
+    // ⭐ NEW: Reset client fields
+    clientEmail1: "",
+    clientEmail2: "",
+    clientPhone1: "",
+    clientPhone2: "",
+  });
+};
   const getBatchOptions = () => {
     if (formData.category === "FSD") return batches.FSD || [];
     if (formData.category === "BVOC") return batches.BVOC || [];
@@ -410,25 +426,27 @@ export default function ManagePeople() {
     };
     return colors[category] || "bg-gray-100 text-gray-700 border-gray-200";
   };
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    if (
-      name === "phone" ||
-      name === "parentPhone1" ||
-      name === "parentPhone2"
-    ) {
-      const numericValue = value.replace(/\D/g, "");
-      setFormData({ ...formData, [name]: numericValue });
-    } else if (name === "aadhaarCard") {
-      const numericValue = value.replace(/\D/g, "");
-      setFormData({ ...formData, [name]: numericValue });
-    } else if (name === "category") {
-      setFormData({ ...formData, category: value, batch: "" });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
+  if (
+    name === "phone" ||
+    name === "parentPhone1" ||
+    name === "parentPhone2" ||
+    name === "clientPhone1" || // ⭐ NEW
+    name === "clientPhone2" // ⭐ NEW
+  ) {
+    const numericValue = value.replace(/\D/g, "");
+    setFormData({ ...formData, [name]: numericValue });
+  } else if (name === "aadhaarCard") {
+    const numericValue = value.replace(/\D/g, "");
+    setFormData({ ...formData, [name]: numericValue });
+  } else if (name === "category") {
+    setFormData({ ...formData, category: value, batch: "" });
+  } else {
+    setFormData({ ...formData, [name]: value });
+  }
+};
   const [isEditingBatch, setIsEditingBatch] = useState(false);
   const [editingBatchData, setEditingBatchData] = useState({
     category: "",
@@ -533,26 +551,30 @@ export default function ManagePeople() {
       setBatchLoading(false);
     }
   };
-  const handleEdit = (person) => {
-    setFormData({
-      originalName: person.name,
-      originalPhone: person.phone,
-      name: person.name,
-      category: person.category,
-      batch: person.batch || "",
-      email: person.email || "",
-      parentEmail: person.parentEmail || "",
-      phone: person.phone,
-      parentPhone1: person.parentPhone1 || "",
-      parentPhone2: person.parentPhone2 || "",
-      aadhaarCard: person.aadhaarCard || "",
-      address: person.address || "",
-    });
+const handleEdit = (person) => {
+  setFormData({
+    originalName: person.name,
+    originalPhone: person.phone,
+    name: person.name,
+    category: person.category,
+    batch: person.batch || "",
+    email: person.email || "",
+    parentEmail: person.parentEmail || "",
+    phone: person.phone,
+    parentPhone1: person.parentPhone1 || "",
+    parentPhone2: person.parentPhone2 || "",
+    aadhaarCard: person.aadhaarCard || "",
+    address: person.address || "",
+    // ⭐ NEW: Load client fields
+    clientEmail1: person.clientEmail1 || "",
+    clientEmail2: person.clientEmail2 || "",
+    clientPhone1: person.clientPhone1 || "",
+    clientPhone2: person.clientPhone2 || "",
+  });
 
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
-
+  setIsEditMode(true);
+  setIsModalOpen(true);
+};
   const totalPeople = people.length;
   const activePeople = people.filter((p) => !p.disabled).length;
   const disabledPeople = people.filter((p) => p.disabled).length;
@@ -692,26 +714,25 @@ export default function ManagePeople() {
               </div>
 
               <div className="relative">
-  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
 
-  <select
-    value={selectedCategory}
-    onChange={(e) => {
-      setSelectedCategory(e.target.value);
-      setSelectedBatch("all");
-    }}
-    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl"
-  >
-    <option value="all">All Categories</option>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedBatch("all");
+                  }}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl"
+                >
+                  <option value="all">All Categories</option>
 
-    {dynamicCategories.map((cat) => (
-      <option key={cat._id} value={cat.name}>
-        {cat.name}
-      </option>
-    ))}
-  </select>
-</div>
-
+                  {dynamicCategories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div className="relative">
                 <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -1088,6 +1109,70 @@ export default function ManagePeople() {
                         type="tel"
                         name="parentPhone2"
                         value={formData.parentPhone2}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        maxLength={10}
+                      />
+                    </div>
+                  </>
+                )}
+                {/* ⭐ NEW: Client-specific fields (only show when category is "Client") */}
+                {formData.category === "Client" && (
+                  <>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Client Email 1
+                      </label>
+                      <input
+                        type="email"
+                        name="clientEmail1"
+                        value={formData.clientEmail1}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Client Email 2
+                      </label>
+                      <input
+                        type="email"
+                        name="clientEmail2"
+                        value={formData.clientEmail2}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Client Phone 1{" "}
+                        <span className="text-sm text-gray-500">
+                          (10 digits)
+                        </span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="clientPhone1"
+                        value={formData.clientPhone1}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        maxLength={10}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-1">
+                        Client Phone 2{" "}
+                        <span className="text-sm text-gray-500">
+                          (10 digits)
+                        </span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="clientPhone2"
+                        value={formData.clientPhone2}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                         maxLength={10}
