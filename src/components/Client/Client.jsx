@@ -27,7 +27,8 @@ export default function CreateLetter() {
   const [isCreating, setIsCreating] = useState(false);
   const [loadingNames, setLoadingNames] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingPreview, setLoadingPreview] 
+  = useState(false);
 
   // Form States
   const [formData, setFormData] = useState({
@@ -39,7 +40,8 @@ export default function CreateLetter() {
     subject: "",
     description: "",
   });
-
+  
+  console.log(formData)
   // Data Lists
   const [namesList, setNamesList] = useState([]);
 
@@ -333,36 +335,54 @@ export default function CreateLetter() {
       setLoadingPreview(false);
     }
   };
-
+ /// data going to backend form MOM
   const handleSubmit = async () => {
-    if (!otpVerified) {
-      toast.error("Please verify OTP first");
-      return;
-    }
-    setIsCreating(true);
-    try {
-      const payload = { ...formData };
-      console.log(payload);
-      const response = await axios.post(`${API_URL}/api/letters`, payload, {
-        headers: getAuthHeaders(),
-      });
+  if (!otpVerified) {
+    toast.error("Please verify OTP first");
+    return;
+  }
 
-      if (response.data.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          router.push("/admin/letters");
-        }, 2000);
-      } else {
-        toast.error(response.data.message || "Failed to create letter");
+  setIsCreating(true);
+
+  try {
+    const payload = { ...formData };
+
+    const response = await axios.post(
+      `${API_URL}/api/client`,
+      payload,
+      {
+        headers: getAuthHeaders(),
+        responseType: "blob" // <-- IMPORTANT
       }
-    } catch (error) {
-      console.error("Create letter error:", error);
-      toast.error("Failed to create letter");
-    } finally {
-      setIsCreating(false);
-    }
-  };
+    );
+
+    // Convert blob to downloadable file
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${payload.name.replace(/\s+/g, "_")}_${payload.letterType}.pdf`;
+    link.click();
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Letter generated successfully!");
+
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      // router.push("/admin/letters");
+    }, 2000);
+
+  } catch (error) {
+    console.error("Create letter error:", error);
+    toast.error("Failed to download letter PDF");
+  } finally {
+    setIsCreating(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
