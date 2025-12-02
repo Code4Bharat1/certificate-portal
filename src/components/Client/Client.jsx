@@ -27,21 +27,21 @@ export default function CreateLetter() {
   const [isCreating, setIsCreating] = useState(false);
   const [loadingNames, setLoadingNames] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [loadingPreview, setLoadingPreview] 
-  = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Form States
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
+    category: "client", // Set default category
     issueDate: "",
     letterType: "",
     projectName: "",
     subject: "",
     description: "",
   });
+
+  console.log(formData);
   
-  console.log(formData)
   // Data Lists
   const [namesList, setNamesList] = useState([]);
 
@@ -64,7 +64,7 @@ export default function CreateLetter() {
 
   // Letter types configuration
   const getLetterTypesConfig = (category) => {
-    if (category === "Client") {
+    if (category === "client") {
       return {
         Agenda: [],
         "MOM (Minutes of Meeting)": [],
@@ -108,37 +108,37 @@ export default function CreateLetter() {
     return { Authorization: `Bearer ${token}` };
   };
 
+  // ✅ FIXED: Fetch names from correct endpoint
   const fetchNames = async () => {
     setLoadingNames(true);
 
     try {
       console.log("Fetching names for category:", formData.category);
 
+      // Option 1: If you have a separate people/clients endpoint
       const response = await axios.get(`${API_URL}/api/people`, {
         headers: getAuthHeaders(),
         params: { category: formData.category },
       });
 
+      // Option 2: If you want to fetch from existing letters
+      // const response = await axios.get(`${API_URL}/api/client-letters`, {
+      //   headers: getAuthHeaders(),
+      //   params: { category: formData.category },
+      // });
+
       console.log("API Response:", response.data);
 
       let names = [];
 
-      // CASE 1 → { success: true, names: [...] }
       if (response.data?.names) {
         names = response.data.names;
-      }
-
-      // CASE 2 → { success: true, data: [...] }
-      else if (response.data?.data) {
+      } else if (response.data?.data) {
         names = response.data.data;
-      }
-
-      // CASE 3 → backend returns raw array
-      else if (Array.isArray(response.data)) {
+      } else if (Array.isArray(response.data)) {
         names = response.data;
       }
 
-      // FINAL CLEANUP
       const enabled = names
         .filter((p) => !p.disabled)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -267,6 +267,27 @@ export default function CreateLetter() {
     }
   };
 
+  const handleOtpPaste = (e) => {
+    const paste = e.clipboardData.getData("text").trim();
+
+    if (/^\d+$/.test(paste) && paste.length === otp.length) {
+      const digits = paste.split("");
+      setOtp(digits);
+
+      const lastBox = document.getElementById(`otp-${otp.length - 1}`);
+      lastBox?.focus();
+
+      e.preventDefault();
+    }
+  };
+
+  const expireOtp = () => {
+    setOtpSent(false);
+    setOtp(["", "", "", "", "", ""]);
+    setResendTimer(0);
+    setOtpVerified(false);
+  };
+
   const verifyOTP = async () => {
     try {
       const otpCode = otp.join("");
@@ -275,22 +296,25 @@ export default function CreateLetter() {
         return;
       }
 
-      // Uncomment when ready to use real OTP verification
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
-
-      // if (response.data.success) {
+      // For testing purposes, accept any 6-digit OTP
       toast.success("OTP Verified Successfully!");
       setOtpVerified(true);
       setShowOtpModal(false);
       setShowPreview(true);
       generatePreview();
+
+      // Uncomment when ready for production
+      // const response = await axios.post(
+      //   `${API_URL}/api/certificates/otp/verify`,
+      //   { phone: "919892398976", otp: otpCode },
+      //   { headers: getAuthHeaders() }
+      // );
+      // if (response.data.success) {
+      //   toast.success("OTP Verified Successfully!");
+      //   setOtpVerified(true);
+      //   setShowOtpModal(false);
+      //   setShowPreview(true);
+      //   generatePreview();
       // } else {
       //   toast.error("Invalid OTP");
       //   setOtp(["", "", "", "", "", ""]);
@@ -302,14 +326,17 @@ export default function CreateLetter() {
     }
   };
 
+  // ✅ FIXED: Generate preview without saving to database
   const generatePreview = async () => {
     setLoadingPreview(true);
     try {
       const payload = { ...formData };
-      console.log(payload);
+      console.log("Preview payload:", payload);
 
+      // Create a temporary preview by calling the download endpoint
+      // but we won't save it to the database yet
       const response = await axios.post(
-        `${API_URL}/api/letters/preview`,
+        `${API_URL}/api/client-letters/preview`, // You'll need to add this route
         payload,
         {
           headers: getAuthHeaders(),
@@ -318,7 +345,6 @@ export default function CreateLetter() {
       );
 
       const fileType = response.data.type || response.headers["content-type"];
-
       const fileUrl = URL.createObjectURL(response.data);
 
       if (fileType.includes("pdf")) {
@@ -335,53 +361,91 @@ export default function CreateLetter() {
       setLoadingPreview(false);
     }
   };
- /// data going to backend form MOM
+
+  // ✅ FIXED: Submit to correct endpoint
   const handleSubmit = async () => {
-  if (!otpVerified) {
-    toast.error("Please verify OTP first");
-    return;
-  }
+    if (!otpVerified) {
+      toast.error("Please verify OTP first");
+      return;
+    }
 
-  setIsCreating(true);
+    setIsCreating(true);
 
-  try {
-    const payload = { ...formData };
+    try {
+      const payload = { ...formData };
+      console.log("Submitting payload:", payload);
 
-    const response = await axios.post(
-      `${API_URL}/api/client`,
-      payload,
-      {
-        headers: getAuthHeaders(),
-        responseType: "blob" // <-- IMPORTANT
+      // Step 1: Create the letter in database
+      const createResponse = await axios.post(
+        `${API_URL}/api/client-letters`, // ✅ FIXED: Correct endpoint
+        payload,
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!createResponse.data.success) {
+        throw new Error(createResponse.data.message || "Failed to create letter");
       }
-    );
 
-    // Convert blob to downloadable file
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
+      const letterId = createResponse.data.letter._id;
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${payload.name.replace(/\s+/g, "_")}_${payload.letterType}.pdf`;
-    link.click();
+      // Step 2: Download the PDF
+      const downloadResponse = await axios.get(
+        `${API_URL}/api/client-letters/${letterId}/download`, // ✅ FIXED: Correct endpoint
+        {
+          headers: getAuthHeaders(),
+          responseType: "blob",
+        }
+      );
 
-    window.URL.revokeObjectURL(url);
+      // Convert blob to downloadable file
+      const blob = new Blob([downloadResponse.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
 
-    toast.success("Letter generated successfully!");
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${payload.name.replace(/\s+/g, "_")}_${payload.letterType}.pdf`;
+      link.click();
 
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      // router.push("/admin/letters");
-    }, 2000);
+      window.URL.revokeObjectURL(url);
 
-  } catch (error) {
-    console.error("Create letter error:", error);
-    toast.error("Failed to download letter PDF");
-  } finally {
-    setIsCreating(false);
-  }
-};
+      toast.success("Letter created and downloaded successfully!");
+
+      expireOtp(); // Force new OTP verification for next document
+
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.push("/admin/letters");
+      }, 2000);
+
+      // Reset form
+      setFormData({
+        name: "",
+        category: "client",
+        issueDate: "",
+        letterType: "",
+        projectName: "",
+        subject: "",
+        description: "",
+      });
+      setShowPreview(false);
+      setPdfPreview(null);
+      setPreviewImage(null);
+
+    } catch (error) {
+      console.error("Create letter error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to create and download letter"
+      );
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
 
   return (
@@ -592,7 +656,7 @@ export default function CreateLetter() {
                 </motion.button>
               </div>
             </motion.div>
-            
+
             {/* Info Section */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -846,6 +910,7 @@ export default function CreateLetter() {
                             handleOtpChange(index, e.target.value)
                           }
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          onPaste={handleOtpPaste} // ✅ ADD THIS LINE
                           className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
                         />
                       ))}

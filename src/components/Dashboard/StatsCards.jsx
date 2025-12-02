@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, Settings, Calendar, TrendingUp, Download, Clock, RefreshCw, Layers, Package, BarChart3, Code2, Rocket, GraduationCap, Zap, Users, ChevronRight } from 'lucide-react';
+import { Megaphone, Settings, Calendar, TrendingUp, Download, Clock, RefreshCw, Layers, Package, BarChart3, Code2, Rocket, GraduationCap, Zap, Users, ChevronRight, FileText } from 'lucide-react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -31,7 +31,7 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
   return <>{count}</>;
 };
 
-const StatCard = ({ title, icon: Icon, total, mj, NEX, fsd, hr, bc, bvoc, dm, operations, monthlyReport, gradient, bg, iconBg, glowColor, index, router, categories }) => {
+const StatCard = ({ title, icon: Icon, total, mj, NEX, fsd, hr, bc, bvoc, dm, operations, monthlyReport, client, gradient, bg, iconBg, glowColor, index, router, categories }) => {
   const getCategory = (key) => categories.find(cat => cat.key.toLowerCase() === key.toLowerCase());
 
   const createCategoryRow = (label, value, key, categoryGradient) => {
@@ -86,34 +86,15 @@ const StatCard = ({ title, icon: Icon, total, mj, NEX, fsd, hr, bc, bvoc, dm, op
       </div>
 
       <div className="p-5 space-y-2 bg-gray-50/50 dark:bg-gray-900/50">
-        {createCategoryRow(
-          "MJ",
-          mj,
-          "marketing-junction",
-          "from-blue-600 to-cyan-500"
-        )}
-        {createCategoryRow(
-          "NEX",
-          NEX,
-          "IT-Nexcore",
-          "from-orange-500 to-amber-500"
-        )}
+        {createCategoryRow("MJ", mj, "marketing-junction", "from-blue-600 to-cyan-500")}
+        {createCategoryRow("NEX", NEX, "IT-Nexcore", "from-orange-500 to-amber-500")}
         {createCategoryRow("FSD", fsd, "fsd", "from-blue-500 to-indigo-600")}
         {createCategoryRow("HR", hr, "hr", "from-orange-600 to-red-500")}
-        {createCategoryRow(
-          "BOOTCAMP",
-          bc,
-          "bootcamp",
-          "from-blue-600 to-purple-600"
-        )}
+        {createCategoryRow("BOOTCAMP", bc, "bootcamp", "from-blue-600 to-purple-600")}
         {createCategoryRow("BVOC", bvoc, "bvoc", "from-orange-500 to-pink-600")}
         {createCategoryRow("DM", dm, "dm", "from-cyan-500 to-blue-600")}
-        {createCategoryRow(
-          "Operations",
-          operations,
-          "operations",
-          "from-gray-600 to-gray-800"
-        )}
+        {createCategoryRow("Operations", operations, "operations", "from-gray-600 to-gray-800")}
+        {createCategoryRow("Client", client, "client", "from-teal-500 to-emerald-600")}
       </div>
     </motion.div>
   );
@@ -238,6 +219,8 @@ const CreationRatioCard = ({ individual, bulk, total, index }) => {
 
 export default function StatsCards() {
   const router = useRouter();
+  const isFetchingRef = useRef(false); // ✅ Prevent duplicate calls
+  
   const [stats, setStats] = useState([
     {
       title: 'Last 7 Days',
@@ -319,7 +302,7 @@ export default function StatsCards() {
     },
     {
       title: "BootCamp",
-      key: "BootCamp",
+      key: "bootcamp",
       gradient: "from-blue-600 to-purple-600",
       buttonTextColor: "text-blue-600",
       route: "/certificates/bootcamp",
@@ -327,7 +310,7 @@ export default function StatsCards() {
     },
     {
       title: "BVOC",
-      key: "BVOC",
+      key: "bvoc",
       gradient: "from-orange-500 to-pink-600",
       buttonTextColor: "text-orange-600",
       route: "/certificates/bvoc",
@@ -335,7 +318,7 @@ export default function StatsCards() {
     },
     {
       title: "FSD",
-      key: "FSD",
+      key: "fsd",
       gradient: "from-blue-500 to-indigo-600",
       buttonTextColor: "text-blue-600",
       route: "/certificates/fsd",
@@ -343,7 +326,7 @@ export default function StatsCards() {
     },
     {
       title: "HR",
-      key: "HR",
+      key: "hr",
       gradient: "from-orange-600 to-red-500",
       buttonTextColor: "text-orange-600",
       route: "/certificates/hr",
@@ -351,7 +334,7 @@ export default function StatsCards() {
     },
     {
       title: "Digital Marketing",
-      key: "DM",
+      key: "dm",
       gradient: "from-cyan-500 to-blue-600",
       buttonTextColor: "text-cyan-600",
       route: "/certificates/dm",
@@ -359,7 +342,7 @@ export default function StatsCards() {
     },
     {
       title: "Operations Department",
-      key: "Operations",
+      key: "operations",
       gradient: "from-gray-600 to-gray-800",
       buttonTextColor: "text-gray-600",
       route: "/certificates/operations",
@@ -367,21 +350,39 @@ export default function StatsCards() {
     },
     {
       title: "Monthly Report",
-      key: "MonthlyReport",
+      key: "monthlyreport",
       gradient: "from-teal-500 to-emerald-600",
       buttonTextColor: "text-teal-600",
       route: "/certificates/monthly-report",
       icon: Calendar,
     },
+    {
+      title: "Client",
+      key: "client",
+      gradient: "from-teal-500 to-emerald-600",
+      buttonTextColor: "text-teal-600",
+      route: "/certificates/client",
+      icon: FileText,
+    }
   ];
 
   const fetchStats = async () => {
+    // ✅ Prevent duplicate calls
+    if (isFetchingRef.current) {
+      console.log('⏸️ Already fetching stats, skipping...');
+      return;
+    }
+
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
+    
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
 
     try {
       const token = typeof window !== 'undefined' ? sessionStorage.getItem('authToken') : null;
+      console.log('📊 Fetching dashboard stats...');
+      
       const response = await axios.get(`${API_URL}/api/stats/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -405,6 +406,7 @@ export default function StatsCards() {
           dm: data.last7Days?.DM || 0,
           operations: data.last7Days?.OD || 0,
           monthlyReport: data.last7Days?.MonthlyReport || 0,
+          client: data.last7Days?.Client || 0,
           gradient: "from-blue-600 via-blue-500 to-cyan-500",
           bg: "bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-950 dark:via-cyan-950 dark:to-blue-900",
           iconBg: "bg-blue-100 dark:bg-blue-900/50",
@@ -423,6 +425,7 @@ export default function StatsCards() {
           dm: data.lastMonth?.DM || 0,
           operations: data.lastMonth?.OD || 0,
           monthlyReport: data.lastMonth?.MonthlyReport || 0,
+          client: data.lastMonth?.Client || 0,
           gradient: "from-orange-600 via-orange-500 to-amber-500",
           bg: "bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900",
           iconBg: "bg-orange-100 dark:bg-orange-900/50",
@@ -441,6 +444,7 @@ export default function StatsCards() {
           dm: data.downloaded?.DM || 0,
           operations: data.downloaded?.OD || 0,
           monthlyReport: data.downloaded?.MonthlyReport || 0,
+          client: data.downloaded?.Client || 0,
           gradient: "from-blue-600 via-indigo-600 to-purple-600",
           bg: "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-900",
           iconBg: "bg-blue-100 dark:bg-blue-900/50",
@@ -459,6 +463,7 @@ export default function StatsCards() {
           dm: data.pending?.DM || 0,
           operations: data.pending?.OD || 0,
           monthlyReport: data.pending?.MonthlyReport || 0,
+          client: data.pending?.Client || 0,
           gradient: "from-orange-600 via-red-600 to-pink-600",
           bg: "bg-gradient-to-br from-orange-50 via-red-50 to-pink-100 dark:from-orange-950 dark:via-red-950 dark:to-pink-900",
           iconBg: "bg-orange-100 dark:bg-orange-900/50",
@@ -473,17 +478,33 @@ export default function StatsCards() {
       if (data.creationRatio) {
         setCreationRatio(data.creationRatio);
       }
+
+      console.log('✅ Stats fetched successfully');
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      console.error('❌ Error fetching stats:', err);
       setError(err.response?.data?.message || 'Failed to load statistics');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false; // ✅ Reset flag
     }
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    let mounted = true;
+
+    const loadData = async () => {
+      if (mounted) {
+        await fetchStats();
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+      isFetchingRef.current = false; // ✅ Clean up on unmount
+    };
+  }, []); // ✅ Empty dependency array is correct
 
   if (loading) {
     return (
