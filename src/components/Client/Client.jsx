@@ -29,6 +29,7 @@ export default function CreateLetter() {
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
+
   // Form States
   const [formData, setFormData] = useState({
     name: "",
@@ -56,6 +57,8 @@ export default function CreateLetter() {
   const [showPreview, setShowPreview] = useState(false);
 
   const [pdfPreview, setPdfPreview] = useState(null);
+
+  const [createdLetterId, setCreatedLetterId] = useState(null);
 
   const categoryConfig = {
     client: { label: "Client", batches: [] },
@@ -301,74 +304,151 @@ export default function CreateLetter() {
     }
   };
 
-  const generatePreview = async () => {
-    setLoadingPreview(true);
-    try {
-      const payload = { ...formData };
-      // console.log(payload);
+const generatePreview = async () => {
+  setLoadingPreview(true);
+  try {
+    // Get the correct API URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-      const response = await axios.post(
-        `${API_URL}/api/client/preview`,
-        payload,
-        {
-          headers: getAuthHeaders(),
-          responseType: "blob",
-        }
+    console.log("🔍 API URL:", apiUrl);
+    console.log("📤 Sending preview request with data:", formData);
+
+    const payload = {
+      name: formData.name,
+      issueDate: formData.issueDate,
+      letterType: formData.letterType,
+      projectName: formData.projectName,
+      subject: formData.subject,
+      description: formData.description,
+    };
+
+    console.log("📦 Payload:", payload);
+
+    const response = await axios.post(`${apiUrl}/api/client/preview`, payload, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      responseType: "blob",
+    });
+
+    console.log("✅ Preview response received");
+
+    const fileType = response.data.type || response.headers["content-type"];
+    const fileUrl = URL.createObjectURL(response.data);
+
+    if (fileType.includes("pdf")) {
+      setPreviewImage(null);
+      setPdfPreview(fileUrl);
+    } else {
+      setPdfPreview(null);
+      setPreviewImage(fileUrl);
+    }
+
+    toast.success("Preview generated successfully!");
+  } catch (error) {
+    console.error("❌ Preview error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    if (
+      error.code === "ERR_NETWORK" ||
+      error.message.includes("ERR_CONNECTION_REFUSED")
+    ) {
+      toast.error(
+        "Cannot connect to server. Please check if backend is running."
       );
-
-      const fileType = response.data.type || response.headers["content-type"];
-
-      const fileUrl = URL.createObjectURL(response.data);
-
-      if (fileType.includes("pdf")) {
-        setPreviewImage(null);
-        setPdfPreview(fileUrl);
-      } else {
-        setPdfPreview(null);
-        setPreviewImage(fileUrl);
-      }
-    } catch (error) {
-      console.error("Preview error:", error);
+    } else if (error.response) {
+      toast.error(`Server error: ${error.response.status}`);
+    } else {
       toast.error("Failed to generate preview");
-    } finally {
-      setLoadingPreview(false);
     }
-  };
+  } finally {
+    setLoadingPreview(false);
+  }
+};
   /// data going to backend form MOM
-  const handleSubmit = async () => {
-    if (!otpVerified) {
-      toast.error("Please verify OTP first");
-      return;
-    }
+const handleSubmit = async () => {
+  if (!otpVerified) {
+    toast.error("Please verify OTP first");
+    return;
+  }
 
-    setIsCreating(true);
+  setIsCreating(true);
 
-    try {
-      const payload = { ...formData };
+  try {
+    // Get the correct API URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-      // 👉 Save to DB and create final PDF
-      const response = await axios.post(`${API_URL}/api/client`, payload, {
-        headers: getAuthHeaders(),
-        responseType: "blob",
-      });
+    const payload = {
+      name: formData.name,
+      category: formData.category,
+      issueDate: formData.issueDate,
+      letterType: formData.letterType,
+      projectName: formData.projectName,
+      subject: formData.subject,
+      description: formData.description,
+    };
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
+    console.log("📤 Creating letter with payload:", payload);
 
-      setPdfPreview(url);
-      setShowPreview(true);
-      setShowSuccess(true);
+    // Save to DB, send email/WhatsApp, and get PDF
+    const response = await axios.post(`${apiUrl}/api/client`, payload, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      responseType: "blob",
+    });
 
-      setTimeout(() => setShowSuccess(false), 3000);
+    // Get letterId from response headers
+    const letterId = response.headers["x-letter-id"];
+    setCreatedLetterId(letterId);
 
-      toast.success("Letter Created — Download or Back");
-    } catch (error) {
-      console.error("Create letter error:", error);
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // Auto-download PDF
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${formData.name.replace(/\s+/g, "_")}_${
+      letterId || "letter"
+    }.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setPdfPreview(url);
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      setShowSuccess(false);
+      toast.success("Letter sent via Email & WhatsApp! 📧📱");
+    }, 3000);
+  } catch (error) {
+    console.error("❌ Create letter error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    if (error.code === "ERR_NETWORK") {
+      toast.error(
+        "Cannot connect to server. Please check if backend is running."
+      );
+    } else if (error.response) {
+      toast.error(`Server error: ${error.response.status}`);
+    } else {
       toast.error("Failed to generate letter");
-    } finally {
-      setIsCreating(false);
     }
-  };
+  } finally {
+    setIsCreating(false);
+  }
+};
 
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
