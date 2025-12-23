@@ -21,6 +21,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+const DEV_MODE = true; // ⭐ Change to false for production
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
@@ -124,10 +125,7 @@ export default function CreateLetter() {
         // "Memo": [],
         "Non-Disclosure Agreement": [],
         // "Other": [],
-        "Promotion Letter": [
-          "Non Paid to Paid",
-          "Stipend Revision",
-        ],
+        "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
     } else if (category === "marketing-junction") {
@@ -150,10 +148,7 @@ export default function CreateLetter() {
         // "Memo": [],
         "Non-Disclosure Agreement": [],
         // "Other": [],
-        "Promotion Letter": [
-          "Non Paid to Paid",
-          "Stipend Revision",
-        ],
+        "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
     } else if (category === "FSD") {
@@ -235,10 +230,7 @@ export default function CreateLetter() {
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        "Promotion Letter": [
-          "Non Paid to Paid",
-          "Stipend Revision",
-        ],
+        "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
     }
@@ -266,7 +258,10 @@ export default function CreateLetter() {
   // Roles based on category
   const getRoles = (category) => {
     if (category === "IT-Nexcore") {
-      return ["Cyber Security Analyst (Intern)", "Junior Software Developer (Intern)"];
+      return [
+        "Cyber Security Analyst (Intern)",
+        "Junior Software Developer (Intern)",
+      ];
     } else if (category === "marketing-junction") {
       return [
         // "Content Writer Intern",
@@ -279,19 +274,12 @@ export default function CreateLetter() {
         "Graphic Desigining",
       ];
     } else if (category === "HR") {
-      return [
-        "HR Assistant",
-      ];
-    }
-    else if (category === "OD") {
-      return [
-        "Operations Intern",
-      ];
-    }
-    else if (category === "FSD") {
+      return ["HR Assistant"];
+    } else if (category === "OD") {
+      return ["Operations Intern"];
+    } else if (category === "FSD") {
       return ["Full Stack Developer"];
-    }
-    else if (category === "DM") {
+    } else if (category === "DM") {
       return ["Digital Marketing"];
     }
     return [];
@@ -335,20 +323,15 @@ export default function CreateLetter() {
   const needsAuditDate = () =>
     formData.course === "Concern Letter-Audit Interview Performance";
 
-  const needsDuration = () =>
-    formData.course === "Non-Disclosure Agreement";
+  const needsDuration = () => formData.course === "Non-Disclosure Agreement";
 
-  const needsSubject = () =>
-    (formData.course === "Appreciation Letter");
+  const needsSubject = () => formData.course === "Appreciation Letter";
 
-  const needsDescription = () =>
-    (formData.course === "Appreciation Letter");
+  const needsDescription = () => formData.course === "Appreciation Letter";
 
-  const needsMonthAndYear = () =>
-    (formData.course === "Appreciation Letter");
+  const needsMonthAndYear = () => formData.course === "Appreciation Letter";
 
-  const needsGenderPronoun = () =>
-    (formData.course === "Experience Certificate");
+  const needsGenderPronoun = () => formData.course === "Experience Certificate";
 
   // Check if role field is needed
   const needsRole = () => {
@@ -366,18 +349,20 @@ export default function CreateLetter() {
 
   const needsAmount = () => {
     return formData.course === "Stipend Revision";
-  }
+  };
 
   const needsEffectiveDate = () => {
-    return (formData.course === "Stipend Revision" || formData.course === "Non Paid to Paid");
-  }
+    return (
+      formData.course === "Stipend Revision" ||
+      formData.course === "Non Paid to Paid"
+    );
+  };
 
   const isInternshipUnpaid = () =>
     formData.course === "Internship Joining Letter - Unpaid";
 
   const isInternshipPaid = () =>
-    (formData.course === "Internship Joining Letter - Paid");
-
+    formData.course === "Internship Joining Letter - Paid";
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -531,7 +516,10 @@ export default function CreateLetter() {
       toast.error("Please select letter type");
       return false;
     }
-    if (hasSubtypes(formData.category, formData.letterType) && !formData.course) {
+    if (
+      hasSubtypes(formData.category, formData.letterType) &&
+      !formData.course
+    ) {
       toast.error("Please select letter subtype");
       return false;
     }
@@ -575,15 +563,12 @@ export default function CreateLetter() {
       }
     }
 
-    if (
-      (formData.course === "Experience Certificate")
-    ) {
+    if (formData.course === "Experience Certificate") {
       if (!formData.genderPronoun) {
         toast.error("Please select His/Her");
         return false;
       }
     }
-
 
     if (!formData.issueDate) {
       toast.error("Please select issue date");
@@ -595,7 +580,9 @@ export default function CreateLetter() {
         return false;
       }
       if (!formData.officialStartDate || !formData.completionDate) {
-        toast.error("Please enter official internship start & completion dates");
+        toast.error(
+          "Please enter official internship start & completion dates"
+        );
         return false;
       }
       if (!formData.responsibilities.trim()) {
@@ -629,6 +616,15 @@ export default function CreateLetter() {
 
   const sendOTP = async () => {
     try {
+      if (DEV_MODE) {
+        // ⭐ Skip actual OTP sending in dev
+        toast.success("OTP sent (DEV MODE)");
+        setOtpSent(true);
+        setResendTimer(60);
+        return;
+      }
+
+      // Production: Real OTP sending
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
         { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
@@ -636,9 +632,9 @@ export default function CreateLetter() {
       );
 
       if (response.data.success) {
-      toast.success("OTP sent to your WhatsApp! 📱");
-      setOtpSent(true);
-      setResendTimer(60);
+        toast.success("OTP sent to your WhatsApp! 📱");
+        setOtpSent(true);
+        setResendTimer(60);
       } else {
         toast.error(response.data.message || "Failed to send OTP");
       }
@@ -664,6 +660,7 @@ export default function CreateLetter() {
     }
   };
 
+  // Replace verifyOTP function:
   const verifyOTP = async () => {
     try {
       const otpCode = otp.join("");
@@ -672,25 +669,33 @@ export default function CreateLetter() {
         return;
       }
 
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+      if (DEV_MODE) {
+        // ⭐ Skip verification in dev - accept any 6 digits
+        toast.success("OTP Verified Successfully! (DEV MODE)");
+        setOtpVerified(true);
+        setShowOtpModal(false);
+        setShowPreview(true);
+        generatePreview();
+        return;
+      }
 
-      // if (response.data.success) {
-      toast.success("OTP Verified Successfully!");
-      setOtpVerified(true);
-      setShowOtpModal(false);
-      setShowPreview(true);
-      generatePreview();
-      // } else {
-      // toast.error("Invalid OTP");
-      // setOtp(["", "", "", "", "", ""]);
-      // }
+      // Production: Real OTP verification
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        { phone: "919892398976", otp: otpCode },
+        { headers: getAuthHeaders() }
+      );
+
+      if (response.data.success) {
+        toast.success("OTP Verified Successfully!");
+        setOtpVerified(true);
+        setShowOtpModal(false);
+        setShowPreview(true);
+        generatePreview();
+      } else {
+        toast.error("Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -1024,7 +1029,7 @@ export default function CreateLetter() {
                   </>
                 )}
 
-                {needsDuration() &&
+                {needsDuration() && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Duration (e.g., 3 months, 6 months)
@@ -1039,7 +1044,7 @@ export default function CreateLetter() {
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                     />
                   </div>
-                }
+                )}
 
                 {/* Description — hidden only for BVOC */}
                 {/* {formData.category !== "BVOC" && (
@@ -1067,7 +1072,9 @@ export default function CreateLetter() {
                     </label>
                     <select
                       value={formData.committeeType || ""}
-                      onChange={(e) => handleInputChange("committeeType", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("committeeType", e.target.value)
+                      }
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                     >
                       <option value="">Select Committee</option>
@@ -1111,7 +1118,9 @@ export default function CreateLetter() {
                         type="text"
                         maxLength={20}
                         value={formData.subjectName || ""}
-                        onChange={(e) => handleInputChange("subjectName", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("subjectName", e.target.value)
+                        }
                         placeholder="Enter subject"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1124,7 +1133,9 @@ export default function CreateLetter() {
                         type="text"
                         maxLength={40}
                         value={formData.projectName || ""}
-                        onChange={(e) => handleInputChange("projectName", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("projectName", e.target.value)
+                        }
                         placeholder="Enter project"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1142,7 +1153,9 @@ export default function CreateLetter() {
                       type="text"
                       maxLength={70}
                       value={formData.misconductReason || ""}
-                      onChange={(e) => handleInputChange("misconductReason", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("misconductReason", e.target.value)
+                      }
                       placeholder="Enter reason"
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                     />
@@ -1159,7 +1172,9 @@ export default function CreateLetter() {
                       <input
                         type="text"
                         value={formData.attendanceMonth || ""}
-                        onChange={(e) => handleInputChange("attendanceMonth", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("attendanceMonth", e.target.value)
+                        }
                         placeholder="e.g. January"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1171,7 +1186,9 @@ export default function CreateLetter() {
                       <input
                         type="number"
                         value={formData.attendanceYear || ""}
-                        onChange={(e) => handleInputChange("attendanceYear", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("attendanceYear", e.target.value)
+                        }
                         placeholder="e.g. 2025"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1189,7 +1206,9 @@ export default function CreateLetter() {
                       <input
                         type="text"
                         value={formData.performanceMonth || ""}
-                        onChange={(e) => handleInputChange("performanceMonth", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("performanceMonth", e.target.value)
+                        }
                         placeholder="e.g. March"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1201,7 +1220,9 @@ export default function CreateLetter() {
                       <input
                         type="number"
                         value={formData.performanceYear || ""}
-                        onChange={(e) => handleInputChange("performanceYear", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("performanceYear", e.target.value)
+                        }
                         placeholder="e.g. 2025"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1220,7 +1241,9 @@ export default function CreateLetter() {
                         type="text"
                         maxLength={30}
                         value={formData.testingPhase || ""}
-                        onChange={(e) => handleInputChange("testingPhase", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("testingPhase", e.target.value)
+                        }
                         placeholder="e.g. Admin Panel Testing phase"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1233,7 +1256,9 @@ export default function CreateLetter() {
                         type="text"
                         maxLength={30}
                         value={formData.uncover || ""}
-                        onChange={(e) => handleInputChange("uncover", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("uncover", e.target.value)
+                        }
                         placeholder="e.g. twenty functional bugs"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1243,67 +1268,70 @@ export default function CreateLetter() {
 
                 {/* FSD Internship Experience Certificate Specific Inputs */}
                 {((formData.category === "FSD" &&
-                  formData.course === "Internship Experience Certificate")
-                  ||
-                  (formData.course === "Experience Certificate")
-                  ||
+                  formData.course === "Internship Experience Certificate") ||
+                  formData.course === "Experience Certificate" ||
                   (formData.category === "DM" &&
-                    formData.course === "Internship Experience Certificate")
-                )
-                  && (
-                    <>
-                      {/* Role */}
+                    formData.course ===
+                      "Internship Experience Certificate")) && (
+                  <>
+                    {/* Role */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Award className="w-4 h-4 inline mr-2" />
+                        Role *
+                      </label>
+                      <select
+                        value={formData.role}
+                        onChange={(e) =>
+                          handleInputChange("role", e.target.value)
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      >
+                        <option value="">Select Role</option>
+                        {getRoles(formData.category).map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Start Date */}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          <Award className="w-4 h-4 inline mr-2" />
-                          Role *
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          Start Date *
                         </label>
-                        <select
-                          value={formData.role}
-                          onChange={(e) => handleInputChange("role", e.target.value)}
+                        <input
+                          type="date"
+                          value={formData.startDate}
+                          onChange={(e) =>
+                            handleInputChange("startDate", e.target.value)
+                          }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        >
-                          <option value="">Select Role</option>
-                          {getRoles(formData.category).map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
 
-                      {/* Start Date */}
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            <Calendar className="w-4 h-4 inline mr-2" />
-                            Start Date *
-                          </label>
-                          <input
-                            type="date"
-                            value={formData.startDate}
-                            onChange={(e) => handleInputChange("startDate", e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                          />
-                        </div>
-
-                        {/* End Date */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            <Calendar className="w-4 h-4 inline mr-2" />
-                            End Date *
-                          </label>
-                          <input
-                            type="date"
-                            value={formData.endDate}
-                            onChange={(e) => handleInputChange("endDate", e.target.value)}
-                            min={formData.startDate}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                          />
-                        </div>
+                      {/* End Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar className="w-4 h-4 inline mr-2" />
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.endDate}
+                          onChange={(e) =>
+                            handleInputChange("endDate", e.target.value)
+                          }
+                          min={formData.startDate}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        />
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </>
+                )}
 
                 {needsAuditDate() && (
                   <div>
@@ -1336,7 +1364,12 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.trainingStartDate}
-                          onChange={(e) => handleInputChange("trainingStartDate", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "trainingStartDate",
+                              e.target.value
+                            )
+                          }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
         outline-none transition-all"
@@ -1352,7 +1385,9 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.trainingEndDate}
-                          onChange={(e) => handleInputChange("trainingEndDate", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("trainingEndDate", e.target.value)
+                          }
                           min={formData.trainingStartDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
@@ -1371,7 +1406,12 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.officialStartDate}
-                          onChange={(e) => handleInputChange("officialStartDate", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "officialStartDate",
+                              e.target.value
+                            )
+                          }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
         outline-none transition-all"
@@ -1386,16 +1426,16 @@ export default function CreateLetter() {
                         <input
                           type="date"
                           value={formData.completionDate}
-                          onChange={(e) => handleInputChange("completionDate", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("completionDate", e.target.value)
+                          }
                           min={formData.officialStartDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
         outline-none transition-all"
                         />
                       </div>
-                      <div>
-
-                      </div>
+                      <div></div>
                     </div>
 
                     {/* Roles & Responsibilities */}
@@ -1405,10 +1445,11 @@ export default function CreateLetter() {
                         Roles & Responsibilities (Max 400 chars) *
                       </label>
                       <p
-                        className={`text-xs mb-2 ${formData.responsibilities.length > 400
-                          ? "text-red-500"
-                          : "text-gray-500"
-                          }`}
+                        className={`text-xs mb-2 ${
+                          formData.responsibilities.length > 400
+                            ? "text-red-500"
+                            : "text-gray-500"
+                        }`}
                       >
                         {formData.responsibilities.length}/400 characters
                       </p>
@@ -1438,7 +1479,9 @@ export default function CreateLetter() {
                           <input
                             type="number"
                             value={formData.amount}
-                            onChange={(e) => handleInputChange("amount", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("amount", e.target.value)
+                            }
                             min={0}
                             placeholder="Enter amount"
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
@@ -1456,7 +1499,9 @@ export default function CreateLetter() {
                           <input
                             type="date"
                             value={formData.effectiveFrom}
-                            onChange={(e) => handleInputChange("effectiveFrom", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("effectiveFrom", e.target.value)
+                            }
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
             focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
             transition-all"
@@ -1473,10 +1518,13 @@ export default function CreateLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Subject (max 50 chars) *
                       </label>
-                      <p className={`text-xs mb-2 ${formData.subject.length > 50
-                        ? "text-red-500 font-semibold"
-                        : "text-gray-500"
-                        }`}>
+                      <p
+                        className={`text-xs mb-2 ${
+                          formData.subject.length > 50
+                            ? "text-red-500 font-semibold"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {formData.subject.length}/50 characters
                         {formData.subject.length > 50 && " - Exceeds limit!"}
                       </p>
@@ -1484,7 +1532,9 @@ export default function CreateLetter() {
                         type="text"
                         maxLength={50}
                         value={formData.subject || ""}
-                        onChange={(e) => handleInputChange("subject", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("subject", e.target.value)
+                        }
                         placeholder="Enter subject"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
@@ -1521,10 +1571,14 @@ export default function CreateLetter() {
 
                       <select
                         value={formData.month || ""}
-                        onChange={(e) => handleInputChange("month", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("month", e.target.value)
+                        }
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white"
                       >
-                        <option value="" disabled>Select Month</option>
+                        <option value="" disabled>
+                          Select Month
+                        </option>
                         <option value="January">January</option>
                         <option value="February">February</option>
                         <option value="March">March</option>
@@ -1546,9 +1600,11 @@ export default function CreateLetter() {
                       <input
                         type="number"
                         value={formData.year || ""}
-                        onChange={(e) => handleInputChange("year", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("year", e.target.value)
+                        }
                         placeholder="e.g. 2025"
-                        min={(new Date().getFullYear()) - 1}
+                        min={new Date().getFullYear() - 1}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                       />
                     </div>
@@ -1557,60 +1613,68 @@ export default function CreateLetter() {
 
                 {/* ✅✅✅ Description for FSD Internship Experience Certificate ✅✅✅ */}
                 {((formData.category === "FSD" &&
-                  formData.course === "Internship Experience Certificate")
-                  ||
-                  (formData.course === "Experience Certificate")
-                  ||
+                  formData.course === "Internship Experience Certificate") ||
+                  formData.course === "Experience Certificate" ||
                   (formData.category === "DM" &&
-                    formData.course === "Internship Experience Certificate")
-                )
-                  && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <FileText className="w-4 h-4 inline mr-2" />
-                        Description (2 Paragraphs) *
-                      </label>
-                      <p className={`text-xs mb-2 ${formData.description.length > 1000
-                        ? "text-red-500 font-semibold"
-                        : "text-gray-500"
-                        }`}>
-                        {formData.description.length}/1000 characters
-                        {formData.description.length > 1000 && " - Exceeds limit!"}
-                      </p>
-                      <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
-                        💡 Write 2 paragraphs separated by a blank line (press Enter twice).
-                        This will appear in the certificate's content area.
-                      </p>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => handleInputChange("description", e.target.value)}
-                        placeholder="Enter Description"
-                        maxLength={1000}
-                        rows={8}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${formData.description.length > 1000
+                    formData.course ===
+                      "Internship Experience Certificate")) && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <FileText className="w-4 h-4 inline mr-2" />
+                      Description (2 Paragraphs) *
+                    </label>
+                    <p
+                      className={`text-xs mb-2 ${
+                        formData.description.length > 1000
+                          ? "text-red-500 font-semibold"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {formData.description.length}/1000 characters
+                      {formData.description.length > 1000 &&
+                        " - Exceeds limit!"}
+                    </p>
+                    <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
+                      💡 Write 2 paragraphs separated by a blank line (press
+                      Enter twice). This will appear in the certificate's
+                      content area.
+                    </p>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
+                      placeholder="Enter Description"
+                      maxLength={1000}
+                      rows={8}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${
+                        formData.description.length > 1000
                           ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                           : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
-                          }`}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs text-gray-500">
-                          📝 Tip: Press <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> twice to create a new paragraph
-                        </p>
-                        {/* {formData.description.trim() && (
+                      }`}
+                    />
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-xs text-gray-500">
+                        📝 Tip: Press{" "}
+                        <kbd className="px-2 py-1 bg-gray-100 rounded">
+                          Enter
+                        </kbd>{" "}
+                        twice to create a new paragraph
+                      </p>
+                      {/* {formData.description.trim() && (
                           <p className="text-xs text-green-600 font-medium">
                             ✓ {formData.description.split(/\n\s*\n/).filter(p => p.trim()).length} paragraph(s)
                           </p>
                         )} */}
-                      </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* --------------------------------------------- */}
                 {/*            TIMELINE LETTER FIELDS            */}
                 {/* --------------------------------------------- */}
                 {formData.letterType === "Timeline Letter" && (
                   <div className="space-y-6">
-
                     {/* 1. Timeline Stage Dropdown */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1636,19 +1700,26 @@ export default function CreateLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Project Name (max 30 chars) *
                       </label>
-                      <p className={`text-xs mb-2 ${formData.timelineProjectName.length > 30
-                        ? "text-red-500 font-semibold"
-                        : "text-gray-500"
-                        }`}>
+                      <p
+                        className={`text-xs mb-2 ${
+                          formData.timelineProjectName.length > 30
+                            ? "text-red-500 font-semibold"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {formData.timelineProjectName.length}/30 characters
-                        {formData.timelineProjectName.length > 30 && " - Exceeds limit!"}
+                        {formData.timelineProjectName.length > 30 &&
+                          " - Exceeds limit!"}
                       </p>
                       <input
                         type="text"
                         maxLength={30}
                         value={formData.timelineProjectName}
                         onChange={(e) =>
-                          handleInputChange("timelineProjectName", e.target.value)
+                          handleInputChange(
+                            "timelineProjectName",
+                            e.target.value
+                          )
                         }
                         placeholder="Enter project name"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
@@ -1688,7 +1759,6 @@ export default function CreateLetter() {
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       />
                     </div>
-
                   </div>
                 )}
 
@@ -1703,7 +1773,9 @@ export default function CreateLetter() {
                       <input
                         type="number"
                         value={formData.amount}
-                        onChange={(e) => handleInputChange("amount", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("amount", e.target.value)
+                        }
                         min={0}
                         placeholder="Enter amount"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
@@ -1725,7 +1797,9 @@ export default function CreateLetter() {
                       <input
                         type="date"
                         value={formData.effectiveFrom}
-                        onChange={(e) => handleInputChange("effectiveFrom", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("effectiveFrom", e.target.value)
+                        }
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
             focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
             transition-all"
@@ -1741,31 +1815,43 @@ export default function CreateLetter() {
                         <FileText className="w-4 h-4 inline mr-2" />
                         Description (2 Paragraphs) *
                       </label>
-                      <p className={`text-xs mb-2 ${formData.description.length > 1000
-                        ? "text-red-500 font-semibold"
-                        : "text-gray-500"
-                        }`}>
+                      <p
+                        className={`text-xs mb-2 ${
+                          formData.description.length > 1000
+                            ? "text-red-500 font-semibold"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {formData.description.length}/1000 characters
-                        {formData.description.length > 1000 && " - Exceeds limit!"}
+                        {formData.description.length > 1000 &&
+                          " - Exceeds limit!"}
                       </p>
                       <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
-                        💡 Write 2 paragraphs separated by a blank line (press Enter twice).
-                        This will appear in the certificate's content area.
+                        💡 Write 2 paragraphs separated by a blank line (press
+                        Enter twice). This will appear in the certificate's
+                        content area.
                       </p>
                       <textarea
                         value={formData.description}
-                        onChange={(e) => handleInputChange("description", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("description", e.target.value)
+                        }
                         placeholder="Enter Description"
                         maxLength={1000}
                         rows={8}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${formData.description.length > 1000
-                          ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-                          : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
-                          }`}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${
+                          formData.description.length > 1000
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                            : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                        }`}
                       />
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-xs text-gray-500">
-                          📝 Tip: Press <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> twice to create a new paragraph
+                          📝 Tip: Press{" "}
+                          <kbd className="px-2 py-1 bg-gray-100 rounded">
+                            Enter
+                          </kbd>{" "}
+                          twice to create a new paragraph
                         </p>
                         {/* {formData.description.trim() && (
                           <p className="text-xs text-green-600 font-medium">
@@ -1873,7 +1959,8 @@ export default function CreateLetter() {
                       IT-Nexcore, Marketing Junction, HR:
                     </p>
                     <p className="text-xs mt-1">
-                      Appreciation, Experience, Internship Joining, Memo, NDA, Promotion, Timeline
+                      Appreciation, Experience, Internship Joining, Memo, NDA,
+                      Promotion, Timeline
                     </p>
                   </div>
                   <div>
@@ -2031,13 +2118,17 @@ export default function CreateLetter() {
                     formData.category === "FSD" &&
                     formData.course === "Internship Experience Certificate" && (
                       <div className="pt-2 border-t border-indigo-200">
-                        <span className="text-gray-600 block mb-1">Description:</span>
+                        <span className="text-gray-600 block mb-1">
+                          Description:
+                        </span>
                         <div className="text-gray-800 text-xs leading-relaxed bg-white p-3 rounded border border-indigo-100 max-h-32 overflow-y-auto">
-                          {formData.description.split(/\n\s*\n/).map((para, idx) => (
-                            <p key={idx} className={idx > 0 ? "mt-2" : ""}>
-                              {para.trim()}
-                            </p>
-                          ))}
+                          {formData.description
+                            .split(/\n\s*\n/)
+                            .map((para, idx) => (
+                              <p key={idx} className={idx > 0 ? "mt-2" : ""}>
+                                {para.trim()}
+                              </p>
+                            ))}
                         </div>
                         <span className="text-xs text-gray-500 mt-1 block">
                           {formData.description.length}/1000 characters
@@ -2049,40 +2140,47 @@ export default function CreateLetter() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Stage:</span>
-                        <span className="font-semibold text-gray-900">{formData.timelineStage}</span>
+                        <span className="font-semibold text-gray-900">
+                          {formData.timelineStage}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Project:</span>
-                        <span className="font-semibold text-gray-900">{formData.timelineProjectName}</span>
+                        <span className="font-semibold text-gray-900">
+                          {formData.timelineProjectName}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Due Date:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.timelineDueDate).toLocaleDateString()}
+                          {new Date(
+                            formData.timelineDueDate
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">New Deadline:</span>
                         <span className="font-semibold text-gray-900">
-                          {new Date(formData.timelineNewDate).toLocaleDateString()}
+                          {new Date(
+                            formData.timelineNewDate
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </>
                   )}
-
 
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
                     <span className="font-semibold text-gray-900">
                       {formData.issueDate
                         ? new Date(formData.issueDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )
                         : ""}
                     </span>
                   </div>

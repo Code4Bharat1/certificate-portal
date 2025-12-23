@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 import TemplateSelector from "../template/TemplateSelector";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
+
+
 export default function CreateCertificate() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
@@ -61,6 +63,16 @@ export default function CreateCertificate() {
   // Success State
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+    useEffect(() => {
+      console.log("🔍 Environment Check:");
+      console.log("API_URL:", API_URL);
+      console.log("Auth Token exists:", !!sessionStorage.getItem("authToken"));
+      console.log(
+        "Full API URL will be:",
+        `${API_URL}/api/certificates/otp/send`
+      );
+    }, []);
 
   const categoryConfig = {
     code4bharat: { label: "Code4Bharat", batches: [] },
@@ -331,60 +343,90 @@ export default function CreateCertificate() {
     }
   };
 
-  const sendOTP = async () => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/send`,
-        { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
-        { headers: getAuthHeaders() }
-      );
+const sendOTP = async () => {
+  try {
+    console.log("🔍 API_URL:", API_URL); // Debug log
+    console.log("🔍 Sending OTP to:", `${API_URL}/api/certificates/otp/send`);
 
-      if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
-        setOtpSent(true);
-        setResendTimer(60);
-      } else {
-        toast.error(response.data.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      console.error("Failed to send OTP:", error);
-      toast.error("Failed to send OTP");
-    }
-  };
+    const loadingToast = toast.loading("Sending OTP...");
 
-  const verifyOTP = async () => {
-    try {
-      const otpCode = otp.join("");
-      if (otpCode.length !== 6) {
-        toast.error("Please enter complete OTP");
-        return;
-      }
-
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        {
-          phone: "919892398976",
-          otp: otpCode,
+    const response = await axios.post(
+      `${API_URL}/api/certificates/otp/send`,
+      {
+        phone: "919892398976",
+        name: "HR-NEXCORE ALLIANCE",
+      },
+      {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
         },
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        toast.success("✅ OTP Verified Successfully!");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        // generatePreview will be called by useEffect
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
       }
-    } catch (error) {
-      console.error("Verify OTP error:", error);
-      toast.error("OTP verification failed");
-      setOtp(["", "", "", "", "", ""]);
+    );
+
+    toast.dismiss(loadingToast);
+
+    if (response.data.success) {
+      toast.success("OTP sent to your WhatsApp! 📱");
+      setOtpSent(true);
+      setResendTimer(60);
+    } else {
+      toast.error(response.data.message || "Failed to send OTP");
     }
-  };
+  } catch (error) {
+    toast.dismiss();
+    console.error("❌ Failed to send OTP:", error);
+    console.error("❌ Error response:", error.response?.data);
+    console.error("❌ Error status:", error.response?.status);
+    toast.error(
+      error.response?.data?.message || "Failed to send OTP. Please try again."
+    );
+  }
+};
+ const verifyOTP = async () => {
+   try {
+     const otpCode = otp.join("");
+     if (otpCode.length !== 6) {
+       toast.error("Please enter complete OTP");
+       return;
+     }
+
+     console.log("🔍 Verifying OTP:", otpCode);
+     const loadingToast = toast.loading("Verifying OTP...");
+
+     const response = await axios.post(
+       `${API_URL}/api/certificates/otp/verify`,
+       {
+         phone: "919892398976",
+         otp: otpCode,
+       },
+       {
+         headers: {
+           ...getAuthHeaders(),
+           "Content-Type": "application/json",
+         },
+       }
+     );
+
+     toast.dismiss(loadingToast);
+
+     if (response.data.success) {
+       toast.success("✅ OTP Verified Successfully!");
+       setOtpVerified(true);
+       setShowOtpModal(false);
+       setShowPreview(true);
+     } else {
+       toast.error(response.data.message || "Invalid OTP");
+       setOtp(["", "", "", "", "", ""]);
+     }
+   } catch (error) {
+     toast.dismiss();
+     console.error("❌ Verify OTP error:", error);
+     console.error("❌ Error response:", error.response?.data);
+     toast.error(error.response?.data?.message || "OTP verification failed");
+     setOtp(["", "", "", "", "", ""]);
+   }
+ };
 
   const generatePreview = async () => {
     setLoadingPreview(true);

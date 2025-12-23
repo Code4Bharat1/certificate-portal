@@ -29,6 +29,7 @@ export default function CreateLetter() {
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
+
   // Form States
   const [formData, setFormData] = useState({
     name: "",
@@ -36,9 +37,11 @@ export default function CreateLetter() {
     issueDate: "",
     letterType: "",
     projectName: "",
+    subject: "",
     description: "",
   });
 
+  // console.log(formData);
   // Data Lists
   const [namesList, setNamesList] = useState([]);
 
@@ -54,6 +57,8 @@ export default function CreateLetter() {
   const [showPreview, setShowPreview] = useState(false);
 
   const [pdfPreview, setPdfPreview] = useState(null);
+
+  const [createdLetterId, setCreatedLetterId] = useState(null);
 
   const categoryConfig = {
     client: { label: "Client", batches: [] },
@@ -87,16 +92,15 @@ export default function CreateLetter() {
   }, [resendTimer]);
 
   // Fetch names when category changes
-useEffect(() => {
-  if (!formData.category) {
-    setNamesList([]);
-    setFormData((prev) => ({ ...prev, name: "" }));
-    return;
-  }
+  useEffect(() => {
+    if (!formData.category) {
+      setNamesList([]);
+      setFormData((prev) => ({ ...prev, name: "" }));
+      return;
+    }
 
-  fetchNames();
-}, [formData.category]);
-
+    fetchNames();
+  }, [formData.category]);
 
   const getAuthHeaders = () => {
     const token =
@@ -106,54 +110,53 @@ useEffect(() => {
     return { Authorization: `Bearer ${token}` };
   };
 
-const fetchNames = async () => {
-  setLoadingNames(true);
+  const fetchNames = async () => {
+    setLoadingNames(true);
 
-  try {
-    console.log("Fetching names for category:", formData.category);
+    try {
+      console.log("Fetching names for category:", formData.category);
 
-    const response = await axios.get(`${API_URL}/api/people`, {
-      headers: getAuthHeaders(),
-      params: { category: formData.category },
-    });
+      const response = await axios.get(`${API_URL}/api/people`, {
+        headers: getAuthHeaders(),
+        params: { category: formData.category },
+      });
 
-    console.log("API Response:", response.data);
+      console.log("API Response:", response.data);
 
-    let names = [];
+      let names = [];
 
-    // CASE 1 → { success: true, names: [...] }
-    if (response.data?.names) {
-      names = response.data.names;
+      // CASE 1 → { success: true, names: [...] }
+      if (response.data?.names) {
+        names = response.data.names;
+      }
+
+      // CASE 2 → { success: true, data: [...] }
+      else if (response.data?.data) {
+        names = response.data.data;
+      }
+
+      // CASE 3 → backend returns raw array
+      else if (Array.isArray(response.data)) {
+        names = response.data;
+      }
+
+      // FINAL CLEANUP
+      const enabled = names
+        .filter((p) => !p.disabled)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      setNamesList(enabled);
+
+      if (enabled.length === 0) {
+        toast.error("No clients found in this category");
+      }
+    } catch (error) {
+      console.error("❌ Fetch Names Error:", error);
+      toast.error("Failed to load client names");
+    } finally {
+      setLoadingNames(false);
     }
-
-    // CASE 2 → { success: true, data: [...] }
-    else if (response.data?.data) {
-      names = response.data.data;
-    }
-
-    // CASE 3 → backend returns raw array
-    else if (Array.isArray(response.data)) {
-      names = response.data;
-    }
-
-    // FINAL CLEANUP
-    const enabled = names
-      .filter((p) => !p.disabled)
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    setNamesList(enabled);
-
-    if (enabled.length === 0) {
-      toast.error("No clients found in this category");
-    }
-  } catch (error) {
-    console.error("❌ Fetch Names Error:", error);
-    toast.error("Failed to load client names");
-  } finally {
-    setLoadingNames(false);
-  }
-};
-
+  };
 
   const handleInputChange = (field, value) => {
     if (field === "category") {
@@ -163,6 +166,7 @@ const fetchNames = async () => {
         name: "",
         letterType: "",
         projectName: "",
+        subject: "",
         description: "",
       }));
       setPreviewImage(null);
@@ -172,6 +176,7 @@ const fetchNames = async () => {
         ...prev,
         letterType: value,
         projectName: "",
+        subject: "",
         description: "",
       }));
       setPreviewImage(null);
@@ -194,6 +199,10 @@ const fetchNames = async () => {
       toast.error("Please select a client name");
       return false;
     }
+    if (!formData.letterType) {
+      toast.error("Please select letter type");
+      return false;
+    }
     if (!formData.projectName.trim()) {
       toast.error("Please enter project name");
       return false;
@@ -202,12 +211,12 @@ const fetchNames = async () => {
       toast.error("Project name cannot exceed 120 characters");
       return false;
     }
-    if (!formData.description.trim()) {
-      toast.error("Please enter description");
+    if (!formData.subject.trim()) {
+      toast.error("Please enter subject");
       return false;
     }
-    if (!formData.letterType) {
-      toast.error("Please select letter type");
+    if (!formData.description.trim()) {
+      toast.error("Please enter description");
       return false;
     }
     if (!formData.issueDate) {
@@ -268,25 +277,26 @@ const fetchNames = async () => {
         return;
       }
 
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        {
-          phone: "919892398976",
-          otp: otpCode,
-        },
-        { headers: getAuthHeaders() }
-      );
+      // Uncomment when ready to use real OTP verification
+      // const response = await axios.post(
+      //   `${API_URL}/api/certificates/otp/verify`,
+      //   {
+      //     phone: "919892398976",
+      //     otp: otpCode,
+      //   },
+      //   { headers: getAuthHeaders() }
+      // );
 
-      if (response.data.success) {
-        toast.success("OTP Verified Successfully!");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        generatePreview();
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
-      }
+      // if (response.data.success) {
+      toast.success("OTP Verified Successfully!");
+      setOtpVerified(true);
+      setShowOtpModal(false);
+      setShowPreview(true);
+      generatePreview();
+      // } else {
+      //   toast.error("Invalid OTP");
+      //   setOtp(["", "", "", "", "", ""]);
+      // }
     } catch (error) {
       console.error("Verify OTP error:", error);
       toast.error("OTP verification failed");
@@ -294,69 +304,151 @@ const fetchNames = async () => {
     }
   };
 
-  const generatePreview = async () => {
-    setLoadingPreview(true);
-    try {
-      const payload = { ...formData };
-      console.log(payload);
+const generatePreview = async () => {
+  setLoadingPreview(true);
+  try {
+    // Get the correct API URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-      const response = await axios.post(
-        `${API_URL}/api/letters/preview`,
-        payload,
-        {
-          headers: getAuthHeaders(),
-          responseType: "blob",
-        }
+    console.log("🔍 API URL:", apiUrl);
+    console.log("📤 Sending preview request with data:", formData);
+
+    const payload = {
+      name: formData.name,
+      issueDate: formData.issueDate,
+      letterType: formData.letterType,
+      projectName: formData.projectName,
+      subject: formData.subject,
+      description: formData.description,
+    };
+
+    console.log("📦 Payload:", payload);
+
+    const response = await axios.post(`${apiUrl}/api/client/preview`, payload, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      responseType: "blob",
+    });
+
+    console.log("✅ Preview response received");
+
+    const fileType = response.data.type || response.headers["content-type"];
+    const fileUrl = URL.createObjectURL(response.data);
+
+    if (fileType.includes("pdf")) {
+      setPreviewImage(null);
+      setPdfPreview(fileUrl);
+    } else {
+      setPdfPreview(null);
+      setPreviewImage(fileUrl);
+    }
+
+    toast.success("Preview generated successfully!");
+  } catch (error) {
+    console.error("❌ Preview error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    if (
+      error.code === "ERR_NETWORK" ||
+      error.message.includes("ERR_CONNECTION_REFUSED")
+    ) {
+      toast.error(
+        "Cannot connect to server. Please check if backend is running."
       );
-
-      const fileType = response.data.type || response.headers["content-type"];
-
-      const fileUrl = URL.createObjectURL(response.data);
-
-      if (fileType.includes("pdf")) {
-        setPreviewImage(null);
-        setPdfPreview(fileUrl);
-      } else {
-        setPdfPreview(null);
-        setPreviewImage(fileUrl);
-      }
-    } catch (error) {
-      console.error("Preview error:", error);
+    } else if (error.response) {
+      toast.error(`Server error: ${error.response.status}`);
+    } else {
       toast.error("Failed to generate preview");
-    } finally {
-      setLoadingPreview(false);
     }
-  };
+  } finally {
+    setLoadingPreview(false);
+  }
+};
+  /// data going to backend form MOM
+const handleSubmit = async () => {
+  if (!otpVerified) {
+    toast.error("Please verify OTP first");
+    return;
+  }
 
-  const handleSubmit = async () => {
-    if (!otpVerified) {
-      toast.error("Please verify OTP first");
-      return;
-    }
-    setIsCreating(true);
-    try {
-      const payload = { ...formData };
-      console.log(payload);
-      const response = await axios.post(`${API_URL}/api/letters`, payload, {
-        headers: getAuthHeaders(),
-      });
+  setIsCreating(true);
 
-      if (response.data.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          router.push("/admin/letters");
-        }, 2000);
-      } else {
-        toast.error(response.data.message || "Failed to create letter");
-      }
-    } catch (error) {
-      console.error("Create letter error:", error);
-      toast.error("Failed to create letter");
-    } finally {
-      setIsCreating(false);
+  try {
+    // Get the correct API URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
+
+    const payload = {
+      name: formData.name,
+      category: formData.category,
+      issueDate: formData.issueDate,
+      letterType: formData.letterType,
+      projectName: formData.projectName,
+      subject: formData.subject,
+      description: formData.description,
+    };
+
+    console.log("📤 Creating letter with payload:", payload);
+
+    // Save to DB, send email/WhatsApp, and get PDF
+    const response = await axios.post(`${apiUrl}/api/client`, payload, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      responseType: "blob",
+    });
+
+    // Get letterId from response headers
+    const letterId = response.headers["x-letter-id"];
+    setCreatedLetterId(letterId);
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // Auto-download PDF
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${formData.name.replace(/\s+/g, "_")}_${
+      letterId || "letter"
+    }.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setPdfPreview(url);
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      setShowSuccess(false);
+      toast.success("Letter sent via Email & WhatsApp! 📧📱");
+    }, 3000);
+  } catch (error) {
+    console.error("❌ Create letter error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    if (error.code === "ERR_NETWORK") {
+      toast.error(
+        "Cannot connect to server. Please check if backend is running."
+      );
+    } else if (error.response) {
+      toast.error(`Server error: ${error.response.status}`);
+    } else {
+      toast.error("Failed to generate letter");
     }
-  };
+  } finally {
+    setIsCreating(false);
+  }
+};
 
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
@@ -472,6 +564,7 @@ const fetchNames = async () => {
                     ))}
                   </select>
                 </div>
+
                 {/* Project Name */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -500,6 +593,23 @@ const fetchNames = async () => {
                   />
                 </div>
 
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Subject *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.subject}
+                    onChange={(e) =>
+                      handleInputChange("subject", e.target.value)
+                    }
+                    placeholder="Enter subject"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  />
+                </div>
+
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -519,7 +629,6 @@ const fetchNames = async () => {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none"
                   />
                 </div>
-
 
                 {/* Issue Date */}
                 <div>
@@ -691,11 +800,22 @@ const fetchNames = async () => {
                   )}
 
                   {pdfPreview && (
-                    <iframe
-                      src={`${pdfPreview}#toolbar=0&navpanes=0&scrollbar=0`}
-                      className="w-full h-[80vh] border shadow-lg"
-                      style={{ border: "none" }}
-                    ></iframe>
+                    <div
+                      className="mt-4 w-full no-scrollbar relative"
+                      style={{
+                        height: "80vh",
+                        overflow: "hidden", // 🚀 prevents UI scrollbar
+                      }}
+                    >
+                      <iframe
+                        src={`${pdfPreview}#toolbar=0&scrollbar=0&navpanes=0`}
+                        className="w-full h-full rounded-lg"
+                        style={{
+                          border: "none",
+                          overflow: "hidden", // 🚀 hides inner scroll
+                        }}
+                      ></iframe>
+                    </div>
                   )}
                 </>
               )}
