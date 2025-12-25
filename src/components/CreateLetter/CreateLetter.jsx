@@ -1,3 +1,4 @@
+//CreateLetter.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,9 +22,14 @@ import { FaWhatsapp } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
+
 const DEV_MODE = true; // ⭐ Change to false for production
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
+
+
+
 
 export default function CreateLetter() {
   const router = useRouter();
@@ -32,7 +38,7 @@ export default function CreateLetter() {
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
+  const [batches, setBatches] = useState({ fsd: [], bvoc: [] });
 
   // Form States
   const [formData, setFormData] = useState({
@@ -94,19 +100,61 @@ export default function CreateLetter() {
 
   const [pdfPreview, setPdfPreview] = useState(null);
 
-  const categoryConfig = {
-    "IT-Nexcore": { label: "IT-Nexcore", batches: [] },
-    "marketing-junction": { label: "Marketing Junction", batches: [] },
-    FSD: { label: "FSD", batches: batches.FSD || [] },
-    HR: { label: "HR", batches: [] },
-    BVOC: { label: "BVOC", batches: batches.BVOC || [] },
-    DM: { label: "Digital Marketing", batches: [] },
-    OD: { label: "Operations Department", batches: [] },
-  };
+  const [adminPermissions, setAdminPermissions] = useState([]);
+
+  // ✅ Load admin permissions on mount
+  useEffect(() => {
+    const adminData = sessionStorage.getItem("adminData");
+    if (adminData) {
+      try {
+        const data = JSON.parse(adminData);
+        setAdminPermissions(data.permissions || []);
+      } catch (error) {
+        console.error("Error parsing admin data:", error);
+      }
+    }
+  }, []);
+
+  // ✅ Filter categories based on permissions
+  const categoryConfig = useMemo(() => {
+    const allCategories = {
+      "it-nexcore": {
+        label: "it-nexcore",
+        batches: [],
+        permission: "it-nexcore",
+      },
+      "marketing-junction": {
+        label: "Marketing Junction",
+        batches: [],
+        permission: "marketing-junction",
+      },
+      dm: { label: "Digital Marketing", batches: [], permission: "dm" },
+      fsd: { label: "fsd", batches: batches.fsd || [], permission: "fsd" },
+      hr: { label: "hr", batches: [], permission: "hr" },
+      bvoc: { label: "bvoc", batches: batches.bvoc || [], permission: "bvoc" },
+      operations: {
+        label: "operations Department",
+        batches: [],
+        permission: "operations",
+      },
+    };
+
+    // Super admin sees all
+    if (adminPermissions.includes("admin_management")) {
+      return allCategories;
+    }
+
+    // Filter based on permissions
+    return Object.fromEntries(
+      Object.entries(allCategories).filter(([key, config]) =>
+        adminPermissions.includes(config.permission)
+      )
+    );
+  }, [adminPermissions, batches]);
 
   // Letter types and subtypes configuration
   const getLetterTypesConfig = (category) => {
-    if (category === "IT-Nexcore") {
+    if (category === "it-nexcore") {
       return {
         "Appreciation Letter": [
           // "Appreciation for Best Performance",
@@ -151,7 +199,7 @@ export default function CreateLetter() {
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
-    } else if (category === "FSD") {
+    } else if (category === "fsd") {
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -172,7 +220,7 @@ export default function CreateLetter() {
           "Warning Regarding Punctuality and Professional Discipline",
         ],
       };
-    } else if (category === "BVOC") {
+    } else if (category === "bvoc") {
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -195,7 +243,7 @@ export default function CreateLetter() {
           "Warning for Unauthorized Absence from Sessions",
         ],
       };
-    } else if (category === "DM") {
+    } else if (category === "dm") {
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -216,7 +264,7 @@ export default function CreateLetter() {
           "Warning Regarding Punctuality and Professional Discipline",
         ],
       };
-    } else if (category === "HR" || category === "OD") {
+    } else if (category === "hr" || category === "operations") {
       return {
         "Appreciation Letter": [
           // "Appreciation for Best Attendance",
@@ -257,7 +305,7 @@ export default function CreateLetter() {
 
   // Roles based on category
   const getRoles = (category) => {
-    if (category === "IT-Nexcore") {
+    if (category === "it-nexcore") {
       return [
         "Cyber Security Analyst (Intern)",
         "Junior Software Developer (Intern)",
@@ -273,19 +321,19 @@ export default function CreateLetter() {
         "Video Graphics",
         "Graphic Desigining",
       ];
-    } else if (category === "HR") {
-      return ["HR Assistant"];
-    } else if (category === "OD") {
-      return ["Operations Intern"];
-    } else if (category === "FSD") {
+    } else if (category === "hr") {
+      return ["hr Assistant"];
+    } else if (category === "operations") {
+      return ["operations Intern"];
+    } else if (category === "fsd") {
       return ["Full Stack Developer"];
-    } else if (category === "DM") {
+    } else if (category === "dm") {
       return ["Digital Marketing"];
     }
     return [];
   };
 
-  // BVOC specific conditional field logic
+  // bvoc specific conditional field logic
 
   // 1. Committee-related
   const needsCommittee = () => {
@@ -411,42 +459,50 @@ export default function CreateLetter() {
     return { Authorization: `Bearer ${token}` };
   };
 
-  const fetchNames = async () => {
-    setLoadingNames(true);
-    try {
-      let response;
-      if (
-        formData.category === "IT-Nexcore" ||
-        formData.category === "marketing-junction"
-      ) {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category },
-        });
-      } else {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category, batch: formData.batch },
-        });
-      }
+const fetchNames = async () => {
+  setLoadingNames(true);
+  try {
+    let response;
 
-      if (response.data.success && Array.isArray(response.data.names)) {
-        const enabled = response.data.names
-          .filter((person) => !person.disabled)
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        setNamesList(enabled);
-      } else {
-        setNamesList([]);
-      }
-    } catch (error) {
-      console.error("Fetch names error:", error);
-      toast.error("Failed to load names");
-    } finally {
-      setLoadingNames(false);
+    // ✅ FIXED: Properly handle it-nexcore and Code4Bharat as unified category
+    if (formData.category === "it-nexcore") {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: {
+          categories: JSON.stringify(["it-nexcore", "Code4Bharat"]),
+        },
+      });
+    } else if (formData.category === "marketing-junction") {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: { category: "marketing-junction" },
+      });
+    } else {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: {
+          category: formData.category,
+          batch: formData.batch || undefined,
+        },
+      });
     }
-  };
 
+    if (response.data.success && Array.isArray(response.data.names)) {
+      const enabled = response.data.names
+        .filter((person) => !person.disabled)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      setNamesList(enabled);
+    } else {
+      setNamesList([]);
+    }
+  } catch (error) {
+    console.error("Fetch names error:", error);
+    toast.error("Failed to load names");
+  } finally {
+    setLoadingNames(false);
+  }
+};
   const handleInputChange = (field, value) => {
     if (field === "category") {
       setFormData((prev) => ({
@@ -627,7 +683,7 @@ export default function CreateLetter() {
       // Production: Real OTP sending
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
+        { phone: "919892398976", name: "hr-NEXCORE ALLIANCE" },
         { headers: getAuthHeaders() }
       );
 
@@ -1046,8 +1102,8 @@ export default function CreateLetter() {
                   </div>
                 )}
 
-                {/* Description — hidden only for BVOC */}
-                {/* {formData.category !== "BVOC" && (
+                {/* Description — hidden only for bvoc */}
+                {/* {formData.category !== "bvoc" && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Description *
@@ -1266,11 +1322,11 @@ export default function CreateLetter() {
                   </div>
                 )}
 
-                {/* FSD Internship Experience Certificate Specific Inputs */}
-                {((formData.category === "FSD" &&
+                {/* fsd Internship Experience Certificate Specific Inputs */}
+                {((formData.category === "fsd" &&
                   formData.course === "Internship Experience Certificate") ||
                   formData.course === "Experience Certificate" ||
-                  (formData.category === "DM" &&
+                  (formData.category === "dm" &&
                     formData.course ===
                       "Internship Experience Certificate")) && (
                   <>
@@ -1611,11 +1667,11 @@ export default function CreateLetter() {
                   </div>
                 )}
 
-                {/* ✅✅✅ Description for FSD Internship Experience Certificate ✅✅✅ */}
-                {((formData.category === "FSD" &&
+                {/* ✅✅✅ Description for fsd Internship Experience Certificate ✅✅✅ */}
+                {((formData.category === "fsd" &&
                   formData.course === "Internship Experience Certificate") ||
                   formData.course === "Experience Certificate" ||
-                  (formData.category === "DM" &&
+                  (formData.category === "dm" &&
                     formData.course ===
                       "Internship Experience Certificate")) && (
                   <div>
@@ -1956,7 +2012,7 @@ export default function CreateLetter() {
                 <div className="space-y-3 text-sm text-gray-700">
                   <div>
                     <p className="font-semibold text-gray-900">
-                      IT-Nexcore, Marketing Junction, HR:
+                      it-nexcore, Marketing Junction, hr:
                     </p>
                     <p className="text-xs mt-1">
                       Appreciation, Experience, Internship Joining, Memo, NDA,
@@ -1964,14 +2020,14 @@ export default function CreateLetter() {
                     </p>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">FSD:</p>
+                    <p className="font-semibold text-gray-900">fsd:</p>
                     <p className="text-xs mt-1">
                       Appreciation, Experience, Offer, Warning, NDA, Live
                       Project
                     </p>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">BVOC:</p>
+                    <p className="font-semibold text-gray-900">bvoc:</p>
                     <p className="text-xs mt-1">
                       Appreciation, Committee, Warning
                     </p>
@@ -2115,7 +2171,7 @@ export default function CreateLetter() {
                   )}
                   {/* ✅ Show description for Internship Experience Certificate */}
                   {formData.description &&
-                    formData.category === "FSD" &&
+                    formData.category === "fsd" &&
                     formData.course === "Internship Experience Certificate" && (
                       <div className="pt-2 border-t border-indigo-200">
                         <span className="text-gray-600 block mb-1">

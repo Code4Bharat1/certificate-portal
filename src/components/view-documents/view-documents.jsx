@@ -36,8 +36,7 @@ export default function ViewDocuments() {
   const [previewDocument, setPreviewDocument] = useState(null);
   const [verifyingStudent, setVerifyingStudent] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
-const [rejectReason, setRejectReason] = useState("");
-
+  const [rejectReason, setRejectReason] = useState("");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
@@ -88,29 +87,88 @@ const [rejectReason, setRejectReason] = useState("");
             documents: {
               aadharFront: docs.aadhaarFront
                 ? {
-                    filename: docs.aadhaarFront.split("/").pop(),
-                    path: docs.aadhaarFront,
+                    filename:
+                      typeof docs.aadhaarFront === "string"
+                        ? docs.aadhaarFront.split("/").pop()
+                        : docs.aadhaarFront.path?.split("/").pop() || "unknown",
+                    path:
+                      typeof docs.aadhaarFront === "string"
+                        ? docs.aadhaarFront
+                        : docs.aadhaarFront.path,
+                    status:
+                      typeof docs.aadhaarFront === "object"
+                        ? docs.aadhaarFront.status
+                        : student.documentStatus?.aadhaarFront?.status ||
+                          "pending",
+                    rejectionReason:
+                      typeof docs.aadhaarFront === "object"
+                        ? docs.aadhaarFront.rejectionReason
+                        : student.documentStatus?.aadhaarFront?.rejectionReason,
                   }
                 : null,
 
               aadharBack: docs.aadhaarBack
                 ? {
-                    filename: docs.aadhaarBack.split("/").pop(),
-                    path: docs.aadhaarBack,
+                    filename:
+                      typeof docs.aadhaarBack === "string"
+                        ? docs.aadhaarBack.split("/").pop()
+                        : docs.aadhaarBack.path?.split("/").pop() || "unknown",
+                    path:
+                      typeof docs.aadhaarBack === "string"
+                        ? docs.aadhaarBack
+                        : docs.aadhaarBack.path,
+                    status:
+                      typeof docs.aadhaarBack === "object"
+                        ? docs.aadhaarBack.status
+                        : student.documentStatus?.aadhaarBack?.status ||
+                          "pending",
+                    rejectionReason:
+                      typeof docs.aadhaarBack === "object"
+                        ? docs.aadhaarBack.rejectionReason
+                        : student.documentStatus?.aadhaarBack?.rejectionReason,
                   }
                 : null,
 
               panCard: docs.panCard
                 ? {
-                    filename: docs.panCard.split("/").pop(),
-                    path: docs.panCard,
+                    filename:
+                      typeof docs.panCard === "string"
+                        ? docs.panCard.split("/").pop()
+                        : docs.panCard.path?.split("/").pop() || "unknown",
+                    path:
+                      typeof docs.panCard === "string"
+                        ? docs.panCard
+                        : docs.panCard.path,
+                    status:
+                      typeof docs.panCard === "object"
+                        ? docs.panCard.status
+                        : student.documentStatus?.panCard?.status || "pending",
+                    rejectionReason:
+                      typeof docs.panCard === "object"
+                        ? docs.panCard.rejectionReason
+                        : student.documentStatus?.panCard?.rejectionReason,
                   }
                 : null,
 
               bankPassbook: docs.bankPassbook
                 ? {
-                    filename: docs.bankPassbook.split("/").pop(),
-                    path: docs.bankPassbook,
+                    filename:
+                      typeof docs.bankPassbook === "string"
+                        ? docs.bankPassbook.split("/").pop()
+                        : docs.bankPassbook.path?.split("/").pop() || "unknown",
+                    path:
+                      typeof docs.bankPassbook === "string"
+                        ? docs.bankPassbook
+                        : docs.bankPassbook.path,
+                    status:
+                      typeof docs.bankPassbook === "object"
+                        ? docs.bankPassbook.status
+                        : student.documentStatus?.bankPassbook?.status ||
+                          "pending",
+                    rejectionReason:
+                      typeof docs.bankPassbook === "object"
+                        ? docs.bankPassbook.rejectionReason
+                        : student.documentStatus?.bankPassbook?.rejectionReason,
                   }
                 : null,
             },
@@ -178,33 +236,133 @@ const [rejectReason, setRejectReason] = useState("");
     });
   };
 
+  // Replace your existing handleDownload function with this:
   const handleDownload = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const url = `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`;
 
-      // Open in new tab
-      window.open(url + `?token=${token}`, "_blank");
-      toast.success("Opening document...");
+      // Get the document URL from API
+      const response = await axios.get(
+        `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.url) {
+        const documentUrl = response.data.url;
+
+        // If it's a Cloudinary URL (starts with http), download directly
+        if (documentUrl.startsWith("http")) {
+          // Download from Cloudinary
+          const fileResponse = await fetch(documentUrl);
+          const blob = await fileResponse.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(downloadUrl);
+          document.body.removeChild(a);
+        } else {
+          // Local file - construct server URL
+          const serverUrl = `${API_URL}/${documentUrl}`;
+          const fileResponse = await fetch(serverUrl, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const blob = await fileResponse.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(downloadUrl);
+          document.body.removeChild(a);
+        }
+
+        toast.success("Document downloaded!");
+      }
     } catch (error) {
       console.error("❌ Error downloading document:", error);
       toast.error("Failed to download document");
     }
   };
 
+  // Replace your existing handlePreview function with this:
+  // Replace the handlePreview function in view-documents.jsx
+
   const handlePreview = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const url = `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`;
 
-      setPreviewDocument({
-        studentId,
-        docType,
-        filename,
-        url: url + `?token=${token}`,
-      });
+      // Get the document URL from API
+      const response = await axios.get(
+        `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("🔍 API Response:", response.data); // Debug log
+
+      if (response.data.success && response.data.url) {
+        const documentUrl = response.data.url;
+
+        console.log("📄 Document URL:", documentUrl); // Debug log
+
+        // Check if it's a Cloudinary URL
+        const isCloudinary =
+          documentUrl.includes("cloudinary.com") ||
+          documentUrl.startsWith("https://res.cloudinary.com");
+
+        console.log("☁️ Is Cloudinary?", isCloudinary); // Debug log
+
+        if (isCloudinary) {
+          // Open Cloudinary documents in new tab
+          console.log("✅ Opening in new tab:", documentUrl);
+          const newWindow = window.open(
+            documentUrl,
+            "_blank",
+            "noopener,noreferrer"
+          );
+
+          if (newWindow) {
+            toast.success("Opening document in new tab");
+          } else {
+            toast.error("Popup blocked! Please allow popups for this site.");
+          }
+        } else {
+          // Local files - use modal preview
+          const previewUrl = documentUrl.startsWith("http")
+            ? documentUrl
+            : `${API_URL}/${documentUrl}`;
+
+          console.log("📂 Opening in modal:", previewUrl);
+
+          setPreviewDocument({
+            studentId,
+            docType,
+            filename,
+            url: previewUrl,
+            isCloudinary: false,
+          });
+        }
+      } else {
+        toast.error("Document URL not found in response");
+      }
     } catch (error) {
       console.error("❌ Error previewing document:", error);
+      console.error("Error details:", error.response?.data);
       toast.error("Failed to preview document");
     }
   };
@@ -235,6 +393,72 @@ const [rejectReason, setRejectReason] = useState("");
       toast.error("Failed to verify documents");
     } finally {
       setVerifyingStudent(null);
+    }
+  };
+
+  // Add these functions after handleVerifyDocuments function in view-document.jsx
+
+  const handleApproveDocument = async (studentId, docType) => {
+    try {
+      const token = sessionStorage.getItem("authToken");
+
+      const response = await axios.put(
+        `${API_URL}/api/documents/students/${studentId}/documents/${docType}/status`,
+        { status: "approved" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Document approved successfully!");
+        fetchStudentsWithDocuments(); // Refresh the list
+      }
+    } catch (error) {
+      console.error("❌ Error approving document:", error);
+      toast.error("Failed to approve document");
+    }
+  };
+
+  const openRejectModal = (studentId, docType) => {
+    setRejectModal({ studentId, docType });
+    setRejectReason("");
+  };
+
+  const handleRejectDocument = async () => {
+    if (!rejectReason.trim()) {
+      toast.error("Please enter a rejection reason");
+      return;
+    }
+
+    try {
+      const token = sessionStorage.getItem("authToken");
+      const { studentId, docType } = rejectModal;
+
+      const response = await axios.put(
+        `${API_URL}/api/documents/students/${studentId}/documents/${docType}/status`,
+        {
+          status: "rejected",
+          rejectionReason: rejectReason,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Document rejected");
+        setRejectModal(null);
+        setRejectReason("");
+        fetchStudentsWithDocuments(); // Refresh
+      }
+    } catch (error) {
+      console.error("❌ Error rejecting document:", error);
+      toast.error("Failed to reject document");
     }
   };
 
@@ -402,7 +626,7 @@ const [rejectReason, setRejectReason] = useState("");
           <div className="space-y-6">
             {filteredStudents.map((student, index) => (
               <motion.div
-                key={student.id}
+                key={student._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -449,7 +673,7 @@ const [rejectReason, setRejectReason] = useState("");
 
                       return (
                         <motion.div
-                          key={docType}
+                          key={`${student._id}-${docType}`}
                           whileHover={{ scale: 1.02 }}
                           className="group relative bg-gradient-to-br from-blue-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border-2 border-blue-100 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 transition-all"
                         >
@@ -506,7 +730,7 @@ const [rejectReason, setRejectReason] = useState("");
                             <button
                               onClick={() =>
                                 handlePreview(
-                                  student.id,
+                                  student._id,
                                   docType,
                                   docData.filename
                                 )
@@ -520,7 +744,7 @@ const [rejectReason, setRejectReason] = useState("");
                             <button
                               onClick={() =>
                                 handleDownload(
-                                  student.id,
+                                  student._id,
                                   docType,
                                   docData.filename
                                 )
@@ -535,8 +759,9 @@ const [rejectReason, setRejectReason] = useState("");
                           {/* Approval / Rejection Buttons */}
                           <div className="flex gap-2 mt-3 pt-2 border-t border-gray-300 dark:border-gray-600">
                             <button
-                              onClick={() =>
-                                handleApproveDocument(student.id, docType)
+                              onClick={
+                                () =>
+                                  handleApproveDocument(student._id, docType) // ✅ CHANGE student.id to student._id
                               }
                               disabled={docData.status === "approved"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
@@ -552,8 +777,8 @@ const [rejectReason, setRejectReason] = useState("");
                             </button>
 
                             <button
-                              onClick={() =>
-                                openRejectModal(student.id, docType)
+                              onClick={
+                                () => openRejectModal(student._id, docType) // ✅ CHANGE student.id to student._id
                               }
                               disabled={docData.status === "rejected"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
@@ -577,9 +802,9 @@ const [rejectReason, setRejectReason] = useState("");
                 {/* Verification Actions */}
                 <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
-                    onClick={() => handleVerifyDocuments(student.id, true)}
+                    onClick={() => handleVerifyDocuments(student._id, true)}
                     disabled={
-                      verifyingStudent === student.id ||
+                      verifyingStudent === student._id ||
                       student.documentsVerified
                     }
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-semibold"
@@ -591,8 +816,8 @@ const [rejectReason, setRejectReason] = useState("");
                   </button>
                   {student.documentsVerified && (
                     <button
-                      onClick={() => handleVerifyDocuments(student.id, false)}
-                      disabled={verifyingStudent === student.id}
+                      onClick={() => handleVerifyDocuments(student._id, false)}
+                      disabled={verifyingStudent === student._id}
                       className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-semibold"
                     >
                       <XCircle className="w-5 h-5" />
@@ -666,6 +891,11 @@ const [rejectReason, setRejectReason] = useState("");
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {previewDocument.filename}
                   </p>
+                  {previewDocument.isCloudinary && (
+                    <span className="text-xs text-green-600 dark:text-green-400">
+                      ☁️ Cloudinary
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => setPreviewDocument(null)}
@@ -674,13 +904,18 @@ const [rejectReason, setRejectReason] = useState("");
                   <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
-              <div className="p-6">
-                <iframe
-                  src={previewDocument.url}
-                  className="w-full h-[600px] rounded-lg border-2 border-gray-200 dark:border-gray-700"
-                  title="Document Preview"
-                />
-              </div>
+
+              {/* Direct URL in iframe */}
+              <iframe
+                src={previewDocument.url}
+                className="w-full h-[600px] rounded-lg"
+                title="Document Preview"
+                style={{ border: "none" }}
+                onError={(e) => {
+                  console.error("Iframe error:", e);
+                  toast.error("Failed to load document preview");
+                }}
+              />
             </motion.div>
           </motion.div>
         )}

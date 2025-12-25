@@ -17,18 +17,32 @@ import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
+const DEV_MODE = true; // ⭐ Change to false for production
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginType, setLoginType] = useState("admin");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const resetAllLoginState = () => {
+    setShowOtpScreen(false);
+    setIsFirstLogin(false);
+    setTempToken("");
+    setUserInfo(null);
+    setOtp("");
+    setPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setUseOtpLogin(false);
+  };
 
   // OTP Flow States
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [otp, setOtp] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
+  const [useOtpLogin, setUseOtpLogin] = useState(false);
 
   // First Login Flow States
   const [isFirstLogin, setIsFirstLogin] = useState(false);
@@ -38,6 +52,7 @@ export default function LoginPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [authToken, setAuthToken] = useState("");
 
   // Document Upload States
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
@@ -84,8 +99,7 @@ export default function LoginPage() {
       });
     }, 1000);
   };
-
-  // ========== ADMIN LOGIN ==========
+  // ========== FIXED ADMIN LOGIN ==========
   const handleAdminLogin = async () => {
     if (!username || !password) {
       toast.error("Please enter username and password");
@@ -95,67 +109,39 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
+      const response = await axios.post(`${API_URL}/api/admin/login`, {
         username,
         password,
       });
 
       if (response.data.success) {
-        toast.success("Admin login successful!");
+        const { token, user } = response.data;
 
+        // ✅ CRITICAL FIX: Use "adminData" key to match CategoryOverview
+        sessionStorage.setItem("authToken", token);
+        sessionStorage.setItem("adminData", JSON.stringify(user)); // ✅ Changed from "userData"
         sessionStorage.setItem("isAuthenticated", "true");
         sessionStorage.setItem("userType", "admin");
-        sessionStorage.setItem("authToken", response.data.token);
-        sessionStorage.setItem("userData", JSON.stringify(response.data.user));
 
+        // ✅ Debug log
+        console.log("✅ Admin Login Success:", {
+          role: user.role,
+          permissions: user.permissions,
+          savedTo: "adminData",
+        });
+
+        toast.success(`Welcome back, ${user.name}!`);
         setTimeout(() => router.push("/dashboard"), 500);
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Invalid credentials!";
       toast.error(errorMessage);
+      console.error("❌ Admin Login Error:", error);
     } finally {
       setLoading(false);
     }
   };
-
-  // ========== SUPER ADMIN LOGIN ==========
-  const handleSuperAdminLogin = async () => {
-    if (!username || !password) {
-      toast.error("Please enter username and password");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/super-admin/login`,
-        {
-          username,
-          password,
-        }
-      );
-
-      if (response.data.success) {
-        toast.success("Super Admin login successful!");
-
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userType", "superadmin");
-        sessionStorage.setItem("authToken", response.data.token);
-        sessionStorage.setItem("userData", JSON.stringify(response.data.user));
-
-        setTimeout(() => router.push("/super-admin/dashboard"), 500);
-      }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Invalid credentials!";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ========== USER FIRST LOGIN (Send OTP) ==========
   const handleUserFirstLogin = async () => {
     if (!username) {
@@ -166,15 +152,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/user/first-login`,
-        { username }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/first-login`, {
+        username,
+      });
 
       const data = response.data;
 
       if (data.success && data.firstLogin) {
-        toast.success("OTP sent to your WhatsApp! 📱");
+        toast.success(data.message);
         setTempToken(data.tempToken);
         setUserInfo(data.user);
         setShowOtpScreen(true);
@@ -206,7 +191,7 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/user/verify-otp`,
+        `${API_URL}/api/auth/verify-otp`,
         {
           phone: userInfo.phone,
           otp,
@@ -222,10 +207,8 @@ export default function LoginPage() {
 
       if (data.success) {
         toast.success("OTP verified! Please set your password");
-
         setTempToken(data.tempToken);
         setUserInfo(data.user);
-
         setShowOtpScreen(false);
         setIsFirstLogin(true);
       }
@@ -236,7 +219,7 @@ export default function LoginPage() {
       toast.error(errorMessage);
 
       if (errorMessage.toLowerCase().includes("expired")) {
-        toast.info("OTP expired. Please request a new one.");
+        toast.error("OTP expired. Please request a new one.");
         setOtp("");
         setShowOtpScreen(false);
       }
@@ -252,15 +235,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/user/first-login`,
-        {
-          username: username,
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/first-login`, {
+        username: username,
+      });
 
       if (response.data.success) {
-        toast.success("New OTP sent! 📱");
+        // Backend handles DEV_MODE messaging
+        toast.success(response.data.message);
         setOtp("");
         startResendTimer();
       }
@@ -281,7 +262,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/user/user-login`, {
+      const response = await axios.post(`${API_URL}/api/auth/user-login`, {
         loginId: username,
         password,
       });
@@ -300,7 +281,7 @@ export default function LoginPage() {
       const err = error.response?.data;
 
       if (err?.requiresFirstLogin) {
-        toast.info("Please complete your first login");
+        toast.error("Please complete your first login");
         handleUserFirstLogin();
         return;
       }
@@ -312,6 +293,7 @@ export default function LoginPage() {
   };
 
   // ========== SET PASSWORD (After OTP Verify) ==========
+  // ========== FIXED: SET PASSWORD (After OTP Verify) ==========
   const handleSetPassword = async () => {
     if (!newPassword || !confirmPassword) {
       toast.error("Please enter both passwords");
@@ -332,7 +314,7 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/user/set-password`,
+        `${API_URL}/api/auth/set-password`,
         {
           password: newPassword,
           confirmPassword: confirmPassword,
@@ -347,15 +329,15 @@ export default function LoginPage() {
       if (response.data.success) {
         toast.success("Password set successfully!");
 
-        // Store token and user data temporarily
-        const authToken = response.data.token;
+        const finalAuthToken = response.data.token;
         const userData = response.data.user;
 
-        setTempToken(authToken);
+        sessionStorage.setItem("authToken", finalAuthToken);
+        sessionStorage.setItem("userData", JSON.stringify(userData));
+
+        setAuthToken(finalAuthToken);
         setUserInfo(userData);
 
-        // Show document upload modal
-        setIsFirstLogin(false);
         setShowDocumentUpload(true);
       }
     } catch (error) {
@@ -364,15 +346,11 @@ export default function LoginPage() {
       toast.error(errorMessage);
 
       if (
-        error.response?.data?.message?.includes("expired") ||
-        error.response?.data?.message?.includes("Invalid token")
+        error.response?.status === 401 ||
+        error.response?.data?.message?.toLowerCase().includes("expired")
       ) {
-        setIsFirstLogin(false);
-        setShowOtpScreen(false);
-        setTempToken("");
-        setNewPassword("");
-        setConfirmPassword("");
-        toast.info("Session expired. Please start login again");
+        toast.error("Session expired. Please start login again");
+        resetAllLoginState();
       }
     } finally {
       setLoading(false);
@@ -425,62 +403,67 @@ export default function LoginPage() {
     }
   };
 
+  // ========== DOCUMENT UPLOAD HANDLERS ==========
   const handleDocumentUpload = async () => {
-  // Check if all mandatory documents are uploaded
-  if (
-    !documents.aadharFront ||
-    !documents.aadharBack ||
-    !documents.panCard ||
-    !documents.bankPassbook
-  ) {
-    toast.error("Please upload all mandatory documents");
-    return;
-  }
-
-  setUploadingDocument(true);
-
-  try {
-    const formData = new FormData();
-
-    // Use documents, not undefined file1/file2/file3/file4
-    formData.append("aadhaarFront", documents.aadharFront);
-    formData.append("aadhaarBack", documents.aadharBack);
-    formData.append("panCard", documents.panCard);
-    formData.append("bankPassbook", documents.bankPassbook);
-
-    // SAVE THE RESPONSE
-    const response = await axios.post(
-      `${API_URL}/api/auth/user/student/upload-documents`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${tempToken}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (response.data.success) {
-      toast.success("Documents uploaded successfully! 🎉");
-
-      // Complete login
-      sessionStorage.setItem("isAuthenticated", "true");
-      sessionStorage.setItem("userType", "user");
-      sessionStorage.setItem("authToken", tempToken);
-      sessionStorage.setItem("userData", JSON.stringify(userInfo));
-
-      setTimeout(() => router.push("/user/dashboard"), 1000);
+    if (
+      !documents.aadharFront ||
+      !documents.aadharBack ||
+      !documents.panCard ||
+      !documents.bankPassbook
+    ) {
+      toast.error("Please upload all mandatory documents");
+      return;
     }
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.message || "Failed to upload documents";
-    toast.error(errorMessage);
-    console.log(error);
-  } finally {
-    setUploadingDocument(false);
-  }
-};
 
+    setUploadingDocument(true);
+
+    try {
+      const token = sessionStorage.getItem("authToken");
+
+      if (!token) {
+        toast.error("Authentication token missing. Please login again.");
+        resetAllLoginState();
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("aadhaarFront", documents.aadharFront);
+      formData.append("aadhaarBack", documents.aadharBack);
+      formData.append("panCard", documents.panCard);
+      formData.append("bankPassbook", documents.bankPassbook);
+
+      const response = await axios.post(
+        `${API_URL}/api/auth/student/upload-documents`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Documents uploaded successfully! 🎉");
+
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userType", "user");
+
+        setTimeout(() => router.push("/user/dashboard"), 1000);
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to upload documents";
+      toast.error(errorMessage);
+
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        resetAllLoginState();
+      }
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
   const removeSelectedDocument = (documentType) => {
     setDocuments((prev) => ({
       ...prev,
@@ -502,15 +485,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/forgot-password`,
-        {
-          phone: forgotPasswordPhone,
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+        phone: forgotPasswordPhone,
+      });
 
       if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
+        toast.success(response.data.message);
         setShowForgotPassword(false);
         setShowForgotPasswordOtp(true);
         setForgotPasswordOtp("");
@@ -536,7 +516,7 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/user/verify-reset-otp`,
+        `${API_URL}/api/auth/verify-reset-otp`,
         {
           phone: forgotPasswordPhone,
           otp: forgotPasswordOtp,
@@ -556,7 +536,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
   // ========== FORGOT PASSWORD - RESET PASSWORD ==========
   const handleResetPassword = async () => {
     if (!resetNewPassword || !resetConfirmPassword) {
@@ -578,7 +557,7 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/user/reset-password`,
+        `${API_URL}/api/auth/reset-password`,
         {
           password: resetNewPassword,
           confirmPassword: resetConfirmPassword,
@@ -593,7 +572,6 @@ export default function LoginPage() {
       if (response.data.success) {
         toast.success("Password reset successful! Please login");
 
-        // Reset all forgot password states
         setShowResetPassword(false);
         setForgotPasswordPhone("");
         setForgotPasswordOtp("");
@@ -617,15 +595,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/user/forgot-password`,
-        {
-          phone: forgotPasswordPhone,
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+        phone: forgotPasswordPhone,
+      });
 
       if (response.data.success) {
-        toast.success("New OTP sent! 📱");
+        // Backend handles DEV_MODE messaging
+        toast.success(response.data.message);
         setForgotPasswordOtp("");
         startResendTimer();
       }
@@ -658,17 +634,18 @@ export default function LoginPage() {
 
   // ========== MAIN SUBMIT HANDLER ==========
   const handleSubmit = async () => {
-    if (isSuperAdmin) {
-      handleSuperAdminLogin();
-    } else if (loginType === "admin") {
+    if (loginType === "admin") {
       handleAdminLogin();
-    } else {
-      if (password) {
-        handleUserLogin();
-      } else {
-        handleUserFirstLogin();
-      }
+      return;
     }
+
+    // USER LOGIN
+    if (useOtpLogin) {
+      handleUserFirstLogin();
+      return;
+    }
+
+    handleUserLogin();
   };
 
   const handleKeyPress = (e) => {
@@ -691,22 +668,6 @@ export default function LoginPage() {
 
   const toggleLoginType = (type) => {
     setLoginType(type);
-    setIsSuperAdmin(false);
-    setUsername("");
-    setPassword("");
-    setShowOtpScreen(false);
-    setOtp("");
-    setIsFirstLogin(false);
-    setTempToken("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setShowForgotPassword(false);
-    setShowForgotPasswordOtp(false);
-    setShowResetPassword(false);
-  };
-
-  const toggleSuperAdmin = () => {
-    setIsSuperAdmin(!isSuperAdmin);
     setUsername("");
     setPassword("");
     setShowOtpScreen(false);
@@ -1481,70 +1442,45 @@ export default function LoginPage() {
           </motion.div>
         ) : !isFirstLogin ? (
           <>
-            {/* Super Admin Toggle - Shows above main toggle */}
-            {(loginType === "admin" || isSuperAdmin) && (
-              <div className="mb-4">
-                <button
-                  onClick={toggleSuperAdmin}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 text-white rounded-lg font-medium text-sm hover:from-purple-600 hover:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSuperAdmin ? (
-                    <>
-                      <Shield className="w-4 h-4" />
-                      Switch to Admin Login
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      Super Admin Access
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* Toggle Buttons - Only show if not Super Admin */}
-            {!isSuperAdmin && (
-              <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
-                <button
-                  onClick={() => toggleLoginType("admin")}
-                  disabled={loading}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    loginType === "admin"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <Shield className="w-5 h-5" />
-                  Admin
-                </button>
-                <button
-                  onClick={() => toggleLoginType("user")}
-                  disabled={loading}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    loginType === "user"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <User className="w-5 h-5" />
-                  User
-                </button>
-              </div>
-            )}
+            {/* Toggle Buttons */}
+            <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
+              <button
+                onClick={() => toggleLoginType("admin")}
+                disabled={loading}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  loginType === "admin"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Shield className="w-5 h-5" />
+                Admin
+              </button>
+              <button
+                onClick={() => toggleLoginType("user")}
+                disabled={loading}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  loginType === "user"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <User className="w-5 h-5" />
+                User
+              </button>
+            </div>
 
             <AnimatePresence mode="wait">
               <motion.div
-                key={isSuperAdmin ? "superadmin" : loginType}
+                key={loginType}
                 initial={{
                   opacity: 0,
-                  x: isSuperAdmin ? 0 : loginType === "admin" ? -20 : 20,
+                  x: loginType === "admin" ? -20 : 20,
                 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{
                   opacity: 0,
-                  x: isSuperAdmin ? 0 : loginType === "admin" ? 20 : -20,
+                  x: loginType === "admin" ? 20 : -20,
                 }}
                 transition={{ duration: 0.3 }}
               >
@@ -1553,37 +1489,22 @@ export default function LoginPage() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className={`w-20 h-20 ${
-                      isSuperAdmin
-                        ? "bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700"
-                        : "bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700"
-                    } rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl`}
+                    className={
+                      "w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
+                    }
                   >
-                    {isSuperAdmin ? (
-                      <Lock className="w-10 h-10 text-white" />
-                    ) : loginType === "admin" ? (
+                    {loginType === "admin" ? (
                       <Shield className="w-10 h-10 text-white" />
                     ) : (
                       <User className="w-10 h-10 text-white" />
                     )}
                   </motion.div>
-                  <h1
-                    className={`text-3xl font-bold mb-2 ${
-                      isSuperAdmin
-                        ? "text-purple-600 dark:text-purple-400"
-                        : "text-blue-600 dark:text-blue-400"
-                    }`}
-                  >
-                    {isSuperAdmin
-                      ? "Super Admin Portal"
-                      : loginType === "admin"
-                      ? "Admin Portal"
-                      : "User Portal"}
+                  <h1 className="text-3xl font-bold mb-2 text-blue-600 dark:text-blue-400">
+                    {loginType === "admin" ? "Admin Portal" : "User Portal"}
                   </h1>
+
                   <p className="text-gray-600 dark:text-gray-400">
-                    {isSuperAdmin
-                      ? "Sign in with super admin credentials"
-                      : loginType === "admin"
+                    {loginType === "admin"
                       ? "Sign in to access admin dashboard"
                       : "Sign in to access your certificates"}
                   </p>
@@ -1592,9 +1513,7 @@ export default function LoginPage() {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {isSuperAdmin
-                        ? "Super Admin Username"
-                        : loginType === "admin"
+                      {loginType === "admin"
                         ? "Admin Username"
                         : "Phone Number"}
                     </label>
@@ -1606,14 +1525,12 @@ export default function LoginPage() {
                       disabled={loading}
                       className="w-full px-4 py-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={
-                        isSuperAdmin
-                          ? "Enter super admin username"
-                          : loginType === "admin"
+                        loginType === "admin"
                           ? "Enter admin username"
                           : "Enter phone number (e.g., 9876543210)"
                       }
                     />
-                    {loginType === "user" && !isSuperAdmin && (
+                    {loginType === "user" && (
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         📱 Enter 10-digit phone number (without +91)
                       </p>
@@ -1623,7 +1540,7 @@ export default function LoginPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Password{" "}
-                      {loginType === "user" && !isSuperAdmin && (
+                      {loginType === "user" && (
                         <span className="text-xs text-gray-500">
                           (if already set)
                         </span>
@@ -1633,7 +1550,10 @@ export default function LoginPage() {
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setUseOtpLogin(false);
+                        }}
                         onKeyPress={handleKeyPress}
                         disabled={loading}
                         className="w-full px-4 py-3 pr-12 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1651,12 +1571,19 @@ export default function LoginPage() {
                         )}
                       </button>
                     </div>
-                    {loginType === "user" && !password && !isSuperAdmin && (
-                      <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                        💡 First time? Just enter phone number to receive OTP
-                      </p>
+                    {loginType === "user" && !password && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUseOtpLogin(true);
+                          setPassword("");
+                        }}
+                        className="mt-1 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                      >
+                        💡 First time? Login using OTP
+                      </button>
                     )}
-                    {loginType === "user" && !isSuperAdmin && (
+                    {loginType === "user" && (
                       <button
                         onClick={() => setShowForgotPassword(true)}
                         className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
@@ -1671,11 +1598,7 @@ export default function LoginPage() {
                     whileTap={{ scale: loading ? 1 : 0.98 }}
                     onClick={handleSubmit}
                     disabled={loading}
-                    className={`w-full ${
-                      isSuperAdmin
-                        ? "bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 hover:from-purple-600 hover:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800"
-                        : "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800"
-                    } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -1699,13 +1622,13 @@ export default function LoginPage() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        {loginType === "user" && !password && !isSuperAdmin
+                        {loginType === "user" && !password
                           ? "Sending OTP..."
                           : "Signing In..."}
                       </span>
                     ) : (
                       `${
-                        loginType === "user" && !password && !isSuperAdmin
+                        loginType === "user" && !password
                           ? "Send OTP"
                           : "Sign In"
                       }`
@@ -1717,12 +1640,7 @@ export default function LoginPage() {
 
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-                {isSuperAdmin ? (
-                  <>
-                    <Lock className="w-4 h-4 inline mr-1" />
-                    Super Admin access only • Highest level privileges
-                  </>
-                ) : loginType === "admin" ? (
+                {loginType === "admin" ? (
                   <>
                     <Shield className="w-4 h-4 inline mr-1" />
                     Admin access only • No signup available

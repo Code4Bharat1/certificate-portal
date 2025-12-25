@@ -1,3 +1,4 @@
+//CreateCertificate.jsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -22,6 +23,29 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import TemplateSelector from "../template/TemplateSelector";
+import { useMemo } from "react";
+const hasAccessToCategory = (adminPermissions, categoryKey) => {
+  if (!adminPermissions || adminPermissions.length === 0) return false;
+
+  // Super admin has all access
+  if (adminPermissions.includes("admin_management")) return true;
+
+  // Direct permission check - backend sends exactly these strings
+  const categoryPermissionMap = {
+    "it-nexcore": "it-nexcore", // Backend uses "it-nexcore" for it-nexcore
+    "marketing-junction": "marketing-junction",
+    dm: "dm",
+    fsd: "fsd",
+    hr: "hr",
+    bootcamp: "bootcamp",
+    bvoc: "bvoc",
+    operations: "operations",
+    client: "client",
+  };
+
+  const requiredPermission = categoryPermissionMap[categoryKey];
+  return adminPermissions.includes(requiredPermission);
+};
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 
@@ -34,7 +58,7 @@ export default function CreateCertificate() {
   const [previewImage, setPreviewImage] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
+  const [batches, setBatches] = useState({ fsd: [], bvoc: [] });
 
   // Form States
   const [formData, setFormData] = useState({
@@ -63,6 +87,19 @@ export default function CreateCertificate() {
   // Success State
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [adminPermissions, setAdminPermissions] = useState([]);
+
+  useEffect(() => {
+    const adminData = sessionStorage.getItem("adminData");
+    if (adminData) {
+      try {
+        const data = JSON.parse(adminData);
+        setAdminPermissions(data.permissions || []);
+      } catch (error) {
+        console.error("Error parsing admin data:", error);
+      }
+    }
+  }, []);
 
     useEffect(() => {
       console.log("🔍 Environment Check:");
@@ -74,11 +111,20 @@ export default function CreateCertificate() {
       );
     }, []);
 
-  const categoryConfig = {
-    code4bharat: { label: "Code4Bharat", batches: [] },
-    "marketing-junction": { label: "Marketing Junction", batches: [] },
-    FSD: { label: "FSD", batches: batches.FSD || [] },
-  };
+ const categoryConfig = useMemo(() => {
+   const allCategories = {
+     "it-nexcore": { label: "it-nexcore", batches: [] },
+     "marketing-junction": { label: "Marketing Junction", batches: [] },
+     dm: { label: "Digital Marketing", batches: [] }, // ✅ Added
+     fsd: { label: "fsd", batches: batches.fsd || [] },
+   };
+
+   return Object.fromEntries(
+     Object.entries(allCategories).filter(([key]) =>
+       hasAccessToCategory(adminPermissions, key)
+     )
+   );
+ }, [adminPermissions, batches]);
 
   const handleTemplateSelect = (template) => {
     setFormData((prev) => ({ ...prev, templateId: template.id }));
@@ -153,47 +199,71 @@ export default function CreateCertificate() {
     return { Authorization: `Bearer ${token}` };
   };
 
-  const fetchNames = async () => {
-    setLoadingNames(true);
-    try {
-      let response;
+const fetchNames = async () => {
+  setLoadingNames(true);
+  try {
+    console.log("🔍 Fetching names for category:", formData.category);
+    console.log("🔍 Batch:", formData.batch);
 
-      if (
-        formData.category === "code4bharat" ||
-        formData.category === "marketing-junction"
-      ) {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category },
-        });
-      } else {
-        response = await axios.get(`${API_URL}/api/people/`, {
-          headers: getAuthHeaders(),
-          params: { category: formData.category, batch: formData.batch },
-        });
-      }
+    let response;
 
-      if (response.data.success && response.data.names?.length > 0) {
-        const enabledNames = response.data.names.filter(
-          (person) => !person.disabled
-        );
-
-        // 🔥 Sort alphabetically by name
-        const sortedNames = enabledNames.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-
-        setNamesList(sortedNames);
-      } else {
-        setNamesList([]);
-      }
-    } catch (error) {
-      console.error("Fetch names error:", error);
-      toast.error("Failed to load names");
-    } finally {
-      setLoadingNames(false);
+    // ✅ Handle it-nexcore and Code4Bharat as unified category (same as CreateLetter)
+    if (formData.category === "it-nexcore") {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: {
+          categories: JSON.stringify(["it-nexcore", "Code4Bharat"]),
+        },
+      });
+    } else if (formData.category === "marketing-junction") {
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: { category: "marketing-junction" },
+      });
+    } else {
+      // For all other categories (fsd, dm, bvoc, hr, etc.)
+      response = await axios.get(`${API_URL}/api/people/`, {
+        headers: getAuthHeaders(),
+        params: {
+          category: formData.category,
+          batch: formData.batch || undefined,
+        },
+      });
     }
-  };
+
+    console.log("📦 API Response:", response.data);
+
+    if (response.data.success && Array.isArray(response.data.names)) {
+      const enabled = response.data.names
+        .filter((person) => !person.disabled)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log("✅ Sorted names:", enabled);
+      setNamesList(enabled);
+
+      if (enabled.length > 0) {
+        toast.success(`Found ${enabled.length} person(s)`);
+      } else {
+        toast.error(`No active people found in ${formData.category} category`);
+      }
+    } else {
+      console.log("⚠️ No names found");
+      setNamesList([]);
+      toast.error(`No active people found in ${formData.category} category`);
+    }
+  } catch (error) {
+    console.error("❌ Fetch names error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    toast.error("Failed to load names");
+    setNamesList([]);
+  } finally {
+    setLoadingNames(false);
+  }
+};
 
 
   const fetchCourses = async () => {

@@ -1,26 +1,27 @@
-'use client';
+//DashboardLayout.jsx
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, FileText, AlertTriangle, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LogOut, FileText, AlertTriangle, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [userName, setUserName] = useState('Admin');
+  const [userName, setUserName] = useState("Admin");
 
   // Get user name from session storage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const adminData = sessionStorage.getItem('adminData');
+    if (typeof window !== "undefined") {
+      const adminData = sessionStorage.getItem("adminData");
       if (adminData) {
         try {
           const data = JSON.parse(adminData);
-          setUserName(data.name || 'Admin');
+          setUserName(data.name || "Admin");
         } catch (error) {
-          console.error('Error parsing admin data:', error);
+          console.error("Error parsing admin data:", error);
         }
       }
     }
@@ -29,28 +30,28 @@ export default function DashboardLayout({ children }) {
   // ✅ Lock/unlock background scroll when modal is open
   useEffect(() => {
     if (showLogoutModal) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, [showLogoutModal]);
 
   const handleLogoutConfirm = () => {
-    toast.success('Logged out successfully!');
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('isAuthenticated');
-      sessionStorage.removeItem('adminData');
-      sessionStorage.removeItem('authToken');
+    toast.success("Logged out successfully!");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("isAuthenticated");
+      sessionStorage.removeItem("adminData");
+      sessionStorage.removeItem("authToken");
     }
     setShowLogoutModal(false);
-    setTimeout(() => router.push('/login'), 600);
+    setTimeout(() => router.push("/login"), 600);
   };
 
   const handleProfileClick = () => {
-    router.push('/profile-page');
+    router.push("/profile-page");
   };
 
   return (
@@ -135,7 +136,8 @@ export default function DashboardLayout({ children }) {
                 Confirm Logout
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                Are you sure you want to log out of the Admin Certificate Portal?
+                Are you sure you want to log out of the Admin Certificate
+                Portal?
               </p>
               <div className="flex justify-center gap-3">
                 <motion.button

@@ -20,6 +20,11 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+const IS_DEV_MODE =
+  process.env.NODE_ENV === "development" ||
+  process.env.NEXT_PUBLIC_DEV_MODE === "true";
+
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CreateLetter() {
@@ -61,12 +66,12 @@ export default function CreateLetter() {
   const [createdLetterId, setCreatedLetterId] = useState(null);
 
   const categoryConfig = {
-    client: { label: "Client", batches: [] },
+    client: { label: "client", batches: [] },
   };
 
   // Letter types configuration
   const getLetterTypesConfig = (category) => {
-    if (category === "Client") {
+    if (category === "client") {
       return {
         Agenda: [],
         "MOM (Minutes of Meeting)": [],
@@ -110,53 +115,65 @@ export default function CreateLetter() {
     return { Authorization: `Bearer ${token}` };
   };
 
-  const fetchNames = async () => {
-    setLoadingNames(true);
+const fetchNames = async () => {
+  setLoadingNames(true);
 
-    try {
-      console.log("Fetching names for category:", formData.category);
+  try {
+    console.log("🔍 Fetching names for category:", formData.category);
 
-      const response = await axios.get(`${API_URL}/api/people`, {
-        headers: getAuthHeaders(),
-        params: { category: formData.category },
-      });
+    const response = await axios.get(`${API_URL}/api/people`, {
+      headers: getAuthHeaders(),
+      params: {
+        category: formData.category,
+        disabled: false, // ✅ Only fetch enabled people
+      },
+    });
 
-      console.log("API Response:", response.data);
+    console.log("📦 API Response:", response.data);
 
-      let names = [];
+    let names = [];
 
-      // CASE 1 → { success: true, names: [...] }
-      if (response.data?.names) {
-        names = response.data.names;
-      }
-
-      // CASE 2 → { success: true, data: [...] }
-      else if (response.data?.data) {
-        names = response.data.data;
-      }
-
-      // CASE 3 → backend returns raw array
-      else if (Array.isArray(response.data)) {
-        names = response.data;
-      }
-
-      // FINAL CLEANUP
-      const enabled = names
-        .filter((p) => !p.disabled)
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-      setNamesList(enabled);
-
-      if (enabled.length === 0) {
-        toast.error("No clients found in this category");
-      }
-    } catch (error) {
-      console.error("❌ Fetch Names Error:", error);
-      toast.error("Failed to load client names");
-    } finally {
-      setLoadingNames(false);
+    // CASE 1 → { success: true, names: [...] }
+    if (response.data?.names) {
+      names = response.data.names;
     }
-  };
+    // CASE 2 → { success: true, data: [...] }
+    else if (response.data?.data) {
+      names = response.data.data;
+    }
+    // CASE 3 → backend returns raw array
+    else if (Array.isArray(response.data)) {
+      names = response.data;
+    }
+
+    console.log("📋 Processed names:", names);
+
+    // FINAL CLEANUP - filter disabled people (double-check)
+    const enabled = names
+      .filter((p) => !p.disabled)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    console.log("✅ Final enabled names:", enabled);
+
+    setNamesList(enabled);
+
+    if (enabled.length === 0) {
+      toast.error(`No active clients found in ${formData.category} category`);
+    } else {
+      toast.success(`Found ${enabled.length} client(s)`);
+    }
+  } catch (error) {
+    console.error("❌ Fetch Names Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    toast.error("Failed to load client names");
+  } finally {
+    setLoadingNames(false);
+  }
+};
 
   const handleInputChange = (field, value) => {
     if (field === "category") {
@@ -234,9 +251,21 @@ export default function CreateLetter() {
 
   const sendOTP = async () => {
     try {
+      // In dev mode, skip actual OTP sending
+      if (IS_DEV_MODE) {
+        toast.success("🚀 DEV MODE: OTP bypassed! Enter any 6 digits", {
+          duration: 4000,
+          icon: "🔓",
+        });
+        setOtpSent(true);
+        setResendTimer(60);
+        return;
+      }
+
+      // Production mode - actual OTP sending
       const response = await axios.post(
         `${API_URL}/api/certificates/otp/send`,
-        { phone: "919892398976", name: "HR-NEXCORE ALLIANCE" },
+        { phone: "919892398976", name: "hr-NEXCORE ALLIANCE" },
         { headers: getAuthHeaders() }
       );
 
@@ -252,6 +281,7 @@ export default function CreateLetter() {
       toast.error("Failed to send OTP");
     }
   };
+
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
@@ -269,49 +299,62 @@ export default function CreateLetter() {
     }
   };
 
-  const verifyOTP = async () => {
-    try {
-      const otpCode = otp.join("");
-      if (otpCode.length !== 6) {
-        toast.error("Please enter complete OTP");
-        return;
-      }
+ const verifyOTP = async () => {
+   try {
+     const otpCode = otp.join("");
+     if (otpCode.length !== 6) {
+       toast.error("Please enter complete OTP");
+       return;
+     }
 
-      // Uncomment when ready to use real OTP verification
-      // const response = await axios.post(
-      //   `${API_URL}/api/certificates/otp/verify`,
-      //   {
-      //     phone: "919892398976",
-      //     otp: otpCode,
-      //   },
-      //   { headers: getAuthHeaders() }
-      // );
+     // Dev mode bypass - accept any 6-digit OTP
+     if (IS_DEV_MODE) {
+       toast.success("🚀 DEV MODE: OTP Verified (Bypass)!", {
+         duration: 3000,
+         icon: "✅",
+       });
+       setOtpVerified(true);
+       setShowOtpModal(false);
+       setShowPreview(true);
+       generatePreview();
+       return;
+     }
 
-      // if (response.data.success) {
-      toast.success("OTP Verified Successfully!");
-      setOtpVerified(true);
-      setShowOtpModal(false);
-      setShowPreview(true);
-      generatePreview();
-      // } else {
-      //   toast.error("Invalid OTP");
-      //   setOtp(["", "", "", "", "", ""]);
-      // }
-    } catch (error) {
-      console.error("Verify OTP error:", error);
-      toast.error("OTP verification failed");
-      setOtp(["", "", "", "", "", ""]);
-    }
-  };
+     // Production mode - actual OTP verification
+     const response = await axios.post(
+       `${API_URL}/api/certificates/otp/verify`,
+       {
+         phone: "919892398976",
+         otp: otpCode,
+       },
+       { headers: getAuthHeaders() }
+     );
+
+     if (response.data.success) {
+       toast.success("OTP Verified Successfully!");
+       setOtpVerified(true);
+       setShowOtpModal(false);
+       setShowPreview(true);
+       generatePreview();
+     } else {
+       toast.error("Invalid OTP");
+       setOtp(["", "", "", "", "", ""]);
+     }
+   } catch (error) {
+     console.error("Verify OTP error:", error);
+     toast.error("OTP verification failed");
+     setOtp(["", "", "", "", "", ""]);
+   }
+ };
 
 const generatePreview = async () => {
   setLoadingPreview(true);
   try {
-    // Get the correct API URL
+    // ✅ FIXED: Use correct endpoint
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-    console.log("🔍 API URL:", apiUrl);
-    console.log("📤 Sending preview request with data:", formData);
+    console.log("🔍 Generating preview for client letter");
+    console.log("📤 Preview data:", formData);
 
     const payload = {
       name: formData.name,
@@ -322,15 +365,18 @@ const generatePreview = async () => {
       description: formData.description,
     };
 
-    console.log("📦 Payload:", payload);
-
-    const response = await axios.post(`${apiUrl}/api/client/preview`, payload, {
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-      responseType: "blob",
-    });
+    // ✅ FIXED: Changed from /api/client/preview to /api/clientletters/preview
+    const response = await axios.post(
+      `${apiUrl}/api/clientletters/preview`,
+      payload,
+      {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        responseType: "blob",
+      }
+    );
 
     console.log("✅ Preview response received");
 
@@ -340,9 +386,11 @@ const generatePreview = async () => {
     if (fileType.includes("pdf")) {
       setPreviewImage(null);
       setPdfPreview(fileUrl);
+      console.log("📄 PDF preview set");
     } else {
       setPdfPreview(null);
       setPreviewImage(fileUrl);
+      console.log("🖼️ Image preview set");
     }
 
     toast.success("Preview generated successfully!");
@@ -352,6 +400,7 @@ const generatePreview = async () => {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
+      url: error.config?.url,
     });
 
     if (
@@ -359,10 +408,13 @@ const generatePreview = async () => {
       error.message.includes("ERR_CONNECTION_REFUSED")
     ) {
       toast.error(
-        "Cannot connect to server. Please check if backend is running."
+        "Cannot connect to server. Please check if backend is running on port 5235."
       );
     } else if (error.response) {
-      toast.error(`Server error: ${error.response.status}`);
+      const errorMsg =
+        error.response.data?.message ||
+        `Server error: ${error.response.status}`;
+      toast.error(errorMsg);
     } else {
       toast.error("Failed to generate preview");
     }
@@ -380,7 +432,6 @@ const handleSubmit = async () => {
   setIsCreating(true);
 
   try {
-    // Get the correct API URL
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
     const payload = {
@@ -393,10 +444,10 @@ const handleSubmit = async () => {
       description: formData.description,
     };
 
-    console.log("📤 Creating letter with payload:", payload);
+    console.log("📤 Creating client letter with payload:", payload);
 
-    // Save to DB, send email/WhatsApp, and get PDF
-    const response = await axios.post(`${apiUrl}/api/client`, payload, {
+    // ✅ FIXED: Changed from /api/client to /api/clientletters
+    const response = await axios.post(`${apiUrl}/api/clientletters`, payload, {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
@@ -404,9 +455,13 @@ const handleSubmit = async () => {
       responseType: "blob",
     });
 
+    console.log("✅ Letter creation response received");
+
     // Get letterId from response headers
     const letterId = response.headers["x-letter-id"];
     setCreatedLetterId(letterId);
+
+    console.log("📋 Letter ID:", letterId);
 
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
@@ -415,18 +470,34 @@ const handleSubmit = async () => {
     const link = document.createElement("a");
     link.href = url;
     link.download = `${formData.name.replace(/\s+/g, "_")}_${
-      letterId || "letter"
+      letterId || "client_letter"
     }.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    console.log("✅ PDF downloaded");
 
     setPdfPreview(url);
     setShowSuccess(true);
 
     setTimeout(() => {
       setShowSuccess(false);
-      toast.success("Letter sent via Email & WhatsApp! 📧📱");
+      toast.success("Letter sent via Email & WhatsApp! 📧📱", {
+        duration: 5000,
+      });
+
+      // Optional: Reset form after successful creation
+      // setFormData({
+      //   name: "",
+      //   category: "",
+      //   issueDate: "",
+      //   letterType: "",
+      //   projectName: "",
+      //   subject: "",
+      //   description: "",
+      // });
+      // setShowPreview(false);
     }, 3000);
   } catch (error) {
     console.error("❌ Create letter error:", error);
@@ -434,16 +505,20 @@ const handleSubmit = async () => {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
+      url: error.config?.url,
     });
 
     if (error.code === "ERR_NETWORK") {
       toast.error(
-        "Cannot connect to server. Please check if backend is running."
+        "Cannot connect to server. Please check if backend is running on port 5235."
       );
     } else if (error.response) {
-      toast.error(`Server error: ${error.response.status}`);
+      const errorMsg =
+        error.response.data?.message ||
+        `Server error: ${error.response.status}`;
+      toast.error(errorMsg);
     } else {
-      toast.error("Failed to generate letter");
+      toast.error("Failed to create letter");
     }
   } finally {
     setIsCreating(false);
@@ -472,7 +547,7 @@ const handleSubmit = async () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Create Client Letter
+                Create client Letter
               </h1>
               <p className="text-gray-600 mt-2">
                 Generate client letters with OTP verification
@@ -509,15 +584,15 @@ const handleSubmit = async () => {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   >
                     <option value="">Select Category</option>
-                    <option value="Client">Client</option>
+                    <option value="client">client</option>
                   </select>
                 </div>
 
-                {/* Client Name */}
+                {/* client Name */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <User className="w-4 h-4 inline mr-2" />
-                    Client Name *
+                    client Name *
                   </label>
                   {loadingNames ? (
                     <div className="flex items-center justify-center py-3">
@@ -532,7 +607,7 @@ const handleSubmit = async () => {
                       disabled={!namesList.length || !formData.category}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:bg-gray-50"
                     >
-                      <option value="">Select Client Name</option>
+                      <option value="">Select client Name</option>
                       {namesList.map((person, idx) => (
                         <option key={idx} value={person.name}>
                           {person.name}
@@ -672,7 +747,7 @@ const handleSubmit = async () => {
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">1.</span>
-                    <span>Select "Client" as category</span>
+                    <span>Select "client" as category</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">2.</span>
@@ -725,7 +800,7 @@ const handleSubmit = async () => {
 
               <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
                 <h4 className="font-bold text-gray-900 mb-3">
-                  📝 Letter Types for Client
+                  📝 Letter Types for client
                 </h4>
                 <div className="space-y-2 text-sm text-gray-700">
                   <p>
@@ -826,7 +901,7 @@ const handleSubmit = async () => {
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Client Name:</span>
+                    <span className="text-gray-600">client Name:</span>
                     <span className="font-semibold text-gray-900">
                       {formData.name}
                     </span>

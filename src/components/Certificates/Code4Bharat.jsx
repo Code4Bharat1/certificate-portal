@@ -44,18 +44,19 @@ export default function Code4BharatPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [letterType, setLetterType] = useState('');
-  const [subLetterType, setSubLetterType] = useState('');
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [letterType, setLetterType] = useState("");
+  const [subLetterType, setSubLetterType] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [processingItem, setProcessingItem] = useState(null);
-  const [sortBy, setSortBy] = useState('date-desc');
+  const [sortBy, setSortBy] = useState("date-desc");
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
+ 
+  const categoryAliases = ["IT-Nexcore", "Code4Bharat"];
 
-  const category = "IT-Nexcore";
   const letterConfig = getLetterTypesConfig(category);
   const letterMainTypes = Object.keys(letterConfig);
 
@@ -63,34 +64,42 @@ export default function Code4BharatPage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const token = sessionStorage.getItem('authToken');
+        const token = sessionStorage.getItem("authToken");
         if (!token) {
-          router.push('/login');
+          router.push("/login");
           return;
         }
 
         const res = await axios.get(`${API_URL}/api/certificates`, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { category },
+          params: {
+            categories: categoryAliases.join(","), // "IT-Nexcore,Code4Bharat"
+          },
         });
 
         if (res.data.success) {
-          const certificates = Array.isArray(res.data.data) ? res.data.data : [];
-          const letters = Array.isArray(res.data.letters) ? res.data.letters : [];
+          const certificates = Array.isArray(res.data.data)
+            ? res.data.data
+            : [];
+          const letters = Array.isArray(res.data.letters)
+            ? res.data.letters
+            : [];
 
           const combined = [
-            ...certificates.map((c) => ({ ...c, type: 'certificate' })),
-            ...letters.map((l) => ({ ...l, type: 'letter' })),
+            ...certificates.map((c) => ({ ...c, type: "certificate" })),
+            ...letters.map((l) => ({ ...l, type: "letter" })),
           ];
 
-          combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          combined.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
           setItems(combined);
         } else {
-          toast.error('Failed to fetch data');
+          toast.error("Failed to fetch data");
         }
       } catch (error) {
         console.error(error);
-        toast.error('Error fetching data');
+        toast.error("Error fetching data");
       } finally {
         setLoading(false);
       }
@@ -103,14 +112,14 @@ export default function Code4BharatPage() {
   const handleDownloadPDF = async (item) => {
     setProcessingItem(item._id);
     try {
-      const token = sessionStorage.getItem('authToken');
+      const token = sessionStorage.getItem("authToken");
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
       let url;
-      if (item.type === 'letter') {
+      if (item.type === "letter") {
         url = `${API_URL}/api/letters/${item._id}/download.pdf`;
       } else {
         url = `${API_URL}/api/certificates/download/${item._id}`;
@@ -118,14 +127,14 @@ export default function Code4BharatPage() {
 
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
+        responseType: "blob",
       });
 
       const Id = item.type === "letter" ? item.letterId : item.certificateId;
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([response.data], { type: "application/pdf" });
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = `${item.name}_${Id}.pdf`;
       document.body.appendChild(link);
@@ -133,14 +142,16 @@ export default function Code4BharatPage() {
       link.remove();
 
       // Update status to 'downloaded'
-      if (item.status !== 'downloaded') {
-        await updateItemStatus(item._id, 'downloaded', item.type);
+      if (item.status !== "downloaded") {
+        await updateItemStatus(item._id, "downloaded", item.type);
       }
 
-      toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} downloaded`);
+      toast.success(
+        `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} downloaded`
+      );
     } catch (error) {
       console.error(error);
-      toast.error('Download failed');
+      toast.error("Download failed");
     } finally {
       setProcessingItem(null);
     }
@@ -148,24 +159,27 @@ export default function Code4BharatPage() {
 
   // Handle Download JPG (only for certificates)
   const handleDownloadJPG = async (item) => {
-    if (item.type !== 'certificate') return;
+    if (item.type !== "certificate") return;
 
     setProcessingItem(item._id);
     try {
-      const token = sessionStorage.getItem('authToken');
+      const token = sessionStorage.getItem("authToken");
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/certificates/${item._id}/download/jpg`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `${API_URL}/api/certificates/${item._id}/download/jpg`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
 
-      const blob = new Blob([response.data], { type: 'image/jpeg' });
+      const blob = new Blob([response.data], { type: "image/jpeg" });
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = `${item.name}_certificate.jpg`;
       document.body.appendChild(link);
@@ -173,14 +187,14 @@ export default function Code4BharatPage() {
       link.remove();
 
       // Update status to 'downloaded'
-      if (item.status !== 'downloaded') {
-        await updateItemStatus(item._id, 'downloaded', item.type);
+      if (item.status !== "downloaded") {
+        await updateItemStatus(item._id, "downloaded", item.type);
       }
 
-      toast.success('Certificate image downloaded');
+      toast.success("Certificate image downloaded");
     } catch (error) {
       console.error(error);
-      toast.error('Download failed');
+      toast.error("Download failed");
     } finally {
       setProcessingItem(null);
     }
@@ -189,10 +203,10 @@ export default function Code4BharatPage() {
   // Update item status
   const updateItemStatus = async (id, status, type) => {
     try {
-      const token = sessionStorage.getItem('authToken');
+      const token = sessionStorage.getItem("authToken");
 
-      let endpoint = '';
-      if (type === 'letter') {
+      let endpoint = "";
+      if (type === "letter") {
         endpoint = `${API_URL}/api/letters/${id}/status`;
       } else {
         endpoint = `${API_URL}/api/certificates/${id}/status`;
@@ -215,9 +229,9 @@ export default function Code4BharatPage() {
   // Handle Delete
   const handleDelete = async (id) => {
     try {
-      const token = sessionStorage.getItem('authToken');
+      const token = sessionStorage.getItem("authToken");
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
@@ -237,13 +251,15 @@ export default function Code4BharatPage() {
 
       if (response.data.success) {
         setItems(items.filter((item) => item._id !== id));
-        toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`);
+        toast.success(
+          `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} deleted`
+        );
       } else {
-        toast.error('Delete failed');
+        toast.error("Delete failed");
       }
     } catch (error) {
       console.error(error);
-      toast.error('Error deleting item');
+      toast.error("Error deleting item");
     } finally {
       setDeleteConfirm(null);
     }
@@ -251,25 +267,31 @@ export default function Code4BharatPage() {
 
   // Clear all filters
   const clearFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setLetterType('');
-    setSubLetterType('');
-    setSortBy('date-desc');
+    setSearchTerm("");
+    setStatusFilter("all");
+    setLetterType("");
+    setSubLetterType("");
+    setSortBy("date-desc");
   };
 
   // Sort items
   const sortedItems = [...items].sort((a, b) => {
     switch (sortBy) {
-      case 'name-asc':
+      case "name-asc":
         return a.name.localeCompare(b.name);
-      case 'name-desc':
+      case "name-desc":
         return b.name.localeCompare(a.name);
-      case 'date-asc':
-        return new Date(a.createdAt || a.issueDate) - new Date(b.createdAt || b.issueDate);
-      case 'date-desc':
+      case "date-asc":
+        return (
+          new Date(a.createdAt || a.issueDate) -
+          new Date(b.createdAt || b.issueDate)
+        );
+      case "date-desc":
       default:
-        return new Date(b.createdAt || b.issueDate) - new Date(a.createdAt || a.issueDate);
+        return (
+          new Date(b.createdAt || b.issueDate) -
+          new Date(a.createdAt || a.issueDate)
+        );
     }
   });
 
@@ -284,30 +306,35 @@ export default function Code4BharatPage() {
       (it.letterId && it.letterId.toLowerCase().includes(search)) ||
       (it.course && it.course.toLowerCase().includes(search));
 
-    const matchesStatus = statusFilter === 'all' || it.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || it.status === statusFilter;
 
     const matchesLetterType =
       !letterType ||
-      (it.type === 'letter' &&
+      (it.type === "letter" &&
         it.letterType &&
         it.letterType.toLowerCase() === letterType.toLowerCase());
 
     const matchesSubLetterType =
       !subLetterType ||
-      (it.type === 'letter' &&
+      (it.type === "letter" &&
         it.letterSubType &&
         it.letterSubType.toLowerCase() === subLetterType.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesLetterType && matchesSubLetterType;
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesLetterType &&
+      matchesSubLetterType
+    );
   });
 
   // Stats
   const stats = {
     total: items.length,
-    certificates: items.filter(it => it.type === 'certificate').length,
-    letters: items.filter(it => it.type === 'letter').length,
-    pending: items.filter(it => it.status === 'pending').length,
-    downloaded: items.filter(it => it.status === 'downloaded').length
+    certificates: items.filter((it) => it.type === "certificate").length,
+    letters: items.filter((it) => it.type === "letter").length,
+    pending: items.filter((it) => it.status === "pending").length,
+    downloaded: items.filter((it) => it.status === "downloaded").length,
   };
 
   return (
