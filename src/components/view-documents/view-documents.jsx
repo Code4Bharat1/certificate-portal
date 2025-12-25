@@ -1,5 +1,8 @@
 "use client";
 
+// 🔥 UPDATED VERSION - v2.0 - API Endpoints Fixed to /api/admin
+// Last Updated: 2024
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -40,6 +43,18 @@ export default function ViewDocuments() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
+  // 🔥 IMPORTANT: All API calls use /api/admin prefix
+  console.log("🔥 ViewDocuments v2.0 - API Base:", API_URL + "/api/admin");
+
+  // Cleanup blob URLs when component unmounts or preview changes
+  useEffect(() => {
+    return () => {
+      if (previewDocument?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewDocument.url);
+      }
+    };
+  }, [previewDocument]);
+
   // Fetch students with documents from API
   useEffect(() => {
     fetchStudentsWithDocuments();
@@ -56,28 +71,31 @@ export default function ViewDocuments() {
         return;
       }
 
-      const response = await axios.get(
-        `${API_URL}/api/documents/students/documents`,
-        {
-          params: {
-            page: 1,
-            limit: 100,
-            verified: verificationFilter,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // 🔥 FIX: Changed to /api/admin
+      const apiEndpoint = `${API_URL}/api/documents/students/documents`;
+      console.log("📡 Fetching from:", apiEndpoint);
 
-      console.log(response);
+      const response = await axios.get(apiEndpoint, {
+        params: {
+          page: 1,
+          limit: 100,
+          verified: verificationFilter,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("✅ Response:", response);
 
       if (response.data.success) {
         const formatted = response.data.students.map((student) => {
           const docs = student.documents || {};
+          const docStatus = student.documentStatus || {};
 
           return {
             ...student,
+            id: student._id || student.id, // ✅ Fix: Use _id from MongoDB
             hasDocuments:
               docs.aadhaarFront ||
               docs.aadhaarBack ||
@@ -87,6 +105,7 @@ export default function ViewDocuments() {
             documents: {
               aadharFront: docs.aadhaarFront
                 ? {
+<<<<<<< HEAD
                     filename:
                       typeof docs.aadhaarFront === "string"
                         ? docs.aadhaarFront.split("/").pop()
@@ -104,11 +123,18 @@ export default function ViewDocuments() {
                       typeof docs.aadhaarFront === "object"
                         ? docs.aadhaarFront.rejectionReason
                         : student.documentStatus?.aadhaarFront?.rejectionReason,
+=======
+                    filename: docs.aadhaarFront.split("/").pop(),
+                    path: docs.aadhaarFront,
+                    status: docStatus.aadhaarFront?.status || "pending",
+                    rejectionReason: docStatus.aadhaarFront?.rejectionReason,
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
                   }
                 : null,
 
               aadharBack: docs.aadhaarBack
                 ? {
+<<<<<<< HEAD
                     filename:
                       typeof docs.aadhaarBack === "string"
                         ? docs.aadhaarBack.split("/").pop()
@@ -126,11 +152,18 @@ export default function ViewDocuments() {
                       typeof docs.aadhaarBack === "object"
                         ? docs.aadhaarBack.rejectionReason
                         : student.documentStatus?.aadhaarBack?.rejectionReason,
+=======
+                    filename: docs.aadhaarBack.split("/").pop(),
+                    path: docs.aadhaarBack,
+                    status: docStatus.aadhaarBack?.status || "pending",
+                    rejectionReason: docStatus.aadhaarBack?.rejectionReason,
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
                   }
                 : null,
 
               panCard: docs.panCard
                 ? {
+<<<<<<< HEAD
                     filename:
                       typeof docs.panCard === "string"
                         ? docs.panCard.split("/").pop()
@@ -147,11 +180,18 @@ export default function ViewDocuments() {
                       typeof docs.panCard === "object"
                         ? docs.panCard.rejectionReason
                         : student.documentStatus?.panCard?.rejectionReason,
+=======
+                    filename: docs.panCard.split("/").pop(),
+                    path: docs.panCard,
+                    status: docStatus.panCard?.status || "pending",
+                    rejectionReason: docStatus.panCard?.rejectionReason,
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
                   }
                 : null,
 
               bankPassbook: docs.bankPassbook
                 ? {
+<<<<<<< HEAD
                     filename:
                       typeof docs.bankPassbook === "string"
                         ? docs.bankPassbook.split("/").pop()
@@ -169,12 +209,19 @@ export default function ViewDocuments() {
                       typeof docs.bankPassbook === "object"
                         ? docs.bankPassbook.rejectionReason
                         : student.documentStatus?.bankPassbook?.rejectionReason,
+=======
+                    filename: docs.bankPassbook.split("/").pop(),
+                    path: docs.bankPassbook,
+                    status: docStatus.bankPassbook?.status || "pending",
+                    rejectionReason: docStatus.bankPassbook?.rejectionReason,
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
                   }
                 : null,
             },
           };
         });
 
+        console.log("✅ Formatted Students:", formatted);
         setStudents(formatted);
       }
     } catch (error) {
@@ -240,6 +287,7 @@ export default function ViewDocuments() {
   const handleDownload = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
+<<<<<<< HEAD
 
       // Get the document URL from API
       const response = await axios.get(
@@ -290,8 +338,39 @@ export default function ViewDocuments() {
 
         toast.success("Document downloaded!");
       }
+=======
+      
+      // 🔥 FIX: Changed to /api/admin
+      const url = `${API_URL}/api/documents/students/documents/${docType}/view`;
+      console.log("📥 Downloading from:", url);
+
+      toast.loading("Downloading document...");
+
+      // Fetch the document as a blob
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      });
+
+      toast.dismiss();
+
+      // Create blob URL and trigger download
+      const blobUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      toast.success("Document downloaded!");
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
     } catch (error) {
       console.error("❌ Error downloading document:", error);
+      toast.dismiss();
       toast.error("Failed to download document");
     }
   };
@@ -302,6 +381,7 @@ export default function ViewDocuments() {
   const handlePreview = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
+<<<<<<< HEAD
 
       // Get the document URL from API
       const response = await axios.get(
@@ -363,6 +443,47 @@ export default function ViewDocuments() {
     } catch (error) {
       console.error("❌ Error previewing document:", error);
       console.error("Error details:", error.response?.data);
+=======
+      
+      // 🔥 FIX: Changed to /api/admin
+      const url = `${API_URL}/api/documents/students/documents/${docType}/view`;
+      console.log("👁️ Previewing from:", url);
+
+      const loadingToast = toast.loading("Loading document...");
+
+      // Fetch the document as a blob
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob", // Important: Get response as blob
+      });
+
+      toast.dismiss(loadingToast);
+
+      // Create object URL from blob
+      const blobUrl = URL.createObjectURL(response.data);
+      const contentType = response.headers["content-type"] || "application/pdf";
+
+      setPreviewDocument({
+        studentId,
+        docType,
+        filename,
+        url: blobUrl,
+        type: contentType,
+        isImage: contentType.startsWith("image/"),
+      });
+
+      toast.success("Document loaded!");
+    } catch (error) {
+      console.error("❌ Error previewing document:", error);
+      console.error("❌ Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      toast.dismiss();
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       toast.error("Failed to preview document");
     }
   };
@@ -373,7 +494,7 @@ export default function ViewDocuments() {
       const token = sessionStorage.getItem("authToken");
 
       const response = await axios.put(
-        `${API_URL}/api/admin/students/${studentId}/documents/verify`,
+        `${API_URL}/api/documents/students/${studentId}/documents/verify`,
         { verified },
         {
           headers: {
@@ -396,8 +517,11 @@ export default function ViewDocuments() {
     }
   };
 
+<<<<<<< HEAD
   // Add these functions after handleVerifyDocuments function in view-document.jsx
 
+=======
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
   const handleApproveDocument = async (studentId, docType) => {
     try {
       const token = sessionStorage.getItem("authToken");
@@ -413,8 +537,13 @@ export default function ViewDocuments() {
       );
 
       if (response.data.success) {
+<<<<<<< HEAD
         toast.success("Document approved successfully!");
         fetchStudentsWithDocuments(); // Refresh the list
+=======
+        toast.success("Document approved!");
+        fetchStudentsWithDocuments();
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       }
     } catch (error) {
       console.error("❌ Error approving document:", error);
@@ -429,7 +558,11 @@ export default function ViewDocuments() {
 
   const handleRejectDocument = async () => {
     if (!rejectReason.trim()) {
+<<<<<<< HEAD
       toast.error("Please enter a rejection reason");
+=======
+      toast.error("Please provide a rejection reason");
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       return;
     }
 
@@ -451,10 +584,17 @@ export default function ViewDocuments() {
       );
 
       if (response.data.success) {
+<<<<<<< HEAD
         toast.success("Document rejected");
         setRejectModal(null);
         setRejectReason("");
         fetchStudentsWithDocuments(); // Refresh
+=======
+        toast.success("Document rejected!");
+        fetchStudentsWithDocuments();
+        setRejectModal(null);
+        setRejectReason("");
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       }
     } catch (error) {
       console.error("❌ Error rejecting document:", error);
@@ -483,6 +623,11 @@ export default function ViewDocuments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
       <Toaster position="top-right" />
+
+      {/* Version indicator - remove in production */}
+      <div className="fixed top-2 right-2 z-50 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+        v2.0 - API Fixed ✅
+      </div>
 
       <div className="max-w-7xl mx-auto">
         <motion.button
@@ -665,7 +810,6 @@ export default function ViewDocuments() {
                 </div>
 
                 {/* Documents Grid */}
-                {/* Documents Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                   {Object.entries(student.documents || {}).map(
                     ([docType, docData]) => {
@@ -766,7 +910,7 @@ export default function ViewDocuments() {
                               disabled={docData.status === "approved"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
                                 docData.status === "approved"
-                                  ? "bg-green-400 text-white"
+                                  ? "bg-green-400 text-white cursor-not-allowed"
                                   : "bg-green-600 hover:bg-green-700 text-white"
                               }`}
                             >
@@ -783,7 +927,7 @@ export default function ViewDocuments() {
                               disabled={docData.status === "rejected"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
                                 docData.status === "rejected"
-                                  ? "bg-red-400 text-white"
+                                  ? "bg-red-400 text-white cursor-not-allowed"
                                   : "bg-red-600 hover:bg-red-700 text-white"
                               }`}
                             >
@@ -829,6 +973,8 @@ export default function ViewDocuments() {
             ))}
           </div>
         )}
+
+        {/* Reject Modal */}
         {rejectModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -836,8 +982,10 @@ export default function ViewDocuments() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setRejectModal(null)}
           >
-            <div
-              className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full"
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-md w-full shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">
@@ -848,42 +996,49 @@ export default function ViewDocuments() {
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Enter rejection reason..."
-                className="w-full p-3 border rounded-lg dark:bg-gray-700"
+                rows="4"
+                className="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:border-blue-500 focus:outline-none"
               />
 
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setRejectModal(null)}
-                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg"
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRejectDocument}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold transition-colors"
                 >
                   Reject
                 </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
 
-        {/* Preview Modal */}
+        {/* Preview Modal - FIXED VERSION */}
         {previewDocument && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setPreviewDocument(null)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              // Cleanup blob URL when closing
+              if (previewDocument.url.startsWith("blob:")) {
+                URL.revokeObjectURL(previewDocument.url);
+              }
+              setPreviewDocument(null);
+            }}
           >
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
+              <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {getDocumentLabel(previewDocument.docType)}
@@ -898,12 +1053,18 @@ export default function ViewDocuments() {
                   )}
                 </div>
                 <button
-                  onClick={() => setPreviewDocument(null)}
+                  onClick={() => {
+                    if (previewDocument.url.startsWith("blob:")) {
+                      URL.revokeObjectURL(previewDocument.url);
+                    }
+                    setPreviewDocument(null);
+                  }}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
+<<<<<<< HEAD
 
               {/* Direct URL in iframe */}
               <iframe
@@ -916,6 +1077,23 @@ export default function ViewDocuments() {
                   toast.error("Failed to load document preview");
                 }}
               />
+=======
+              <div className="p-6 flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+                {previewDocument.isImage ? (
+                  <img
+                    src={previewDocument.url}
+                    alt={previewDocument.filename}
+                    className="w-full h-auto rounded-lg"
+                  />
+                ) : (
+                  <iframe
+                    src={previewDocument.url}
+                    className="w-full h-[600px] rounded-lg border-2 border-gray-200 dark:border-gray-700"
+                    title="Document Preview"
+                  />
+                )}
+              </div>
+>>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
             </motion.div>
           </motion.div>
         )}
