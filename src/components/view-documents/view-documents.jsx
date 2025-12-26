@@ -1,8 +1,5 @@
 "use client";
 
-// 🔥 UPDATED VERSION - v2.0 - API Endpoints Fixed to /api/admin
-// Last Updated: 2024
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -10,9 +7,6 @@ import {
   Search,
   Download,
   Eye,
-  FileText,
-  Image,
-  File,
   User,
   Calendar,
   Filter,
@@ -24,6 +18,7 @@ import {
   Shield,
   CreditCard,
   Building2,
+  FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -43,19 +38,50 @@ export default function ViewDocuments() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-  // 🔥 IMPORTANT: All API calls use /api/admin prefix
-  console.log("🔥 ViewDocuments v2.0 - API Base:", API_URL + "/api/admin");
+ useEffect(() => {
+   return () => {
+     if (previewDocument?.isBlob && previewDocument?.url) {
+       URL.revokeObjectURL(previewDocument.url);
+     }
+   };
+ }, [previewDocument]);
 
-  // Cleanup blob URLs when component unmounts or preview changes
-  useEffect(() => {
-    return () => {
-      if (previewDocument?.url?.startsWith("blob:")) {
-        URL.revokeObjectURL(previewDocument.url);
-      }
+const normalizeDoc = (doc, statusObj = {}) => {
+  if (!doc) return null;
+
+  if (typeof doc === "string") {
+    // ✅ FIX: Check if it's actually a Cloudinary URL (must start with http/https and contain cloudinary.com)
+    const isCloudinary =
+      doc.startsWith("http") && doc.includes("cloudinary.com");
+
+    return {
+      filename: doc.split("/").pop(),
+      path: doc,
+      status: statusObj?.status || "pending",
+      rejectionReason: statusObj?.rejectionReason || null,
+      isCloudinary: isCloudinary,
     };
-  }, [previewDocument]);
+  }
 
-  // Fetch students with documents from API
+  if (typeof doc === "object") {
+    const path = doc.path || doc.url;
+    // ✅ FIX: Check if it's actually a Cloudinary URL
+    const isCloudinary =
+      path && path.startsWith("http") && path.includes("cloudinary.com");
+
+    return {
+      filename: path ? path.split("/").pop() : "unknown",
+      path,
+      status: doc.status || statusObj?.status || "pending",
+      rejectionReason:
+        doc.rejectionReason || statusObj?.rejectionReason || null,
+      isCloudinary: isCloudinary,
+    };
+  }
+
+  return null;
+};
+
   useEffect(() => {
     fetchStudentsWithDocuments();
   }, [verificationFilter]);
@@ -71,22 +97,13 @@ export default function ViewDocuments() {
         return;
       }
 
-      // 🔥 FIX: Changed to /api/admin
-      const apiEndpoint = `${API_URL}/api/documents/students/documents`;
-      console.log("📡 Fetching from:", apiEndpoint);
-
-      const response = await axios.get(apiEndpoint, {
-        params: {
-          page: 1,
-          limit: 100,
-          verified: verificationFilter,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("✅ Response:", response);
+      const response = await axios.get(
+        `${API_URL}/api/documents/students/documents`,
+        {
+          params: { page: 1, limit: 100, verified: verificationFilter },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (response.data.success) {
         const formatted = response.data.students.map((student) => {
@@ -95,149 +112,39 @@ export default function ViewDocuments() {
 
           return {
             ...student,
-            id: student._id || student.id, // ✅ Fix: Use _id from MongoDB
+            id: student._id || student.id,
             hasDocuments:
               docs.aadhaarFront ||
               docs.aadhaarBack ||
               docs.panCard ||
               docs.bankPassbook,
-
             documents: {
-              aadharFront: docs.aadhaarFront
-                ? {
-<<<<<<< HEAD
-                    filename:
-                      typeof docs.aadhaarFront === "string"
-                        ? docs.aadhaarFront.split("/").pop()
-                        : docs.aadhaarFront.path?.split("/").pop() || "unknown",
-                    path:
-                      typeof docs.aadhaarFront === "string"
-                        ? docs.aadhaarFront
-                        : docs.aadhaarFront.path,
-                    status:
-                      typeof docs.aadhaarFront === "object"
-                        ? docs.aadhaarFront.status
-                        : student.documentStatus?.aadhaarFront?.status ||
-                          "pending",
-                    rejectionReason:
-                      typeof docs.aadhaarFront === "object"
-                        ? docs.aadhaarFront.rejectionReason
-                        : student.documentStatus?.aadhaarFront?.rejectionReason,
-=======
-                    filename: docs.aadhaarFront.split("/").pop(),
-                    path: docs.aadhaarFront,
-                    status: docStatus.aadhaarFront?.status || "pending",
-                    rejectionReason: docStatus.aadhaarFront?.rejectionReason,
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
-                  }
-                : null,
-
-              aadharBack: docs.aadhaarBack
-                ? {
-<<<<<<< HEAD
-                    filename:
-                      typeof docs.aadhaarBack === "string"
-                        ? docs.aadhaarBack.split("/").pop()
-                        : docs.aadhaarBack.path?.split("/").pop() || "unknown",
-                    path:
-                      typeof docs.aadhaarBack === "string"
-                        ? docs.aadhaarBack
-                        : docs.aadhaarBack.path,
-                    status:
-                      typeof docs.aadhaarBack === "object"
-                        ? docs.aadhaarBack.status
-                        : student.documentStatus?.aadhaarBack?.status ||
-                          "pending",
-                    rejectionReason:
-                      typeof docs.aadhaarBack === "object"
-                        ? docs.aadhaarBack.rejectionReason
-                        : student.documentStatus?.aadhaarBack?.rejectionReason,
-=======
-                    filename: docs.aadhaarBack.split("/").pop(),
-                    path: docs.aadhaarBack,
-                    status: docStatus.aadhaarBack?.status || "pending",
-                    rejectionReason: docStatus.aadhaarBack?.rejectionReason,
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
-                  }
-                : null,
-
-              panCard: docs.panCard
-                ? {
-<<<<<<< HEAD
-                    filename:
-                      typeof docs.panCard === "string"
-                        ? docs.panCard.split("/").pop()
-                        : docs.panCard.path?.split("/").pop() || "unknown",
-                    path:
-                      typeof docs.panCard === "string"
-                        ? docs.panCard
-                        : docs.panCard.path,
-                    status:
-                      typeof docs.panCard === "object"
-                        ? docs.panCard.status
-                        : student.documentStatus?.panCard?.status || "pending",
-                    rejectionReason:
-                      typeof docs.panCard === "object"
-                        ? docs.panCard.rejectionReason
-                        : student.documentStatus?.panCard?.rejectionReason,
-=======
-                    filename: docs.panCard.split("/").pop(),
-                    path: docs.panCard,
-                    status: docStatus.panCard?.status || "pending",
-                    rejectionReason: docStatus.panCard?.rejectionReason,
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
-                  }
-                : null,
-
-              bankPassbook: docs.bankPassbook
-                ? {
-<<<<<<< HEAD
-                    filename:
-                      typeof docs.bankPassbook === "string"
-                        ? docs.bankPassbook.split("/").pop()
-                        : docs.bankPassbook.path?.split("/").pop() || "unknown",
-                    path:
-                      typeof docs.bankPassbook === "string"
-                        ? docs.bankPassbook
-                        : docs.bankPassbook.path,
-                    status:
-                      typeof docs.bankPassbook === "object"
-                        ? docs.bankPassbook.status
-                        : student.documentStatus?.bankPassbook?.status ||
-                          "pending",
-                    rejectionReason:
-                      typeof docs.bankPassbook === "object"
-                        ? docs.bankPassbook.rejectionReason
-                        : student.documentStatus?.bankPassbook?.rejectionReason,
-=======
-                    filename: docs.bankPassbook.split("/").pop(),
-                    path: docs.bankPassbook,
-                    status: docStatus.bankPassbook?.status || "pending",
-                    rejectionReason: docStatus.bankPassbook?.rejectionReason,
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
-                  }
-                : null,
+              aadharFront: normalizeDoc(
+                docs.aadhaarFront,
+                docStatus.aadhaarFront
+              ),
+              aadharBack: normalizeDoc(docs.aadhaarBack, docStatus.aadhaarBack),
+              panCard: normalizeDoc(docs.panCard, docStatus.panCard),
+              bankPassbook: normalizeDoc(
+                docs.bankPassbook,
+                docStatus.bankPassbook
+              ),
             },
           };
         });
 
-        console.log("✅ Formatted Students:", formatted);
         setStudents(formatted);
       }
     } catch (error) {
-      console.error("❌ Error fetching documents:", error);
+      console.error("Error fetching documents:", error);
       toast.error("Failed to load documents");
     } finally {
       setLoading(false);
     }
   };
 
-  // Get unique users for filter
-  const uniqueUsers = Array.from(
-    new Set(students.map((student) => student.name))
-  );
+  const uniqueUsers = Array.from(new Set(students.map((s) => s.name)));
 
-  // Filter students
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -248,17 +155,14 @@ export default function ViewDocuments() {
   });
 
   const getDocumentIcon = (docType) => {
-    switch (docType) {
-      case "aadharFront":
-      case "aadharBack":
-        return <Shield className="w-5 h-5" />;
-      case "panCard":
-        return <CreditCard className="w-5 h-5" />;
-      case "bankPassbook":
-        return <Building2 className="w-5 h-5" />;
-      default:
-        return <File className="w-5 h-5" />;
-    }
+    const icons = {
+      aadharFront: Shield,
+      aadharBack: Shield,
+      panCard: CreditCard,
+      bankPassbook: Building2,
+    };
+    const Icon = icons[docType] || FileText;
+    return <Icon className="w-5 h-5" />;
   };
 
   const getDocumentLabel = (docType) => {
@@ -273,8 +177,7 @@ export default function ViewDocuments() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
+    return new Date(dateString).toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -283,151 +186,83 @@ export default function ViewDocuments() {
     });
   };
 
-  // Replace your existing handleDownload function with this:
   const handleDownload = async (studentId, docType, filename) => {
     try {
       const token = sessionStorage.getItem("authToken");
-<<<<<<< HEAD
-
-      // Get the document URL from API
       const response = await axios.get(
         `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success && response.data.url) {
         const documentUrl = response.data.url;
+        const fileResponse = await fetch(
+          documentUrl.startsWith("http")
+            ? documentUrl
+            : `${API_URL}/${documentUrl}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-        // If it's a Cloudinary URL (starts with http), download directly
-        if (documentUrl.startsWith("http")) {
-          // Download from Cloudinary
-          const fileResponse = await fetch(documentUrl);
-          const blob = await fileResponse.blob();
-          const downloadUrl = window.URL.createObjectURL(blob);
-
-          const a = document.createElement("a");
-          a.href = downloadUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(downloadUrl);
-          document.body.removeChild(a);
-        } else {
-          // Local file - construct server URL
-          const serverUrl = `${API_URL}/${documentUrl}`;
-          const fileResponse = await fetch(serverUrl, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const blob = await fileResponse.blob();
-          const downloadUrl = window.URL.createObjectURL(blob);
-
-          const a = document.createElement("a");
-          a.href = downloadUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(downloadUrl);
-          document.body.removeChild(a);
-        }
-
+        const blob = await fileResponse.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
         toast.success("Document downloaded!");
       }
-=======
-      
-      // 🔥 FIX: Changed to /api/admin
-      const url = `${API_URL}/api/documents/students/documents/${docType}/view`;
-      console.log("📥 Downloading from:", url);
-
-      toast.loading("Downloading document...");
-
-      // Fetch the document as a blob
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob",
-      });
-
-      toast.dismiss();
-
-      // Create blob URL and trigger download
-      const blobUrl = URL.createObjectURL(response.data);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-
-      toast.success("Document downloaded!");
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
     } catch (error) {
-      console.error("❌ Error downloading document:", error);
-      toast.dismiss();
+      console.error("Error downloading document:", error);
       toast.error("Failed to download document");
     }
   };
+const handlePreview = async (studentId, docType, filename) => {
+  try {
+    // Get the document data from the student object
+    const student = students.find((s) => s.id === studentId);
+    const docData = student?.documents?.[docType];
 
-  // Replace your existing handlePreview function with this:
-  // Replace the handlePreview function in view-documents.jsx
+    if (!docData || !docData.path) {
+      toast.error("Document not found");
+      return;
+    }
 
-  const handlePreview = async (studentId, docType, filename) => {
-    try {
-      const token = sessionStorage.getItem("authToken");
-<<<<<<< HEAD
+    const documentPath = docData.path;
+    // ✅ Proper Cloudinary detection
+    const isCloudinary =
+      documentPath.startsWith("http") &&
+      documentPath.includes("cloudinary.com");
 
-      // Get the document URL from API
-      const response = await axios.get(
-        `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+    // For Cloudinary documents, open directly in new tab
+    if (isCloudinary) {
+      const newWindow = window.open(
+        documentPath,
+        "_blank",
+        "noopener,noreferrer"
       );
+      if (newWindow) {
+        toast.success("Opening document in new tab...");
+      } else {
+        toast.error("Popup blocked! Please allow popups for this site.");
+      }
+    } else {
+      // For local documents, fetch through API
+      const token = sessionStorage.getItem("authToken");
 
-      console.log("🔍 API Response:", response.data); // Debug log
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      if (response.data.success && response.data.url) {
-        const documentUrl = response.data.url;
-
-        console.log("📄 Document URL:", documentUrl); // Debug log
-
-        // Check if it's a Cloudinary URL
-        const isCloudinary =
-          documentUrl.includes("cloudinary.com") ||
-          documentUrl.startsWith("https://res.cloudinary.com");
-
-        console.log("☁️ Is Cloudinary?", isCloudinary); // Debug log
-
-        if (isCloudinary) {
-          // Open Cloudinary documents in new tab
-          console.log("✅ Opening in new tab:", documentUrl);
-          const newWindow = window.open(
-            documentUrl,
-            "_blank",
-            "noopener,noreferrer"
-          );
-
-          if (newWindow) {
-            toast.success("Opening document in new tab");
-          } else {
-            toast.error("Popup blocked! Please allow popups for this site.");
-          }
-        } else {
-          // Local files - use modal preview
+        if (response.data.success && response.data.url) {
+          const documentUrl = response.data.url;
           const previewUrl = documentUrl.startsWith("http")
             ? documentUrl
             : `${API_URL}/${documentUrl}`;
-
-          console.log("📂 Opening in modal:", previewUrl);
 
           setPreviewDocument({
             studentId,
@@ -437,116 +272,56 @@ export default function ViewDocuments() {
             isCloudinary: false,
           });
         }
-      } else {
-        toast.error("Document URL not found in response");
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+        toast.error("Failed to load document from server");
       }
-    } catch (error) {
-      console.error("❌ Error previewing document:", error);
-      console.error("Error details:", error.response?.data);
-=======
-      
-      // 🔥 FIX: Changed to /api/admin
-      const url = `${API_URL}/api/documents/students/documents/${docType}/view`;
-      console.log("👁️ Previewing from:", url);
-
-      const loadingToast = toast.loading("Loading document...");
-
-      // Fetch the document as a blob
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob", // Important: Get response as blob
-      });
-
-      toast.dismiss(loadingToast);
-
-      // Create object URL from blob
-      const blobUrl = URL.createObjectURL(response.data);
-      const contentType = response.headers["content-type"] || "application/pdf";
-
-      setPreviewDocument({
-        studentId,
-        docType,
-        filename,
-        url: blobUrl,
-        type: contentType,
-        isImage: contentType.startsWith("image/"),
-      });
-
-      toast.success("Document loaded!");
-    } catch (error) {
-      console.error("❌ Error previewing document:", error);
-      console.error("❌ Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      toast.dismiss();
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
-      toast.error("Failed to preview document");
     }
-  };
+  } catch (error) {
+    console.error("Error previewing document:", error);
+    toast.error("Failed to preview document");
+  }
+};
 
   const handleVerifyDocuments = async (studentId, verified) => {
     try {
       setVerifyingStudent(studentId);
       const token = sessionStorage.getItem("authToken");
-
       const response = await axios.put(
         `${API_URL}/api/documents/students/${studentId}/documents/verify`,
         { verified },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         toast.success(
           verified ? "Documents verified!" : "Documents marked as unverified"
         );
-        fetchStudentsWithDocuments(); // Refresh list
+        fetchStudentsWithDocuments();
       }
     } catch (error) {
-      console.error("❌ Error verifying documents:", error);
+      console.error("Error verifying documents:", error);
       toast.error("Failed to verify documents");
     } finally {
       setVerifyingStudent(null);
     }
   };
 
-<<<<<<< HEAD
-  // Add these functions after handleVerifyDocuments function in view-document.jsx
-
-=======
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
   const handleApproveDocument = async (studentId, docType) => {
     try {
       const token = sessionStorage.getItem("authToken");
-
       const response = await axios.put(
         `${API_URL}/api/documents/students/${studentId}/documents/${docType}/status`,
         { status: "approved" },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
-<<<<<<< HEAD
-        toast.success("Document approved successfully!");
-        fetchStudentsWithDocuments(); // Refresh the list
-=======
         toast.success("Document approved!");
         fetchStudentsWithDocuments();
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       }
     } catch (error) {
-      console.error("❌ Error approving document:", error);
+      console.error("Error approving document:", error);
       toast.error("Failed to approve document");
     }
   };
@@ -558,46 +333,27 @@ export default function ViewDocuments() {
 
   const handleRejectDocument = async () => {
     if (!rejectReason.trim()) {
-<<<<<<< HEAD
-      toast.error("Please enter a rejection reason");
-=======
       toast.error("Please provide a rejection reason");
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       return;
     }
 
     try {
       const token = sessionStorage.getItem("authToken");
       const { studentId, docType } = rejectModal;
-
       const response = await axios.put(
         `${API_URL}/api/documents/students/${studentId}/documents/${docType}/status`,
-        {
-          status: "rejected",
-          rejectionReason: rejectReason,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { status: "rejected", rejectionReason: rejectReason },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
-<<<<<<< HEAD
-        toast.success("Document rejected");
-        setRejectModal(null);
-        setRejectReason("");
-        fetchStudentsWithDocuments(); // Refresh
-=======
         toast.success("Document rejected!");
         fetchStudentsWithDocuments();
         setRejectModal(null);
         setRejectReason("");
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
       }
     } catch (error) {
-      console.error("❌ Error rejecting document:", error);
+      console.error("Error rejecting document:", error);
       toast.error("Failed to reject document");
     }
   };
@@ -610,24 +366,18 @@ export default function ViewDocuments() {
           Verified
         </span>
       );
-    } else {
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-full text-sm">
-          <Clock className="w-4 h-4" />
-          Pending Verification
-        </span>
-      );
     }
+    return (
+      <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-full text-sm">
+        <Clock className="w-4 h-4" />
+        Pending Verification
+      </span>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
       <Toaster position="top-right" />
-
-      {/* Version indicator - remove in production */}
-      <div className="fixed top-2 right-2 z-50 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-        v2.0 - API Fixed ✅
-      </div>
 
       <div className="max-w-7xl mx-auto">
         <motion.button
@@ -639,7 +389,6 @@ export default function ViewDocuments() {
           <ArrowLeft className="w-6 h-6" />
         </motion.button>
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -660,7 +409,6 @@ export default function ViewDocuments() {
           </div>
         </motion.div>
 
-        {/* Filters Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -668,7 +416,6 @@ export default function ViewDocuments() {
           className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 border-2 border-blue-100 dark:border-gray-700"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -680,13 +427,12 @@ export default function ViewDocuments() {
               />
             </div>
 
-            {/* User Filter */}
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none"
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">All Students</option>
                 {uniqueUsers.map((user) => (
@@ -697,13 +443,12 @@ export default function ViewDocuments() {
               </select>
             </div>
 
-            {/* Verification Filter */}
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
                 value={verificationFilter}
                 onChange={(e) => setVerificationFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none"
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">All Documents</option>
                 <option value="uploaded">Uploaded</option>
@@ -713,7 +458,6 @@ export default function ViewDocuments() {
             </div>
           </div>
 
-          {/* Active Filters */}
           {(selectedUser !== "all" ||
             verificationFilter !== "all" ||
             searchTerm) && (
@@ -752,7 +496,6 @@ export default function ViewDocuments() {
           )}
         </motion.div>
 
-        {/* Documents by Student */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -771,13 +514,12 @@ export default function ViewDocuments() {
           <div className="space-y-6">
             {filteredStudents.map((student, index) => (
               <motion.div
-                key={student._id}
+                key={student.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-2 border-blue-100 dark:border-gray-700"
               >
-                {/* Student Header */}
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-3">
                     <div className="bg-blue-100 dark:bg-blue-900 rounded-full p-3">
@@ -809,7 +551,6 @@ export default function ViewDocuments() {
                   </div>
                 </div>
 
-                {/* Documents Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                   {Object.entries(student.documents || {}).map(
                     ([docType, docData]) => {
@@ -817,11 +558,10 @@ export default function ViewDocuments() {
 
                       return (
                         <motion.div
-                          key={`${student._id}-${docType}`}
+                          key={`${student.id}-${docType}`}
                           whileHover={{ scale: 1.02 }}
                           className="group relative bg-gradient-to-br from-blue-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border-2 border-blue-100 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 transition-all"
                         >
-                          {/* Document Icon */}
                           <div className="flex items-start gap-3 mb-3">
                             <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-2 text-blue-600 dark:text-blue-400">
                               {getDocumentIcon(docType)}
@@ -834,7 +574,6 @@ export default function ViewDocuments() {
                                 {docData.filename}
                               </p>
 
-                              {/* Status Badge */}
                               {docData.status && (
                                 <span
                                   className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
@@ -859,7 +598,6 @@ export default function ViewDocuments() {
                                 </span>
                               )}
 
-                              {/* Rejection Reason */}
                               {docData.status === "rejected" &&
                                 docData.rejectionReason && (
                                   <p className="text-red-400 text-xs mt-1">
@@ -869,12 +607,11 @@ export default function ViewDocuments() {
                             </div>
                           </div>
 
-                          {/* Actions */}
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={() =>
                                 handlePreview(
-                                  student._id,
+                                  student.id,
                                   docType,
                                   docData.filename
                                 )
@@ -888,7 +625,7 @@ export default function ViewDocuments() {
                             <button
                               onClick={() =>
                                 handleDownload(
-                                  student._id,
+                                  student.id,
                                   docType,
                                   docData.filename
                                 )
@@ -900,12 +637,10 @@ export default function ViewDocuments() {
                             </button>
                           </div>
 
-                          {/* Approval / Rejection Buttons */}
                           <div className="flex gap-2 mt-3 pt-2 border-t border-gray-300 dark:border-gray-600">
                             <button
-                              onClick={
-                                () =>
-                                  handleApproveDocument(student._id, docType) // ✅ CHANGE student.id to student._id
+                              onClick={() =>
+                                handleApproveDocument(student.id, docType)
                               }
                               disabled={docData.status === "approved"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
@@ -921,8 +656,8 @@ export default function ViewDocuments() {
                             </button>
 
                             <button
-                              onClick={
-                                () => openRejectModal(student._id, docType) // ✅ CHANGE student.id to student._id
+                              onClick={() =>
+                                openRejectModal(student.id, docType)
                               }
                               disabled={docData.status === "rejected"}
                               className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
@@ -943,12 +678,11 @@ export default function ViewDocuments() {
                   )}
                 </div>
 
-                {/* Verification Actions */}
                 <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
-                    onClick={() => handleVerifyDocuments(student._id, true)}
+                    onClick={() => handleVerifyDocuments(student.id, true)}
                     disabled={
-                      verifyingStudent === student._id ||
+                      verifyingStudent === student.id ||
                       student.documentsVerified
                     }
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-semibold"
@@ -960,8 +694,8 @@ export default function ViewDocuments() {
                   </button>
                   {student.documentsVerified && (
                     <button
-                      onClick={() => handleVerifyDocuments(student._id, false)}
-                      disabled={verifyingStudent === student._id}
+                      onClick={() => handleVerifyDocuments(student.id, false)}
+                      disabled={verifyingStudent === student.id}
                       className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-semibold"
                     >
                       <XCircle className="w-5 h-5" />
@@ -974,7 +708,6 @@ export default function ViewDocuments() {
           </div>
         )}
 
-        {/* Reject Modal */}
         {rejectModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1018,14 +751,12 @@ export default function ViewDocuments() {
           </motion.div>
         )}
 
-        {/* Preview Modal - FIXED VERSION */}
         {previewDocument && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => {
-              // Cleanup blob URL when closing
               if (previewDocument.url.startsWith("blob:")) {
                 URL.revokeObjectURL(previewDocument.url);
               }
@@ -1047,45 +778,67 @@ export default function ViewDocuments() {
                     {previewDocument.filename}
                   </p>
                   {previewDocument.isCloudinary && (
-                    <span className="text-xs text-green-600 dark:text-green-400">
-                      ☁️ Cloudinary
+                    <span className="inline-block mt-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs">
+                      Cloudinary Document
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => {
-                    if (previewDocument.url.startsWith("blob:")) {
-                      URL.revokeObjectURL(previewDocument.url);
-                    }
-                    setPreviewDocument(null);
-                  }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {previewDocument.isCloudinary && (
+                    <button
+                      onClick={() => window.open(previewDocument.url, "_blank")}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Open in New Tab
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (previewDocument.url.startsWith("blob:")) {
+                        URL.revokeObjectURL(previewDocument.url);
+                      }
+                      setPreviewDocument(null);
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
               </div>
-<<<<<<< HEAD
 
-              {/* Direct URL in iframe */}
-              <iframe
-                src={previewDocument.url}
-                className="w-full h-[600px] rounded-lg"
-                title="Document Preview"
-                style={{ border: "none" }}
-                onError={(e) => {
-                  console.error("Iframe error:", e);
-                  toast.error("Failed to load document preview");
-                }}
-              />
-=======
               <div className="p-6 flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
-                {previewDocument.isImage ? (
-                  <img
-                    src={previewDocument.url}
-                    alt={previewDocument.filename}
-                    className="w-full h-auto rounded-lg"
-                  />
+                {previewDocument.isCloudinary ? (
+                  // For Cloudinary documents, show image if it's an image, otherwise iframe
+                  previewDocument.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={previewDocument.url}
+                      alt={previewDocument.filename}
+                      className="w-full h-auto rounded-lg border-2 border-gray-200 dark:border-gray-700"
+                      onError={(e) => {
+                        console.error("Image failed to load");
+                        toast.error(
+                          "Failed to load image. Opening in new tab..."
+                        );
+                        window.open(previewDocument.url, "_blank");
+                      }}
+                    />
+                  ) : (
+                    <iframe
+                      src={previewDocument.url}
+                      className="w-full h-[600px] rounded-lg border-2 border-gray-200 dark:border-gray-700"
+                      title="Document Preview"
+                      onError={(e) => {
+                        console.error("Iframe failed to load");
+                        toast.error(
+                          "Failed to load document in preview. Opening in new tab..."
+                        );
+                        window.open(previewDocument.url, "_blank");
+                      }}
+                    />
+                  )
                 ) : (
+                  // For local documents, use iframe
                   <iframe
                     src={previewDocument.url}
                     className="w-full h-[600px] rounded-lg border-2 border-gray-200 dark:border-gray-700"
@@ -1093,7 +846,6 @@ export default function ViewDocuments() {
                   />
                 )}
               </div>
->>>>>>> 05531356fd9cc1fdf442eade50f04469d9663690
             </motion.div>
           </motion.div>
         )}
