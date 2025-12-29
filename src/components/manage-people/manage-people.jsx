@@ -26,14 +26,54 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+// ✅ UTILITY FUNCTIONS (no component state)
+const normalizeCategory = (category) => {
+  if (!category) return "";
+  const lower = category.toLowerCase().trim();
+  const categoryMap = {
+    "it-nexcore": "IT-Nexcore",
+    itnexcore: "IT-Nexcore",
+    code4bharat: "Code4Bharat",
+    "code 4 bharat": "Code4Bharat",
+    "marketing-junction": "marketing-junction",
+    marketingjunction: "marketing-junction",
+    fsd: "FSD",
+    bvoc: "BVOC",
+    hr: "HR",
+    dm: "DM",
+    // od: "OD",
+    "operations department": "Operations Department",
+    // operationsdepartment: "OD",
+    client: "client",
+  };
+  return categoryMap[lower] || category;
+};
+
+// const getCategoryDisplayName = (category) => {
+//   const displayMap = {
+//     "IT-Nexcore": "IT-Nexcore",
+//     Code4Bharat: "Code4Bharat",
+//     "marketing-junction": "Marketing Junction",
+//     FSD: "FSD",
+//     BVOC: "BVOC",
+//     HR: "HR",
+//     DM: "DM",
+//     OD: "Operations Department",
+//     client: "Client",
+//   };
+//   return displayMap[category] || category;
+// };
+
+// ✅ MAIN COMPONENT
+
+
 export default function ManagePeople() {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // const [viewMode, setViewMode] = useState("active");
+  // ✅ ALL STATE DECLARATIONS
   const [people, setPeople] = useState([]);
   const [dynamicCategories, setDynamicCategories] = useState([]);
-
   const [filteredPeople, setFilteredPeople] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -48,12 +88,18 @@ export default function ManagePeople() {
   const [apiError, setApiError] = useState(null);
   const [bulkFile, setBulkFile] = useState(null);
   const [batches, setBatches] = useState({ FSD: [], BVOC: [] });
-  const closeBatchModal = () => setIsBatchModalOpen(false);
-  const openBatchModal = () => setIsBatchModalOpen(true);
-  // For Add Category Modal
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDesc, setNewCategoryDesc] = useState("");
+  const [viewMode, setViewMode] = useState("active");
+  const [isEditingBatch, setIsEditingBatch] = useState(false);
+  const [editingBatchData, setEditingBatchData] = useState({
+    category: "",
+    oldBatchName: "",
+    newBatchName: "",
+    month: "June",
+    year: "2025",
+  });
 
   const [batchForm, setBatchForm] = useState({
     category: "FSD",
@@ -62,46 +108,29 @@ export default function ManagePeople() {
     year: "2025",
   });
 
- const [formData, setFormData] = useState({
-   originalName: "",
-   originalPhone: "",
-   name: "",
-   category: "",
-   batch: "",
-   phone: "",
-   parentPhone1: "",
-   parentPhone2: "",
-   aadhaarCard: "",
-   address: "",
-   email: "",
-   parentEmail: "",
-   clientEmail1: "",
-   clientEmail2: "",
-   clientPhone1: "",
-   clientPhone2: "",
- });
-
-  const [viewMode, setViewMode] = useState("active");
+  const [formData, setFormData] = useState({
+    originalName: "",
+    originalPhone: "",
+    name: "",
+    category: "",
+    batch: "",
+    phone: "",
+    parentPhone1: "",
+    parentPhone2: "",
+    aadhaarCard: "",
+    address: "",
+    email: "",
+    parentEmail: "",
+    clientEmail1: "",
+    clientEmail2: "",
+    clientPhone1: "",
+    clientPhone2: "",
+  });
 
   const MAX_NAME_LENGTH = 50;
   const MAX_ADDRESS_LENGTH = 200;
 
-  const loadCategories = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/categories`);
-      if (res.data.success) setDynamicCategories(res.data.categories);
-    } catch (err) {
-      console.error("❌ Error loading categories:", err);
-    }
-  };
-
-  const closeBulkUpload = () => {
-    setShowBulkUpload(false);
-    setBulkFile(null);
-  };
-
-  /* --------------------- Fetch & Load --------------------- */
-
+  // ✅ USEEFFECT HOOKS
   useEffect(() => {
     if (!API_URL) {
       console.error("❌ API_URL not defined");
@@ -120,10 +149,17 @@ export default function ManagePeople() {
     else if (viewMode === "disabled")
       filtered = filtered.filter((p) => p.disabled);
 
-    if (selectedCategory !== "all")
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+    if (selectedCategory !== "all") {
+      const normalizedSelected = normalizeCategory(selectedCategory);
+      filtered = filtered.filter((p) => {
+        const normalizedPersonCategory = normalizeCategory(p.category);
+        return normalizedPersonCategory === normalizedSelected;
+      });
+    }
+
     if (selectedBatch !== "all")
       filtered = filtered.filter((p) => p.batch === selectedBatch);
+
     if (searchQuery)
       filtered = filtered.filter(
         (p) =>
@@ -134,13 +170,23 @@ export default function ManagePeople() {
     setFilteredPeople(filtered);
   }, [people, searchQuery, selectedCategory, selectedBatch, viewMode]);
 
+  // ✅ ALL FUNCTION DECLARATIONS
+  const loadCategories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/categories`);
+      if (res.data.success) setDynamicCategories(res.data.categories);
+    } catch (err) {
+      console.error("❌ Error loading categories:", err);
+    }
+  };
+
   const fetchPeople = async () => {
     if (!API_URL) return;
     try {
       setFetchLoading(true);
       const res = await axios.get(`${API_URL}/api/people/`);
-      console.log(res);
-      if (res.data.success) setPeople(res.data.names || res.data.data || []);
+      const peopleData = res.data.names || res.data.data || [];
+      if (res.data.success) setPeople(peopleData);
       else toast.error("Failed to load people");
     } catch (err) {
       console.error("❌ Fetch error:", err);
@@ -159,7 +205,111 @@ export default function ManagePeople() {
     }
   };
 
-  /* --------------------- Batch Handlers --------------------- */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const {
+      name,
+      category,
+      batch,
+      phone,
+      parentPhone1,
+      parentPhone2,
+      aadhaarCard,
+      address,
+      email,
+      parentEmail,
+      clientEmail1,
+      clientEmail2,
+      clientPhone1,
+      clientPhone2,
+    } = formData;
+
+    if (!name || !category || !phone)
+      return toast.error("Missing required fields");
+    if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
+
+    const normalizedCategory = normalizeCategory(category);
+
+    if (
+      (normalizedCategory === "FSD" || normalizedCategory === "BVOC") &&
+      !batch
+    )
+      return toast.error("Select a batch for this category");
+
+    const payload = {
+      name: name.trim(),
+      category: normalizedCategory,
+      batch: batch || null,
+      phone,
+      parentPhone1: parentPhone1 || null,
+      parentPhone2: parentPhone2 || null,
+      aadhaarCard: aadhaarCard || null,
+      address: address?.trim() || null,
+      email: email || null,
+      parentEmail: parentEmail || null,
+      clientEmail1: clientEmail1 || null,
+      clientEmail2: clientEmail2 || null,
+      clientPhone1: clientPhone1 || null,
+      clientPhone2: clientPhone2 || null,
+    };
+
+    try {
+      setLoading(true);
+      if (isEditMode) {
+        const res = await axios.put(`${API_URL}/api/people/update-by-name`, {
+          originalName: formData.originalName,
+          originalPhone: formData.originalPhone,
+          ...payload,
+        });
+        if (res.data.success) toast.success(`${name} updated`);
+      } else {
+        const res = await axios.post(`${API_URL}/api/people`, payload);
+        if (res.data.success) toast.success(`${name} added`);
+      }
+      fetchPeople();
+      closeModal();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBatchOptions = () => {
+    const normalizedCategory = normalizeCategory(formData.category);
+    if (normalizedCategory === "FSD") return batches.FSD || [];
+    if (normalizedCategory === "BVOC") return batches.BVOC || [];
+    return [];
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setFormData({
+      originalName: "",
+      originalPhone: "",
+      name: "",
+      category: "",
+      batch: "",
+      phone: "",
+      parentPhone1: "",
+      parentPhone2: "",
+      aadhaarCard: "",
+      address: "",
+      email: "",
+      parentEmail: "",
+      clientEmail1: "",
+      clientEmail2: "",
+      clientPhone1: "",
+      clientPhone2: "",
+    });
+  };
+
+  const closeBatchModal = () => setIsBatchModalOpen(false);
+  const closeBulkUpload = () => {
+    setShowBulkUpload(false);
+    setBulkFile(null);
+  };
 
   const handleAddBatch = async () => {
     const { category, batchName, month, year } = batchForm;
@@ -212,6 +362,7 @@ export default function ManagePeople() {
       toast.error("Failed to delete batch");
     }
   };
+
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
       return toast.error("Category name is required");
@@ -225,87 +376,13 @@ export default function ManagePeople() {
 
       if (res.data.success) {
         toast.success(`Category "${newCategoryName}" added successfully`);
-
-        // Reload fresh category list from backend
         loadCategories();
-
-        // Close modal
         setShowAddCategory(false);
-
-        // Reset fields
         setNewCategoryName("");
         setNewCategoryDesc("");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add category");
-    }
-  };
-
-  /* --------------------- CRUD Handlers --------------------- */
-
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  const {
-    name,
-    category,
-    batch,
-    phone,
-    parentPhone1,
-    parentPhone2,
-    aadhaarCard,
-    address,
-    email,
-    parentEmail,
-    // ⭐ NEW: Extract client fields
-    clientEmail1,
-    clientEmail2,
-    clientPhone1,
-    clientPhone2,
-  } = formData;
-
-  if (!name || !category || !phone)
-    return toast.error("Missing required fields");
-  if (!/^\d{10}$/.test(phone)) return toast.error("Phone must be 10 digits");
-
-  if ((category === "FSD" || category === "BVOC") && !batch)
-    return toast.error("Select a batch for this category");
-
-  const payload = {
-    name: name.trim(),
-    category,
-    batch: batch || null,
-    phone,
-    parentPhone1: parentPhone1 || null,
-    parentPhone2: parentPhone2 || null,
-    aadhaarCard: aadhaarCard || null,
-    address: address?.trim() || null,
-    email: email || null,
-    parentEmail: parentEmail || null,
-    // ⭐ NEW: Add client fields to payload
-    clientEmail1: clientEmail1 || null,
-    clientEmail2: clientEmail2 || null,
-    clientPhone1: clientPhone1 || null,
-    clientPhone2: clientPhone2 || null,
-  };
-    try {
-      setLoading(true);
-      if (isEditMode) {
-        const res = await axios.put(`${API_URL}/api/people/update-by-name`, {
-          originalName: formData.originalName,
-          originalPhone: formData.originalPhone,
-          ...payload,
-        });
-        if (res.data.success) toast.success(`${name} updated`);
-      } else {
-        const res = await axios.post(`${API_URL}/api/people`, payload);
-        if (res.data.success) toast.success(`${name} added`);
-      }
-      fetchPeople();
-      closeModal();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save data");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -335,20 +412,18 @@ export default function ManagePeople() {
     }
   };
 
-  /* --------------------- Bulk Upload --------------------- */
-
   const handleBulkUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setBulkFile(file);
-    const formData = new FormData();
-    formData.append("file", file);
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
 
     try {
       setLoading(true);
       const res = await axios.post(
         `${API_URL}/api/people/bulk-upload`,
-        formData,
+        formDataUpload,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -365,58 +440,10 @@ export default function ManagePeople() {
     }
   };
 
-  const downloadTemplate = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/people/template`, {
-        responseType: "blob",
-      });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "people-template.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast.success("Template downloaded");
-    } catch {
-      toast.error("Failed to download template");
-    }
-  };
-
-  /* --------------------- Misc --------------------- */
-
-const closeModal = () => {
-  setIsModalOpen(false);
-  setIsEditMode(false);
-  setFormData({
-    originalName: "",
-    originalPhone: "",
-    name: "",
-    category: "",
-    batch: "",
-    phone: "",
-    parentPhone1: "",
-    parentPhone2: "",
-    aadhaarCard: "",
-    address: "",
-    email: "",
-    parentEmail: "",
-    // ⭐ NEW: Reset client fields
-    clientEmail1: "",
-    clientEmail2: "",
-    clientPhone1: "",
-    clientPhone2: "",
-  });
-};
-  const getBatchOptions = () => {
-    if (formData.category === "FSD") return batches.FSD || [];
-    if (formData.category === "BVOC") return batches.BVOC || [];
-    return [];
-  };
-
   const getCategoryColor = (category) => {
     const colors = {
-      code4bharat: "bg-blue-100 text-blue-700 border-blue-200",
+      Code4Bharat: "bg-blue-100 text-blue-700 border-blue-200",
+      "IT-Nexcore": "bg-cyan-100 text-cyan-700 border-cyan-200",
       "marketing-junction": "bg-pink-100 text-pink-700 border-pink-200",
       FSD: "bg-purple-100 text-purple-700 border-purple-200",
       BVOC: "bg-green-100 text-green-700 border-green-200",
@@ -426,45 +453,35 @@ const closeModal = () => {
     };
     return colors[category] || "bg-gray-100 text-gray-700 border-gray-200";
   };
-const handleChange = (e) => {
-  const { name, value } = e.target;
 
-  if (
-    name === "phone" ||
-    name === "parentPhone1" ||
-    name === "parentPhone2" ||
-    name === "clientPhone1" || // ⭐ NEW
-    name === "clientPhone2" // ⭐ NEW
-  ) {
-    const numericValue = value.replace(/\D/g, "");
-    setFormData({ ...formData, [name]: numericValue });
-  } else if (name === "aadhaarCard") {
-    const numericValue = value.replace(/\D/g, "");
-    setFormData({ ...formData, [name]: numericValue });
-  } else if (name === "category") {
-    setFormData({ ...formData, category: value, batch: "" });
-  } else {
-    setFormData({ ...formData, [name]: value });
-  }
-};
-  const [isEditingBatch, setIsEditingBatch] = useState(false);
-  const [editingBatchData, setEditingBatchData] = useState({
-    category: "",
-    oldBatchName: "",
-    newBatchName: "",
-    month: "June",
-    year: "2025",
-  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-  /* Add this handler for editing batch */
+    if (
+      name === "phone" ||
+      name === "parentPhone1" ||
+      name === "parentPhone2" ||
+      name === "clientPhone1" ||
+      name === "clientPhone2"
+    ) {
+      const numericValue = value.replace(/\D/g, "");
+      setFormData({ ...formData, [name]: numericValue });
+    } else if (name === "aadhaarCard") {
+      const numericValue = value.replace(/\D/g, "");
+      setFormData({ ...formData, [name]: numericValue });
+    } else if (name === "category") {
+      setFormData({ ...formData, category: value, batch: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
   const handleEditBatch = (category, batchName) => {
-    // Extract month and year from batch name if FSD
     let month = "June";
     let year = "2025";
     let batchNumber = "";
 
     if (category === "FSD") {
-      // Extract from format: "B-1 (June-2025)"
       const match = batchName.match(/^(B-\d+)\s+\(([A-Za-z]+)-(\d{4})\)$/);
       if (match) {
         batchNumber = match[1];
@@ -472,7 +489,6 @@ const handleChange = (e) => {
         year = match[3];
       }
     } else if (category === "BVOC") {
-      // Extract from format: "B-1 2025"
       const match = batchName.match(/^(B-\d+)\s+(\d{4})$/);
       if (match) {
         batchNumber = match[1];
@@ -490,7 +506,6 @@ const handleChange = (e) => {
     setIsEditingBatch(true);
   };
 
-  /* Add this handler for updating batch */
   const handleUpdateBatch = async () => {
     const { category, oldBatchName, newBatchName, month, year } =
       editingBatchData;
@@ -504,7 +519,6 @@ const handleChange = (e) => {
         ? `${newBatchName.trim()} (${month}-${year})`
         : `${newBatchName.trim()} ${year}`;
 
-    // Check if new name already exists (and is different from old name)
     if (
       fullNewName !== oldBatchName &&
       batches[category]?.includes(fullNewName)
@@ -522,19 +536,13 @@ const handleChange = (e) => {
 
       if (res.data.success) {
         toast.success(`Batch updated: ${oldBatchName} → ${fullNewName}`);
-
-        // Update local state
         setBatches({
           ...batches,
           [category]: batches[category].map((b) =>
             b === oldBatchName ? fullNewName : b
           ),
         });
-
-        // Refresh people list to show updated batch names
         fetchPeople();
-
-        // Close edit modal
         setIsEditingBatch(false);
         setEditingBatchData({
           category: "",
@@ -551,30 +559,31 @@ const handleChange = (e) => {
       setBatchLoading(false);
     }
   };
-const handleEdit = (person) => {
-  setFormData({
-    originalName: person.name,
-    originalPhone: person.phone,
-    name: person.name,
-    category: person.category,
-    batch: person.batch || "",
-    email: person.email || "",
-    parentEmail: person.parentEmail || "",
-    phone: person.phone,
-    parentPhone1: person.parentPhone1 || "",
-    parentPhone2: person.parentPhone2 || "",
-    aadhaarCard: person.aadhaarCard || "",
-    address: person.address || "",
-    // ⭐ NEW: Load client fields
-    clientEmail1: person.clientEmail1 || "",
-    clientEmail2: person.clientEmail2 || "",
-    clientPhone1: person.clientPhone1 || "",
-    clientPhone2: person.clientPhone2 || "",
-  });
 
-  setIsEditMode(true);
-  setIsModalOpen(true);
-};
+  const handleEdit = (person) => {
+    setFormData({
+      originalName: person.name,
+      originalPhone: person.phone,
+      name: person.name,
+      category: person.category,
+      batch: person.batch || "",
+      email: person.email || "",
+      parentEmail: person.parentEmail || "",
+      phone: person.phone,
+      parentPhone1: person.parentPhone1 || "",
+      parentPhone2: person.parentPhone2 || "",
+      aadhaarCard: person.aadhaarCard || "",
+      address: person.address || "",
+      clientEmail1: person.clientEmail1 || "",
+      clientEmail2: person.clientEmail2 || "",
+      clientPhone1: person.clientPhone1 || "",
+      clientPhone2: person.clientPhone2 || "",
+    });
+
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
   const totalPeople = people.length;
   const activePeople = people.filter((p) => !p.disabled).length;
   const disabledPeople = people.filter((p) => p.disabled).length;
@@ -591,6 +600,7 @@ const handleEdit = (person) => {
       >
         <ArrowLeft className="w-6 h-6" />
       </motion.button>
+
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -624,16 +634,6 @@ const handleEdit = (person) => {
               Add Person
             </motion.button>
 
-            {/* <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowBulkUpload(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg"
-            >
-              <Upload className="w-5 h-5" />
-              Bulk Upload
-            </motion.button> */}
-
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -643,7 +643,7 @@ const handleEdit = (person) => {
               <Layers className="w-5 h-5" />
               Manage Batches
             </motion.button>
-            {/* ⭐ NEW BUTTON — ADD CATEGORY */}
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -698,7 +698,6 @@ const handleEdit = (person) => {
               </motion.button>
             </div>
           </div>
-          <div></div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -715,7 +714,6 @@ const handleEdit = (person) => {
 
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-
                 <select
                   value={selectedCategory}
                   onChange={(e) => {
@@ -725,7 +723,6 @@ const handleEdit = (person) => {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl"
                 >
                   <option value="all">All Categories</option>
-
                   {dynamicCategories.map((cat) => (
                     <option key={cat._id} value={cat.name}>
                       {cat.name}
@@ -909,7 +906,7 @@ const handleEdit = (person) => {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Person Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -939,7 +936,6 @@ const handleEdit = (person) => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Name */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Name *
@@ -955,7 +951,6 @@ const handleEdit = (person) => {
                   />
                 </div>
 
-                {/* Category */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Category *
@@ -976,7 +971,6 @@ const handleEdit = (person) => {
                   </select>
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Email
@@ -987,11 +981,9 @@ const handleEdit = (person) => {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
-                    // required
                   />
                 </div>
 
-                {/* Batch */}
                 {getBatchOptions().length > 0 && (
                   <div>
                     <label className="block text-gray-700 font-semibold mb-1">
@@ -1014,7 +1006,6 @@ const handleEdit = (person) => {
                   </div>
                 )}
 
-                {/* Phone */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Phone *{" "}
@@ -1031,7 +1022,6 @@ const handleEdit = (person) => {
                   />
                 </div>
 
-                {/* Aadhaar */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Aadhaar{" "}
@@ -1047,7 +1037,6 @@ const handleEdit = (person) => {
                   />
                 </div>
 
-                {/* Address */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">
                     Address{" "}
@@ -1063,10 +1052,8 @@ const handleEdit = (person) => {
                   />
                 </div>
 
-                {/* BVOC: parent details */}
                 {formData.category === "BVOC" && (
                   <>
-                    {/* ✅ Parent Email (required only for BVOC) */}
                     <div>
                       <label className="block text-gray-700 font-semibold mb-1">
                         Parent Email *
@@ -1116,7 +1103,7 @@ const handleEdit = (person) => {
                     </div>
                   </>
                 )}
-                {/* ⭐ NEW: Client-specific fields (only show when category is "Client") */}
+
                 {formData.category === "Client" && (
                   <>
                     <div>
@@ -1181,12 +1168,16 @@ const handleEdit = (person) => {
                   </>
                 )}
 
-                {/* Submit button */}
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50"
                 >
-                  <CheckCircle className="w-6 h-6" />
+                  {loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-6 h-6" />
+                  )}
                   {isEditMode ? "Update" : "Add"} Person
                 </button>
               </form>
@@ -1195,6 +1186,7 @@ const handleEdit = (person) => {
         )}
       </AnimatePresence>
 
+      {/* Batch Management Modal */}
       <AnimatePresence>
         {isBatchModalOpen && (
           <motion.div
@@ -1616,202 +1608,81 @@ const handleEdit = (person) => {
         )}
       </AnimatePresence>
 
-      {/* Bulk Upload Modal */}
+      {/* Add Category Modal */}
       <AnimatePresence>
-        {showBulkUpload && (
+        {showAddCategory && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-            onClick={closeBulkUpload}
+            onClick={() => setShowAddCategory(false)}
           >
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8"
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">
-                  Bulk Upload
+                  Add Category
                 </h2>
                 <button
-                  onClick={closeBulkUpload}
+                  onClick={() => setShowAddCategory(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Instructions */}
-              <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-                <div className="flex items-start gap-3 mb-2">
-                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="font-bold text-gray-800 mb-2">
-                      Bulk Upload – Instructions
-                    </h3>
+              <div className="space-y-5">
+                <div>
+                  <label className="block mb-1 font-semibold text-gray-700">
+                    Category Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter category name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
 
-                    <ul className="text-sm text-gray-600 space-y-2 list-disc list-inside">
-                      <li>
-                        Use Excel sheet with columns:{" "}
-                        <b>name, category, phone, batch</b>
-                      </li>
-                      <li>
-                        Phone must be <b>10 digits</b>. Country code{" "}
-                        <b>auto added as 91</b>.
-                      </li>
-                      <li>
-                        Valid categories:
-                        <br />
-                        <span className="font-semibold">
-                          code4bharat, marketing-junction, FSD, BVOC, HR, DM,
-                          Operations Department
-                        </span>
-                      </li>
-                      <li>
-                        FSD & BVOC require <b>batch field mandatory</b>
-                      </li>
-                      <li>
-                        Optional fields:
-                        <br />
-                        <span className="font-semibold">
-                          parentPhone1, parentPhone2, aadhaarCard, address
-                        </span>
-                      </li>
-                      {/* <li>
-                  Backend API:
-                  <code className="block bg-gray-200 px-2 py-1 rounded mt-1 text-xs">
-                    POST /api/people/bulk-upload
-                  </code>
-                  <code className="block bg-gray-200 px-2 py-1 rounded mt-1 text-xs">
-                    field name: file
-                  </code>
-                </li> */}
-                    </ul>
-                  </div>
+                <div>
+                  <label className="block mb-1 font-semibold text-gray-700">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    placeholder="Short description..."
+                    value={newCategoryDesc}
+                    onChange={(e) => setNewCategoryDesc(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-24"
+                  ></textarea>
                 </div>
               </div>
 
-              {/* Upload Section */}
-              <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 mt-6 text-center hover:border-green-500 transition-colors">
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleBulkUpload}
-                  className="hidden"
-                  id="bulk-upload"
-                />
-                <label htmlFor="bulk-upload" className="cursor-pointer">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 font-semibold mb-1">
-                    {bulkFile ? bulkFile.name : "Click to upload Excel file"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Supports .xlsx and .xls formats
-                  </p>
-                </label>
-              </div>
-
-              {/* Process Button */}
-              {bulkFile && (
+              <div className="mt-6 flex gap-3">
                 <button
-                  onClick={() => {
-                    toast.success("Bulk upload processing...");
-                    closeBulkUpload();
-                  }}
-                  className="mt-6 w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                  onClick={() => setShowAddCategory(false)}
+                  className="w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  Process Upload
+                  Cancel
                 </button>
-              )}
+
+                <button
+                  onClick={handleAddCategory}
+                  className="w-1/2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition"
+                >
+                  Add Category
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {
-        <AnimatePresence>
-          {showAddCategory && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-              onClick={() => setShowAddCategory(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.9 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-3xl font-bold text-gray-800">
-                    Add Category
-                  </h2>
-                  <button
-                    onClick={() => setShowAddCategory(false)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="block mb-1 font-semibold text-gray-700">
-                      Category Name *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter category name"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 font-semibold text-gray-700">
-                      Description (optional)
-                    </label>
-                    <textarea
-                      placeholder="Short description..."
-                      value={newCategoryDesc}
-                      onChange={(e) => setNewCategoryDesc(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-24"
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex gap-3">
-                  <button
-                    onClick={() => setShowAddCategory(false)}
-                    className="w-1/2 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleAddCategory();
-                    }}
-                    className="w-1/2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition"
-                  >
-                    Add Category
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      }
     </div>
   );
 }

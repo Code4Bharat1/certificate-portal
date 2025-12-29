@@ -55,9 +55,9 @@ export default function Code4BharatPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
  
-  const categoryAliases = ["IT-Nexcore", "Code4Bharat"];
+  const categoryAliases = ["IT-Nexcore", "code4bharat"];
 
-  const letterConfig = getLetterTypesConfig(category);
+  const letterConfig = getLetterTypesConfig();
   const letterMainTypes = Object.keys(letterConfig);
 
   // Fetch items

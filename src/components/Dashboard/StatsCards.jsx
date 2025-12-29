@@ -69,7 +69,7 @@ const StatCard = ({
   icon: Icon,
   total,
   mj,
-  NEX,
+nex,
   fsd,
   hr,
   bc,
@@ -188,7 +188,7 @@ const StatCard = ({
 
       <div className="p-5 space-y-2 bg-gray-50/50 dark:bg-gray-900/50">
         {createCategoryRow("MJ", mj, "marketing-junction")}
-        {createCategoryRow("NEX", NEX, "it-nexcore")}
+        {createCategoryRow("NEX", nex, "it-nexcore")}
         {createCategoryRow("FSD", fsd, "fsd")}
         {createCategoryRow("HR", hr, "hr")}
         {createCategoryRow("BOOTCAMP", bc, "bootcamp")}
@@ -357,7 +357,7 @@ export default function StatsCards() {
       icon: Calendar,
       total: 0,
       mj: 0,
-      NEX: 0,
+    nex: 0,
       gradient: "from-blue-600 via-blue-500 to-cyan-500",
       bg: "bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-950 dark:via-cyan-950 dark:to-blue-900",
       iconBg: "bg-blue-100 dark:bg-blue-900/50",
@@ -368,7 +368,7 @@ export default function StatsCards() {
       icon: TrendingUp,
       total: 0,
       mj: 0,
-      NEX: 0,
+    nex: 0,
       gradient: "from-orange-600 via-orange-500 to-amber-500",
       bg: "bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950 dark:via-amber-950 dark:to-orange-900",
       iconBg: "bg-orange-100 dark:bg-orange-900/50",
@@ -379,7 +379,7 @@ export default function StatsCards() {
       icon: Download,
       total: 0,
       mj: 0,
-      NEX: 0,
+    nex: 0,
       gradient: "from-blue-600 via-indigo-600 to-purple-600",
       bg: "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-900",
       iconBg: "bg-blue-100 dark:bg-blue-900/50",
@@ -390,7 +390,7 @@ export default function StatsCards() {
       icon: Clock,
       total: 0,
       mj: 0,
-      NEX: 0,
+    nex: 0,
       gradient: "from-orange-600 via-red-600 to-pink-600",
       bg: "bg-gradient-to-br from-orange-50 via-red-50 to-pink-100 dark:from-orange-950 dark:via-red-950 dark:to-pink-900",
       iconBg: "bg-orange-100 dark:bg-orange-900/50",
@@ -532,7 +532,7 @@ export default function StatsCards() {
           icon: Calendar,
           total: data.last7Days?.total || 0,
           mj: data.last7Days?.["marketing-junction"] || 0,
-          NEX: data.last7Days?.["it-nexcore"] || 0,
+          nex: data.last7Days?.["it-nexcore"] || 0,
           fsd: data.last7Days?.fsd || 0,
           hr: data.last7Days?.hr || 0,
           bc: data.last7Days?.bootcamp || 0, // ✅ Fixed: was BOOTCAMP
@@ -551,7 +551,7 @@ export default function StatsCards() {
           icon: TrendingUp,
           total: data.lastMonth?.total || 0,
           mj: data.lastMonth?.["marketing-junction"] || 0,
-          NEX: data.lastMonth?.["it-nexcore"] || 0,
+        nex: data.lastMonth?.["it-nexcore"] || 0,
           fsd: data.lastMonth?.fsd || 0,
           hr: data.lastMonth?.hr || 0,
           bc: data.lastMonth?.bootcamp || 0, // ✅ Fixed
@@ -570,7 +570,7 @@ export default function StatsCards() {
           icon: Download,
           total: data.downloaded?.total || 0,
           mj: data.downloaded?.["marketing-junction"] || 0,
-          NEX: data.downloaded?.["it-nexcore"] || 0,
+        nex: data.downloaded?.["it-nexcore"] || 0,
           fsd: data.downloaded?.fsd || 0,
           hr: data.downloaded?.hr || 0,
           bc: data.downloaded?.bootcamp || 0, // ✅ Fixed
@@ -589,7 +589,7 @@ export default function StatsCards() {
           icon: Clock,
           total: data.pending?.total || 0,
           mj: data.pending?.["marketing-junction"] || 0,
-          NEX: data.pending?.["it-nexcore"] || 0,
+        nex: data.pending?.["it-nexcore"] || 0,
           fsd: data.pending?.fsd || 0,
           hr: data.pending?.hr || 0,
           bc: data.pending?.bootcamp || 0, // ✅ Fixed

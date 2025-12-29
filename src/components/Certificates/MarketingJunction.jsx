@@ -294,7 +294,7 @@ export default function MarketingJunctionPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push("/dashboard")}
                 className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition"
                 aria-label="Go back to dashboard"
               >
@@ -322,7 +322,6 @@ export default function MarketingJunctionPage() {
                 <span className="text-sm text-blue-100">Letters</span>
                 <span className="text-xl font-bold">{stats.letters}</span>
               </div>
-
             </div>
           </div>
         </div>
@@ -344,7 +343,7 @@ export default function MarketingJunctionPage() {
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => setSearchTerm("")}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
               >
                 ×
@@ -362,7 +361,9 @@ export default function MarketingJunctionPage() {
             <Filter className="w-5 h-5" />
             <span>Filters</span>
             <ChevronDown
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 transition-transform ${
+                showFilters ? "rotate-180" : ""
+              }`}
             />
           </motion.button>
 
@@ -387,7 +388,7 @@ export default function MarketingJunctionPage() {
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden mb-6"
@@ -395,26 +396,33 @@ export default function MarketingJunctionPage() {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap gap-4 mb-4">
                   <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Status
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {['all', 'downloaded', 'pending'].map((status) => (
+                      {["all", "downloaded", "pending"].map((status) => (
                         <button
                           key={status}
                           onClick={() => setStatusFilter(status)}
-                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${statusFilter === status
-                              ? status === 'downloaded'
-                                ? 'bg-green-500 text-white'
-                                : status === 'pending'
-                                  ? 'bg-amber-500 text-white'
-                                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            }`}
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                            statusFilter === status
+                              ? status === "downloaded"
+                                ? "bg-green-500 text-white"
+                                : status === "pending"
+                                ? "bg-amber-500 text-white"
+                                : "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                           <span className="ml-1 text-xs">
-                            ({status === 'all'
+                            (
+                            {status === "all"
                               ? certificates.length
-                              : certificates.filter(it => it.status === status).length})
+                              : certificates.filter(
+                                  (it) => it.status === status
+                                ).length}
+                            )
                           </span>
                         </button>
                       ))}
@@ -439,8 +447,12 @@ export default function MarketingJunctionPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Loading...</h3>
-            <p className="text-gray-600 dark:text-gray-400">Fetching all certificates and letters</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+              Loading...
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Fetching all certificates and letters
+            </p>
           </div>
         )}
 
@@ -448,7 +460,11 @@ export default function MarketingJunctionPage() {
         {!loading && filteredCertificates.length > 0 && (
           <div className="mt-8 flex justify-between items-center bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Showing <span className="font-semibold text-gray-800 dark:text-white">{filteredCertificates.length}</span> of {certificates.length} items
+              Showing{" "}
+              <span className="font-semibold text-gray-800 dark:text-white">
+                {filteredCertificates.length}
+              </span>{" "}
+              of {certificates.length} items
             </p>
             {filteredCertificates.length !== certificates.length && (
               <button
@@ -479,58 +495,74 @@ export default function MarketingJunctionPage() {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate">
                         {cert.name}
                       </h3>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${cert.type === 'letter'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300'
-                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'
-                        }`}>
-                        {cert.type === 'letter' ? 'Letter' : 'Certificate'}
+                      <span
+                        className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                          cert.type === "letter"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300"
+                            : "bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300"
+                        }`}
+                      >
+                        {cert.type === "letter" ? "Letter" : "Certificate"}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{cert.course}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {cert.course}
+                    </p>
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${cert.status === 'downloaded'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
-                      }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1 ${
+                      cert.status === "downloaded"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400"
+                    }`}
                   >
-                    {cert.status === 'downloaded' ? (
+                    {cert.status === "downloaded" ? (
                       <CheckCircle className="w-3 h-3" />
                     ) : (
                       <Clock className="w-3 h-3" />
                     )}
-                    {cert.status || 'pending'}
+                    {cert.status || "pending"}
                   </span>
                 </div>
 
                 {/* Card Body */}
                 <div className="space-y-3 mb-4 text-sm flex-grow">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">{cert.type === 'letter' ? 'Letter ID:' : 'Certificate ID:'}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {cert.type === "letter"
+                        ? "Letter ID:"
+                        : "Certificate ID:"}
+                    </span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-all">
                       {cert.certificateId || cert.letterId || cert._id}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Issue Date:
+                    </span>
                     <span className="font-semibold text-gray-800 dark:text-gray-200">
-                      {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      }) : '—'}
+                      {cert.issueDate
+                        ? new Date(cert.issueDate).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </span>
                   </div>
-                  {it.type === 'letter' && it.letterType && (
+                  {cert.type === "letter" && cert.letterType && (
                     <div className="flex justify-between items-start">
-                      <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Type:
+                      </span>
                       <span className="font-semibold text-gray-800 dark:text-gray-200 text-right">
-                        {it.letterType}
-                        {it.letterSubType && (
+                        {cert.letterType}
+                        {cert.letterSubType && (
                           <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal">
-                            {it.letterSubType}
+                            {cert.letterSubType}
                           </span>
                         )}
                       </span>
@@ -538,11 +570,13 @@ export default function MarketingJunctionPage() {
                   )}
 
                   {/* Signature Status (only for letters) */}
-                  {it.type === 'letter' && (
+                  {cert.type === "letter" && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Signature:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Signature:
+                      </span>
 
-                      {it.signedUploaded ? (
+                      {cert.signedUploaded ? (
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold">
                           <CheckCircle className="w-3 h-3" />
                           Uploaded
@@ -574,7 +608,7 @@ export default function MarketingJunctionPage() {
                     PDF
                   </motion.button>
 
-                  {cert.type !== 'letter' && (
+                  {cert.type !== "letter" && (
                     <motion.button
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
@@ -614,13 +648,15 @@ export default function MarketingJunctionPage() {
             className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700"
           >
             <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No items found</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+              No items found
+            </h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' ?
-                "Try adjusting your filters or search criteria" :
-                "No certificates or letters have been created yet"}
+              {searchTerm || statusFilter !== "all"
+                ? "Try adjusting your filters or search criteria"
+                : "No certificates or letters have been created yet"}
             </p>
-            {(searchTerm || statusFilter !== 'all') && (
+            {(searchTerm || statusFilter !== "all") && (
               <button
                 onClick={clearFilters}
                 className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition inline-flex items-center gap-2"
@@ -631,8 +667,6 @@ export default function MarketingJunctionPage() {
             )}
           </motion.div>
         )}
-
-
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -658,12 +692,21 @@ export default function MarketingJunctionPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                   {(() => {
-                    const item = certificates.find((x) => x._id === deleteConfirm);
-                    return `${item?.type === 'letter' ? 'Delete Letter?' : 'Delete Certificate?'}`;
+                    const item = certificates.find(
+                      (x) => x._id === deleteConfirm
+                    );
+                    return `${
+                      item?.type === "letter"
+                        ? "Delete Letter?"
+                        : "Delete Certificate?"
+                    }`;
                   })()}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Are you sure you want to delete this {certificates.find((x) => x._id === deleteConfirm)?.type || 'item'}? This action cannot be undone.
+                  Are you sure you want to delete this{" "}
+                  {certificates.find((x) => x._id === deleteConfirm)?.type ||
+                    "item"}
+                  ? This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                   <button

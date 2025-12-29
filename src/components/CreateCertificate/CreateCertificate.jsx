@@ -1,7 +1,6 @@
-//CreateCertificate.jsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
@@ -23,16 +22,18 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import TemplateSelector from "../template/TemplateSelector";
-import { useMemo } from "react";
+
+// ✅ SINGLE hasAccessToCategory function definition - KEEP ONLY THIS ONE
 const hasAccessToCategory = (adminPermissions, categoryKey) => {
   if (!adminPermissions || adminPermissions.length === 0) return false;
 
   // Super admin has all access
   if (adminPermissions.includes("admin_management")) return true;
 
-  // Direct permission check - backend sends exactly these strings
+  // Direct permission check
   const categoryPermissionMap = {
-    "it-nexcore": "it-nexcore", // Backend uses "it-nexcore" for it-nexcore
+    "it-nexcore": "it-nexcore",
+    code4bharat: "code4bharat",
     "marketing-junction": "marketing-junction",
     dm: "dm",
     fsd: "fsd",
@@ -46,9 +47,8 @@ const hasAccessToCategory = (adminPermissions, categoryKey) => {
   const requiredPermission = categoryPermissionMap[categoryKey];
   return adminPermissions.includes(requiredPermission);
 };
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
-
-
 
 export default function CreateCertificate() {
   const router = useRouter();
@@ -69,6 +69,7 @@ export default function CreateCertificate() {
     batch: "",
     description: "",
     templateId: "",
+    customCourse: "",
   });
 
   // Data Lists
@@ -101,41 +102,65 @@ export default function CreateCertificate() {
     }
   }, []);
 
-    useEffect(() => {
-      console.log("🔍 Environment Check:");
-      console.log("API_URL:", API_URL);
-      console.log("Auth Token exists:", !!sessionStorage.getItem("authToken"));
-      console.log(
-        "Full API URL will be:",
-        `${API_URL}/api/certificates/otp/send`
-      );
-    }, []);
+  useEffect(() => {
+    console.log("🔍 Environment Check:");
+    console.log("API_URL:", API_URL);
+    console.log("Auth Token exists:", !!sessionStorage.getItem("authToken"));
+    console.log(
+      "Full API URL will be:",
+      `${API_URL}/api/certificates/otp/send`
+    );
+  }, []);
 
- const categoryConfig = useMemo(() => {
-   const allCategories = {
-     "it-nexcore": { label: "it-nexcore", batches: [] },
-     "marketing-junction": { label: "Marketing Junction", batches: [] },
-     dm: { label: "Digital Marketing", batches: [] }, // ✅ Added
-     fsd: { label: "fsd", batches: batches.fsd || [] },
-   };
+  // ✅ FIXED: categoryConfig with proper batch handling
+  const categoryConfig = useMemo(() => {
+    console.log("🔍 Batches in memo:", batches);
 
-   return Object.fromEntries(
-     Object.entries(allCategories).filter(([key]) =>
-       hasAccessToCategory(adminPermissions, key)
-     )
-   );
- }, [adminPermissions, batches]);
+    return {
+      "it-nexcore": {
+        label: "IT-NexCore",
+        batches: [],
+        dbCategory: "IT-Nexcore",
+      },
+
+      fsd: {
+        label: "Full Stack Development",
+        batches: batches.fsd || [],
+        dbCategory: "FSD",
+      },
+
+      "marketing-junction": {
+        label: "Marketing Junction",
+        batches: [],
+        dbCategory: "marketing-junction",
+      },
+    };
+  }, [batches]);
 
   const handleTemplateSelect = (template) => {
     setFormData((prev) => ({ ...prev, templateId: template.id }));
   };
 
+  // ✅ FIXED: Fetch batches with proper key mapping
   useEffect(() => {
     const fetchBatches = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/batches`);
         if (response.data.success) {
-          setBatches(response.data.batches);
+          console.log("📦 Batches from backend:", response.data.batches);
+
+          // ✅ Backend returns { FSD: [...], BVOC: [...] }
+          // Convert to lowercase for consistency
+          const backendBatches = response.data.batches;
+          setBatches({
+            fsd: backendBatches.FSD || [],
+            bvoc: backendBatches.BVOC || [],
+          });
+
+          console.log("✅ Batches set:", {
+            fsd: backendBatches.FSD || [],
+            bvoc: backendBatches.BVOC || [],
+          });
         }
       } catch (error) {
         console.error("Error fetching batches:", error);
@@ -145,7 +170,18 @@ export default function CreateCertificate() {
     fetchBatches();
   }, []);
 
-  // OTP Timer - ONLY ONE useEffect for resendTimer
+  // ✅ Debug category selection
+  useEffect(() => {
+    console.log("🔍 Category changed to:", formData.category);
+    if (formData.category) {
+      const config = categoryConfig[formData.category];
+      console.log("🔍 Category config:", config);
+      console.log("🔍 Batches count:", config?.batches?.length);
+      console.log("🔍 Batches array:", config?.batches);
+    }
+  }, [formData.category, categoryConfig]);
+
+  // OTP Timer
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -199,72 +235,63 @@ export default function CreateCertificate() {
     return { Authorization: `Bearer ${token}` };
   };
 
-const fetchNames = async () => {
-  setLoadingNames(true);
-  try {
-    console.log("🔍 Fetching names for category:", formData.category);
-    console.log("🔍 Batch:", formData.batch);
+  const fetchNames = async () => {
+    setLoadingNames(true);
+    try {
+      console.log("🔍 Fetching names for category:", formData.category);
+      console.log("🔍 Batch:", formData.batch);
 
-    let response;
+      const categoryData = categoryConfig[formData.category];
 
-    // ✅ Handle it-nexcore and Code4Bharat as unified category (same as CreateLetter)
-    if (formData.category === "it-nexcore") {
-      response = await axios.get(`${API_URL}/api/people/`, {
+      if (!categoryData) {
+        console.error("❌ Category not found in config:", formData.category);
+        toast.error("Invalid category selected");
+        setLoadingNames(false);
+        return;
+      }
+
+      // ✅ Use the dbCategory field to query the correct database category
+      const response = await axios.get(`${API_URL}/api/people/`, {
         headers: getAuthHeaders(),
         params: {
-          categories: JSON.stringify(["it-nexcore", "Code4Bharat"]),
-        },
-      });
-    } else if (formData.category === "marketing-junction") {
-      response = await axios.get(`${API_URL}/api/people/`, {
-        headers: getAuthHeaders(),
-        params: { category: "marketing-junction" },
-      });
-    } else {
-      // For all other categories (fsd, dm, bvoc, hr, etc.)
-      response = await axios.get(`${API_URL}/api/people/`, {
-        headers: getAuthHeaders(),
-        params: {
-          category: formData.category,
+          category: categoryData.dbCategory,
           batch: formData.batch || undefined,
         },
       });
-    }
 
-    console.log("📦 API Response:", response.data);
+      console.log("📦 API Response:", response.data);
 
-    if (response.data.success && Array.isArray(response.data.names)) {
-      const enabled = response.data.names
-        .filter((person) => !person.disabled)
-        .sort((a, b) => a.name.localeCompare(b.name));
+      if (response.data.success && Array.isArray(response.data.names)) {
+        const enabled = response.data.names
+          .filter((person) => !person.disabled)
+          .sort((a, b) => a.name.localeCompare(b.name));
 
-      console.log("✅ Sorted names:", enabled);
-      setNamesList(enabled);
+        console.log("✅ Sorted names:", enabled);
+        setNamesList(enabled);
 
-      if (enabled.length > 0) {
-        toast.success(`Found ${enabled.length} person(s)`);
+        if (enabled.length > 0) {
+          toast.success(`Found ${enabled.length} person(s)`);
+        } else {
+          toast.error(`No active people found in ${categoryData.label}`);
+        }
       } else {
-        toast.error(`No active people found in ${formData.category} category`);
+        console.log("⚠️ No names found");
+        setNamesList([]);
+        toast.error(`No active people found in ${categoryData.label}`);
       }
-    } else {
-      console.log("⚠️ No names found");
+    } catch (error) {
+      console.error("❌ Fetch names error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      toast.error("Failed to load names");
       setNamesList([]);
-      toast.error(`No active people found in ${formData.category} category`);
+    } finally {
+      setLoadingNames(false);
     }
-  } catch (error) {
-    console.error("❌ Fetch names error:", error);
-    console.error("Error details:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-    });
-    toast.error("Failed to load names");
-    setNamesList([]);
-  } finally {
-    setLoadingNames(false);
-  }
-};
-
+  };
 
   const fetchCourses = async () => {
     setLoadingCourses(true);
@@ -413,90 +440,91 @@ const fetchNames = async () => {
     }
   };
 
-const sendOTP = async () => {
-  try {
-    console.log("🔍 API_URL:", API_URL); // Debug log
-    console.log("🔍 Sending OTP to:", `${API_URL}/api/certificates/otp/send`);
+  const sendOTP = async () => {
+    try {
+      console.log("🔍 API_URL:", API_URL);
+      console.log("🔍 Sending OTP to:", `${API_URL}/api/certificates/otp/send`);
 
-    const loadingToast = toast.loading("Sending OTP...");
+      const loadingToast = toast.loading("Sending OTP...");
 
-    const response = await axios.post(
-      `${API_URL}/api/certificates/otp/send`,
-      {
-        phone: "919892398976",
-        name: "HR-NEXCORE ALLIANCE",
-      },
-      {
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/send`,
+        {
+          phone: "919892398976",
+          name: "HR-NEXCORE ALLIANCE",
         },
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.dismiss(loadingToast);
+
+      if (response.data.success) {
+        toast.success("OTP sent to your WhatsApp! 📱");
+        setOtpSent(true);
+        setResendTimer(60);
+      } else {
+        toast.error(response.data.message || "Failed to send OTP");
       }
-    );
-
-    toast.dismiss(loadingToast);
-
-    if (response.data.success) {
-      toast.success("OTP sent to your WhatsApp! 📱");
-      setOtpSent(true);
-      setResendTimer(60);
-    } else {
-      toast.error(response.data.message || "Failed to send OTP");
+    } catch (error) {
+      toast.dismiss();
+      console.error("❌ Failed to send OTP:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+      toast.error(
+        error.response?.data?.message || "Failed to send OTP. Please try again."
+      );
     }
-  } catch (error) {
-    toast.dismiss();
-    console.error("❌ Failed to send OTP:", error);
-    console.error("❌ Error response:", error.response?.data);
-    console.error("❌ Error status:", error.response?.status);
-    toast.error(
-      error.response?.data?.message || "Failed to send OTP. Please try again."
-    );
-  }
-};
- const verifyOTP = async () => {
-   try {
-     const otpCode = otp.join("");
-     if (otpCode.length !== 6) {
-       toast.error("Please enter complete OTP");
-       return;
-     }
+  };
 
-     console.log("🔍 Verifying OTP:", otpCode);
-     const loadingToast = toast.loading("Verifying OTP...");
+  const verifyOTP = async () => {
+    try {
+      const otpCode = otp.join("");
+      if (otpCode.length !== 6) {
+        toast.error("Please enter complete OTP");
+        return;
+      }
 
-     const response = await axios.post(
-       `${API_URL}/api/certificates/otp/verify`,
-       {
-         phone: "919892398976",
-         otp: otpCode,
-       },
-       {
-         headers: {
-           ...getAuthHeaders(),
-           "Content-Type": "application/json",
-         },
-       }
-     );
+      console.log("🔍 Verifying OTP:", otpCode);
+      const loadingToast = toast.loading("Verifying OTP...");
 
-     toast.dismiss(loadingToast);
+      const response = await axios.post(
+        `${API_URL}/api/certificates/otp/verify`,
+        {
+          phone: "919892398976",
+          otp: otpCode,
+        },
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-     if (response.data.success) {
-       toast.success("✅ OTP Verified Successfully!");
-       setOtpVerified(true);
-       setShowOtpModal(false);
-       setShowPreview(true);
-     } else {
-       toast.error(response.data.message || "Invalid OTP");
-       setOtp(["", "", "", "", "", ""]);
-     }
-   } catch (error) {
-     toast.dismiss();
-     console.error("❌ Verify OTP error:", error);
-     console.error("❌ Error response:", error.response?.data);
-     toast.error(error.response?.data?.message || "OTP verification failed");
-     setOtp(["", "", "", "", "", ""]);
-   }
- };
+      toast.dismiss(loadingToast);
+
+      if (response.data.success) {
+        toast.success("✅ OTP Verified Successfully!");
+        setOtpVerified(true);
+        setShowOtpModal(false);
+        setShowPreview(true);
+      } else {
+        toast.error(response.data.message || "Invalid OTP");
+        setOtp(["", "", "", "", "", ""]);
+      }
+    } catch (error) {
+      toast.dismiss();
+      console.error("❌ Verify OTP error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || "OTP verification failed");
+      setOtp(["", "", "", "", "", ""]);
+    }
+  };
 
   const generatePreview = async () => {
     setLoadingPreview(true);
@@ -563,6 +591,7 @@ const sendOTP = async () => {
       setIsCreating(false);
     }
   };
+
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
       <Toaster position="top-center" />
@@ -619,8 +648,6 @@ const sendOTP = async () => {
           </div>
         </div>
 
-        {/* Rest of the component remains same as CreateCertificate.jsx */}
-        {/* Form Section, Preview Section, OTP Modal, Success Modal - same code */}
         {!showPreview ? (
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
@@ -760,11 +787,11 @@ const sendOTP = async () => {
                           );
                         })}
 
-                        {/* 👇 New Option for Custom Course */}
+                        {/* Custom Course Option */}
                         <option value="custom">Other (Custom Course)</option>
                       </select>
 
-                      {/* 👇 Show custom course input when selected */}
+                      {/* Custom course input */}
                       {formData.course === "custom" && (
                         <div className="mt-3">
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -800,10 +827,11 @@ const sendOTP = async () => {
                       Description *
                     </label>
                     <p
-                      className={`text-xs mt-1 ${formData.description.length > 1000
+                      className={`text-xs mt-1 ${
+                        formData.description.length > 1000
                           ? "text-red-500"
                           : "text-gray-500"
-                        }`}
+                      }`}
                     >
                       {formData.description.length}/1000 characters
                     </p>
@@ -821,12 +849,6 @@ const sendOTP = async () => {
                     />
                   </div>
                 )}
-                {/* <div className="mt-6">
-                  <TemplateSelector
-                    onSelect={handleTemplateSelect}
-                    selectedTemplateId={formData.templateId}
-                  />
-                </div> */}
 
                 {/* Issue Date */}
                 <div>
@@ -840,7 +862,6 @@ const sendOTP = async () => {
                     onChange={(e) =>
                       handleInputChange("issueDate", e.target.value)
                     }
-                    // max={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
@@ -854,10 +875,11 @@ const sendOTP = async () => {
                   className={`w-full text-white py-4
                   rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center
                   justify-center gap-2
-                  ${isDescriptionInvalid
+                  ${
+                    isDescriptionInvalid
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-gradient-to-r from-blue-600 to-indigo-600"
-                    }
+                  }
                   `}
                 >
                   <Shield className="w-5 h-5" />
@@ -944,7 +966,7 @@ const sendOTP = async () => {
             </motion.div>
           </div>
         ) : (
-          // Preview section - keeping same as before
+          // Preview section
           <div className="grid lg:grid-cols-2 gap-8">
             <div>
               <motion.button
@@ -1006,10 +1028,11 @@ const sendOTP = async () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Course:</span>
-                    {/* <span className="font-semibold text-gray-900">{formData.course}</span> */}
-                    {formData.course === "custom"
-                      ? formData.customCourse
-                      : formData.course}
+                    <span className="font-semibold text-gray-900">
+                      {formData.course === "custom"
+                        ? formData.customCourse
+                        : formData.course}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Issue Date:</span>
@@ -1030,7 +1053,7 @@ const sendOTP = async () => {
           </div>
         )}
 
-        {/* OTP Modal - Same as before */}
+        {/* OTP Modal */}
         <AnimatePresence>
           {showOtpModal && (
             <motion.div
@@ -1078,7 +1101,9 @@ const sendOTP = async () => {
                           type="text"
                           maxLength={1}
                           value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onChange={(e) =>
+                            handleOtpChange(index, e.target.value)
+                          }
                           onKeyDown={(e) => handleOtpKeyDown(index, e)}
                           onPaste={handlePaste}
                           className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all"
@@ -1122,7 +1147,7 @@ const sendOTP = async () => {
           )}
         </AnimatePresence>
 
-        {/* Success Modal - Same as before */}
+        {/* Success Modal */}
         <AnimatePresence>
           {showSuccess && (
             <motion.div

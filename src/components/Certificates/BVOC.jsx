@@ -54,7 +54,7 @@ export default function BvocPage() {
   const [sortBy, setSortBy] = useState('date-desc');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5235';
-  const category = 'BVOC';
+  
   const letterConfig = getLetterTypesConfig();
   const letterMainTypes = Object.keys(letterConfig);
 
@@ -70,7 +70,7 @@ export default function BvocPage() {
 
         const res = await axios.get(`${API_URL}/api/certificates`, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { category },
+          params: { categories : "BVOC" },
         });
 
         if (res.data.success) {

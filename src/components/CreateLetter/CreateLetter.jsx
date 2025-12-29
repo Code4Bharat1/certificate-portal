@@ -116,90 +116,94 @@ export default function CreateLetter() {
   }, []);
 
   // ✅ Filter categories based on permissions
-  const categoryConfig = useMemo(() => {
-    const allCategories = {
-      "it-nexcore": {
-        label: "it-nexcore",
-        batches: [],
-        permission: "it-nexcore",
-      },
-      "marketing-junction": {
-        label: "Marketing Junction",
-        batches: [],
-        permission: "marketing-junction",
-      },
-      dm: { label: "Digital Marketing", batches: [], permission: "dm" },
-      fsd: { label: "fsd", batches: batches.fsd || [], permission: "fsd" },
-      hr: { label: "hr", batches: [], permission: "hr" },
-      bvoc: { label: "bvoc", batches: batches.bvoc || [], permission: "bvoc" },
-      operations: {
-        label: "operations Department",
-        batches: [],
-        permission: "operations",
-      },
-    };
+ const categoryConfig = useMemo(() => {
+   const allCategories = {
+     "IT-Nexcore": {
+       // ✅ Match backend exactly
+       label: "IT-Nexcore",
+       batches: [],
+       permission: "it-nexcore",
+     },
+     "marketing-junction": {
+       label: "Marketing Junction",
+       batches: [],
+       permission: "marketing-junction",
+     },
+     DM: {
+       // ✅ Match backend exactly
+       label: "Digital Marketing",
+       batches: [],
+       permission: "dm",
+     },
+     FSD: {
+       // ✅ Match backend exactly
+       label: "Full Stack Development",
+       batches: batches.fsd || [],
+       permission: "fsd",
+     },
+     HR: {
+       // ✅ Match backend exactly
+       label: "Human Resources",
+       batches: [],
+       permission: "hr",
+     },
+     BVOC: {
+       // ✅ Match backend exactly
+       label: "B.Voc",
+       batches: batches.bvoc || [],
+       permission: "bvoc",
+     },
+     "Operations Department": {
+       // ✅ Match backend exactly
+       label: "Operations Department",
+       batches: [],
+       permission: "operations",
+     },
+     // ❌ CLIENT REMOVED - Not needed for letter creation
+   };
 
-    // Super admin sees all
-    if (adminPermissions.includes("admin_management")) {
-      return allCategories;
-    }
+   // Super admin sees all
+   if (adminPermissions.includes("admin_management")) {
+     return allCategories;
+   }
 
-    // Filter based on permissions
-    return Object.fromEntries(
-      Object.entries(allCategories).filter(([key, config]) =>
-        adminPermissions.includes(config.permission)
-      )
-    );
-  }, [adminPermissions, batches]);
+   // Filter based on permissions
+   return Object.fromEntries(
+     Object.entries(allCategories).filter(([key, config]) =>
+       adminPermissions.includes(config.permission)
+     )
+   );
+ }, [adminPermissions, batches]);
 
   // Letter types and subtypes configuration
   const getLetterTypesConfig = (category) => {
-    if (category === "it-nexcore") {
+    if (category === "IT-Nexcore") {
+      // ✅ Changed
       return {
-        "Appreciation Letter": [
-          // "Appreciation for Best Performance",
-          // "Appreciation for Consistent Performance",
-          // "Appreciation for Detecting Errors and Debugging",
-          // "Appreciation for Outstanding Performance",
-        ],
-        "Experience Certificate": [
-          // "Experience Certificate - Junior Software Developer",
-          // "Experience Certificate - Junior Cyber Security Analyst",
-        ],
+        "Appreciation Letter": [],
+        "Experience Certificate": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        // "Memo": [],
         "Non-Disclosure Agreement": [],
-        // "Other": [],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
     } else if (category === "marketing-junction") {
       return {
-        "Appreciation Letter": [
-          // "Appreciation for Best Performance",
-          // "Appreciation for Consistent Performance",
-          // "Appreciation for Detecting Errors and Debugging",
-          // "Appreciation for Outstanding Performance",
-        ],
-        "Experience Certificate": [
-          // "Experience Certificate - Video Editing",
-          // "Experience Certificate - Video Graphics",
-          // "Experience Certificate - Graphic Desigining",
-        ],
+        "Appreciation Letter": [],
+        "Experience Certificate": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        // "Memo": [],
         "Non-Disclosure Agreement": [],
-        // "Other": [],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
       };
-    } else if (category === "fsd") {
+    } else if (category === "FSD") {
+      // ✅ Changed
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -209,9 +213,7 @@ export default function CreateLetter() {
         "Concern Letter-Audit Interview Performance": [],
         "Internship Experience Certificate": [],
         "Live Project Agreement": [],
-        // "Non-Disclosure Agreement": [],
         "Offer Letter": [],
-        // "Other": [],
         "Warning Letter": [
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
@@ -220,7 +222,8 @@ export default function CreateLetter() {
           "Warning Regarding Punctuality and Professional Discipline",
         ],
       };
-    } else if (category === "bvoc") {
+    } else if (category === "BVOC") {
+      // ✅ Changed
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -234,7 +237,6 @@ export default function CreateLetter() {
           "Committee Vice-President",
         ],
         "Concern Letter-Audit Interview Performance": [],
-        // "Other": [],
         "Warning Letter": [
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
@@ -243,7 +245,8 @@ export default function CreateLetter() {
           "Warning for Unauthorized Absence from Sessions",
         ],
       };
-    } else if (category === "dm") {
+    } else if (category === "DM") {
+      // ✅ Changed
       return {
         "Appreciation Letter": [
           "Appreciation for Best Attendance",
@@ -252,10 +255,7 @@ export default function CreateLetter() {
         ],
         "Concern Letter-Audit Interview Performance": [],
         "Internship Experience Certificate": [],
-        // "Live Project Agreement": [],
-        // "Non-Disclosure Agreement": [],
         "Offer Letter": [],
-        // "Other": [],
         "Warning Letter": [
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
@@ -264,15 +264,11 @@ export default function CreateLetter() {
           "Warning Regarding Punctuality and Professional Discipline",
         ],
       };
-    } else if (category === "hr" || category === "operations") {
+    } else if (category === "HR" || category === "Operations Department") {
+      // ✅ Changed
       return {
-        "Appreciation Letter": [
-          // "Appreciation for Best Attendance",
-          // "Appreciation for Outstanding Performance",
-          // "Appreciation for Consistent Performance",
-        ],
+        "Appreciation Letter": [],
         "Experience Certificate": [],
-        // "Live Project Agreement": [],
         "Non-Disclosure Agreement": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
@@ -305,29 +301,25 @@ export default function CreateLetter() {
 
   // Roles based on category
   const getRoles = (category) => {
-    if (category === "it-nexcore") {
+    if (category === "IT-Nexcore") {
+      // ✅ Changed
       return [
         "Cyber Security Analyst (Intern)",
         "Junior Software Developer (Intern)",
       ];
     } else if (category === "marketing-junction") {
-      return [
-        // "Content Writer Intern",
-        // "Digital Marketing Intern",
-        // "Graphic Designer Intern",
-        // "SEO Specialist Intern",
-        // "Social Media Manager Intern",
-        "Video Editing",
-        "Video Graphics",
-        "Graphic Desigining",
-      ];
-    } else if (category === "hr") {
-      return ["hr Assistant"];
-    } else if (category === "operations") {
-      return ["operations Intern"];
-    } else if (category === "fsd") {
+      return ["Video Editing", "Video Graphics", "Graphic Desigining"];
+    } else if (category === "HR") {
+      // ✅ Changed
+      return ["HR Assistant"];
+    } else if (category === "Operations Department") {
+      // ✅ Changed
+      return ["Operations Intern"];
+    } else if (category === "FSD") {
+      // ✅ Changed
       return ["Full Stack Developer"];
-    } else if (category === "dm") {
+    } else if (category === "DM") {
+      // ✅ Changed
       return ["Digital Marketing"];
     }
     return [];
@@ -458,18 +450,17 @@ export default function CreateLetter() {
         : null;
     return { Authorization: `Bearer ${token}` };
   };
-
 const fetchNames = async () => {
   setLoadingNames(true);
   try {
     let response;
 
-    // ✅ FIXED: Properly handle it-nexcore and Code4Bharat as unified category
-    if (formData.category === "it-nexcore") {
+    // ✅ Handle IT-Nexcore and Code4Bharat as unified
+    if (formData.category === "IT-Nexcore") {
       response = await axios.get(`${API_URL}/api/people/`, {
         headers: getAuthHeaders(),
         params: {
-          categories: JSON.stringify(["it-nexcore", "Code4Bharat"]),
+          categories: JSON.stringify(["IT-Nexcore", "Code4Bharat"]),
         },
       });
     } else if (formData.category === "marketing-junction") {
@@ -503,6 +494,7 @@ const fetchNames = async () => {
     setLoadingNames(false);
   }
 };
+
   const handleInputChange = (field, value) => {
     if (field === "category") {
       setFormData((prev) => ({
@@ -793,34 +785,147 @@ const fetchNames = async () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!otpVerified) {
-      toast.error("Please verify OTP first");
-      return;
-    }
-    setIsCreating(true);
-    try {
-      const payload = { ...formData };
-      console.log(payload);
-      const response = await axios.post(`${API_URL}/api/letters`, payload, {
-        headers: getAuthHeaders(),
-      });
+const handleSubmit = async () => {
+  if (!otpVerified) {
+    toast.error("Please verify OTP first");
+    return;
+  }
 
-      if (response.data.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 2000);
-      } else {
-        toast.error(response.data.message || "Failed to create letter");
-      }
-    } catch (error) {
-      console.error("Create letter error:", error);
-      toast.error("Failed to create letter");
-    } finally {
-      setIsCreating(false);
+  setIsCreating(true);
+
+  try {
+    // ✅ Clean the payload - remove empty strings and format properly
+    const payload = {
+      name: formData.name,
+      category: formData.category, // Send as-is from frontend
+      issueDate: formData.issueDate,
+      letterType: formData.letterType,
+      course: formData.course || formData.letterType, // Fallback to letterType if no subtype
+    };
+
+    // ✅ Only add optional fields if they have values
+    if (formData.batch) payload.batch = formData.batch;
+    if (formData.subject) payload.subject = formData.subject;
+    if (formData.role) payload.role = formData.role;
+    if (formData.description) payload.description = formData.description;
+    if (formData.startDate) payload.startDate = formData.startDate;
+    if (formData.endDate) payload.endDate = formData.endDate;
+    if (formData.duration) payload.duration = formData.duration;
+
+    // Committee fields
+    if (formData.committeeType) payload.committeeType = formData.committeeType;
+
+    // Attendance fields
+    if (formData.attendancePercent) {
+      payload.attendancePercent = parseInt(formData.attendancePercent);
     }
-  };
+    if (formData.attendanceMonth)
+      payload.attendanceMonth = formData.attendanceMonth;
+    if (formData.attendanceYear)
+      payload.attendanceYear = formData.attendanceYear;
+
+    // Performance fields
+    if (formData.performanceMonth)
+      payload.performanceMonth = formData.performanceMonth;
+    if (formData.performanceYear)
+      payload.performanceYear = formData.performanceYear;
+
+    // Warning/Assignment fields
+    if (formData.subjectName) payload.subjectName = formData.subjectName;
+    if (formData.projectName) payload.projectName = formData.projectName;
+    if (formData.misconductReason)
+      payload.misconductReason = formData.misconductReason;
+    if (formData.testingPhase) payload.testingPhase = formData.testingPhase;
+    if (formData.uncover) payload.uncover = formData.uncover;
+
+    // Audit date
+    if (formData.auditDate) payload.auditDate = formData.auditDate;
+
+    // Training/Internship fields
+    if (formData.trainingStartDate)
+      payload.trainingStartDate = formData.trainingStartDate;
+    if (formData.trainingEndDate)
+      payload.trainingEndDate = formData.trainingEndDate;
+    if (formData.officialStartDate)
+      payload.officialStartDate = formData.officialStartDate;
+    if (formData.completionDate)
+      payload.completionDate = formData.completionDate;
+    if (formData.responsibilities)
+      payload.responsibilities = formData.responsibilities;
+
+    // Amount fields
+    if (formData.amount) payload.amount = parseFloat(formData.amount);
+    if (formData.effectiveFrom) payload.effectiveFrom = formData.effectiveFrom;
+
+    // Timeline fields
+    if (formData.timelineStage) payload.timelineStage = formData.timelineStage;
+    if (formData.timelineProjectName)
+      payload.timelineProjectName = formData.timelineProjectName;
+    if (formData.timelineDueDate)
+      payload.timelineDueDate = formData.timelineDueDate;
+    if (formData.timelineNewDate)
+      payload.timelineNewDate = formData.timelineNewDate;
+
+    // Gender and month/year
+    if (formData.genderPronoun) payload.genderPronoun = formData.genderPronoun;
+    if (formData.month) payload.month = formData.month;
+    if (formData.year) payload.year = parseInt(formData.year);
+
+    console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
+
+    const response = await axios.post(`${API_URL}/api/letters`, payload, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Response:", response.data);
+
+    if (response.data.success) {
+      toast.success("Letter created successfully!");
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        // Reset form or redirect
+       
+      }, 2000);
+    } else {
+      toast.error(response.data.message || "Failed to create letter");
+    }
+  } catch (error) {
+    console.error("❌ Create letter error:", error);
+
+    if (error.response) {
+      // Server responded with error
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+
+      const errorMessage =
+        error.response.data.message ||
+        error.response.data.error ||
+        `Server error: ${error.response.status}`;
+
+      toast.error(errorMessage);
+
+      // Log validation errors if present
+      if (error.response.data.errors) {
+        console.error("Validation errors:", error.response.data.errors);
+      }
+    } else if (error.request) {
+      // Request made but no response
+      console.error("No response received:", error.request);
+      toast.error("No response from server. Please check your connection.");
+    } else {
+      // Something else went wrong
+      console.error("Error:", error.message);
+      toast.error("Failed to create letter: " + error.message);
+    }
+  } finally {
+    setIsCreating(false);
+  }
+};
 
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
@@ -1323,10 +1428,10 @@ const fetchNames = async () => {
                 )}
 
                 {/* fsd Internship Experience Certificate Specific Inputs */}
-                {((formData.category === "fsd" &&
+                {((formData.category === "FSD" &&
                   formData.course === "Internship Experience Certificate") ||
                   formData.course === "Experience Certificate" ||
-                  (formData.category === "dm" &&
+                  (formData.category === "DM" &&
                     formData.course ===
                       "Internship Experience Certificate")) && (
                   <>
@@ -1668,10 +1773,10 @@ const fetchNames = async () => {
                 )}
 
                 {/* ✅✅✅ Description for fsd Internship Experience Certificate ✅✅✅ */}
-                {((formData.category === "fsd" &&
+                {((formData.category === "FSD" &&
                   formData.course === "Internship Experience Certificate") ||
                   formData.course === "Experience Certificate" ||
-                  (formData.category === "dm" &&
+                  (formData.category === "DM" &&
                     formData.course ===
                       "Internship Experience Certificate")) && (
                   <div>
