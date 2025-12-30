@@ -218,6 +218,16 @@ export default function QuickActions() {
       permissions: ["client"],
       requiresAny: false,
     },
+    {
+      title: "Code Letter",
+      description: "Design and generate official letters with ease",
+      icon: FileText,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      onClick: handleCreateLetterClick,
+      iconAnimation: "group-hover:rotate-6 group-hover:scale-110",
+      permissions: ["hr", "operations", "admin_management"],
+      requiresAny: true,
+    },
   ];
 
   // Filter actions using the new permission system
