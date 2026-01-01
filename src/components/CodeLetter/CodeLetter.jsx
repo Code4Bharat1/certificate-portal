@@ -755,7 +755,7 @@ export default function CodeLetter() {
       console.log(payload);
 
       const response = await axios.post(
-        `${API_URL}/api/letters/preview`,
+        `${API_URL}/api/codeletters/preview`,
         payload,
         {
           headers: getAuthHeaders(),
@@ -874,7 +874,7 @@ export default function CodeLetter() {
 
       console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
 
-      const response = await axios.post(`${API_URL}/api/letters`, payload, {
+      const response = await axios.post(`${API_URL}/api/codeletters`, payload, {
         headers: {
           ...getAuthHeaders(),
           "Content-Type": "application/json",
@@ -1786,13 +1786,13 @@ export default function CodeLetter() {
                     </label>
                     <p
                       className={`text-xs mb-2 ${
-                        formData.description.length > 1000
+                        formData.description.length > 1050
                           ? "text-red-500 font-semibold"
                           : "text-gray-500"
                       }`}
                     >
-                      {formData.description.length}/1000 characters
-                      {formData.description.length > 1000 &&
+                      {formData.description.length}/1050 characters
+                      {formData.description.length > 1050 &&
                         " - Exceeds limit!"}
                     </p>
                     <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
@@ -1806,10 +1806,10 @@ export default function CodeLetter() {
                         handleInputChange("description", e.target.value)
                       }
                       placeholder="Enter Description"
-                      maxLength={1000}
+                      maxLength={1050}
                       rows={8}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${
-                        formData.description.length > 1000
+                        formData.description.length > 1050
                           ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                           : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
                       }`}
@@ -1978,13 +1978,13 @@ export default function CodeLetter() {
                       </label>
                       <p
                         className={`text-xs mb-2 ${
-                          formData.description.length > 1000
+                          formData.description.length > 1050
                             ? "text-red-500 font-semibold"
                             : "text-gray-500"
                         }`}
                       >
-                        {formData.description.length}/1000 characters
-                        {formData.description.length > 1000 &&
+                        {formData.description.length}/1050 characters
+                        {formData.description.length > 1050 &&
                           " - Exceeds limit!"}
                       </p>
                       <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded">
@@ -2001,7 +2001,7 @@ export default function CodeLetter() {
                         maxLength={1000}
                         rows={8}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${
-                          formData.description.length > 1000
+                          formData.description.length > 1050
                             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                             : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
                         }`}
@@ -2292,7 +2292,7 @@ export default function CodeLetter() {
                             ))}
                         </div>
                         <span className="text-xs text-gray-500 mt-1 block">
-                          {formData.description.length}/1000 characters
+                          {formData.description.length}/1050 characters
                         </span>
                       </div>
                     )}

@@ -116,6 +116,7 @@ export default function QuickActions() {
   const handleVerifyClick = () => router.push("/verify-certificate");
   const handleManagePeopleClick = () => router.push("/manage-people");
   const handleCreateLetterClick = () => router.push("/create-letter");
+  const handleCodeLetterClick = () => router.push("/code-letter");
   const handleViewTCClick = () => router.push("/verify-t&c");
   const handleViewDocumentsClick = () => router.push("/view-documents");
   const handleClientDocumentsClick = () => router.push("/Client");
@@ -223,7 +224,7 @@ export default function QuickActions() {
       description: "Design and generate official letters with ease",
       icon: FileText,
       iconColor: "text-blue-600 dark:text-blue-400",
-      onClick: handleCreateLetterClick,
+      onClick: handleCodeLetterClick,
       iconAnimation: "group-hover:rotate-6 group-hover:scale-110",
       permissions: ["hr", "operations", "admin_management"],
       requiresAny: true,
