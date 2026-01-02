@@ -419,7 +419,7 @@ export default function CodeLetter() {
   // OTP Timer
   useEffect(() => {
     if (resendTimer > 0) {
-      const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      const t = setTimeout(() => setResendTimer(resendTimer - 1), 1050);
       return () => clearTimeout(t);
     }
   }, [resendTimer]);
@@ -584,8 +584,8 @@ export default function CodeLetter() {
       toast.error("Please select start and end dates for Offer Letter");
       return false;
     }
-    if (formData.description && formData.description.length > 1000) {
-      toast.error("Description cannot exceed 1000 characters");
+    if (formData.description && formData.description.length > 1050) {
+      toast.error("Description cannot exceed 1050 characters");
       return false;
     }
     // Timeline Letter Validation
@@ -634,8 +634,8 @@ export default function CodeLetter() {
         toast.error("Please enter responsibilities");
         return false;
       }
-      if (formData.responsibilities.length > 500) {
-        toast.error("Responsibilities cannot exceed 500 characters");
+      if (formData.responsibilities.length > 550) {
+        toast.error("Responsibilities cannot exceed 550 characters");
         return false;
       }
     }
@@ -1603,16 +1603,16 @@ export default function CodeLetter() {
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         <FileText className="w-4 h-4 inline mr-2" />
-                        Roles & Responsibilities (Max 400 chars) *
+                        Roles & Responsibilities (Max 550 chars) *
                       </label>
                       <p
                         className={`text-xs mb-2 ${
-                          formData.responsibilities.length > 400
+                          formData.responsibilities.length > 550
                             ? "text-red-500"
                             : "text-gray-500"
                         }`}
                       >
-                        {formData.responsibilities.length}/400 characters
+                        {formData.responsibilities.length}/550 characters
                       </p>
                       <textarea
                         value={formData.responsibilities}
@@ -1620,7 +1620,7 @@ export default function CodeLetter() {
                           handleInputChange("responsibilities", e.target.value)
                         }
                         placeholder="Enter responsibilities (1 paragraph)"
-                        maxLength={400}
+                        maxLength={550}
                         rows={4}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none 
@@ -1998,7 +1998,7 @@ export default function CodeLetter() {
                           handleInputChange("description", e.target.value)
                         }
                         placeholder="Enter Description"
-                        maxLength={1000}
+                        maxLength={1050}
                         rows={8}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 outline-none transition-all resize-none ${
                           formData.description.length > 1050
