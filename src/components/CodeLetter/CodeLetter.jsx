@@ -175,7 +175,6 @@ export default function CodeLetter() {
   // Letter types and subtypes configuration
   const getLetterTypesConfig = (category) => {
     if (category === "IT-Nexcore") {
-      // ✅ Changed
       return {
         "Appreciation Letter": [],
         "Experience Certificate": [],
@@ -200,9 +199,9 @@ export default function CodeLetter() {
         "Timeline Letter": [],
       };
     } else if (category === "FSD") {
-      // ✅ Changed
       return {
         "Appreciation Letter": [
+          "General Appreciation Letter",
           "Appreciation for Best Attendance",
           "Appreciation for Outstanding Performance",
           "Appreciation for Consistent Performance",
@@ -212,6 +211,7 @@ export default function CodeLetter() {
         "Live Project Agreement": [],
         "Offer Letter": [],
         "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Misconduct or Disrespectful Behavior",
@@ -220,9 +220,9 @@ export default function CodeLetter() {
         ],
       };
     } else if (category === "BVOC") {
-      // ✅ Changed
       return {
         "Appreciation Letter": [
+          "General Appreciation Letter",
           "Appreciation for Best Attendance",
           "Appreciation for Detecting Errors And Debugging",
           "Appreciation for Outstanding Performance",
@@ -235,6 +235,7 @@ export default function CodeLetter() {
         ],
         "Concern Letter-Audit Interview Performance": [],
         "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Misconduct or Disrespectful Behavior",
@@ -243,9 +244,9 @@ export default function CodeLetter() {
         ],
       };
     } else if (category === "DM") {
-      // ✅ Changed
       return {
         "Appreciation Letter": [
+          "General Appreciation Letter",
           "Appreciation for Best Attendance",
           "Appreciation for Outstanding Performance",
           "Appreciation for Consistent Performance",
@@ -254,6 +255,7 @@ export default function CodeLetter() {
         "Internship Experience Certificate": [],
         "Offer Letter": [],
         "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Misconduct or Disrespectful Behavior",
@@ -262,7 +264,6 @@ export default function CodeLetter() {
         ],
       };
     } else if (category === "HR" || category === "Operations Department") {
-      // ✅ Changed
       return {
         "Appreciation Letter": [],
         "Experience Certificate": [],
@@ -362,11 +363,23 @@ export default function CodeLetter() {
 
   const needsDuration = () => formData.course === "Non-Disclosure Agreement";
 
-  const needsSubject = () => formData.course === "Appreciation Letter";
+  // 2. Update needsSubject helper function
+  const needsSubject = () =>
+    formData.course === "Appreciation Letter" ||
+    formData.course === "General Appreciation Letter" ||
+    formData.course === "General Warning Letter"; // ← ADD THIS
 
-  const needsDescription = () => formData.course === "Appreciation Letter";
+  // 3. Update needsDescription helper function
+  const needsDescription = () =>
+    formData.course === "Appreciation Letter" ||
+    formData.course === "General Appreciation Letter" ||
+    formData.course === "General Warning Letter"; // ← ADD THIS
 
-  const needsMonthAndYear = () => formData.course === "Appreciation Letter";
+  // 4. Update needsMonthAndYear helper function
+  const needsMonthAndYear = () =>
+    formData.course === "Appreciation Letter" ||
+    formData.course === "General Appreciation Letter" ||
+    formData.course === "General Warning Letter"; // ← ADD THIS
 
   const needsGenderPronoun = () => formData.course === "Experience Certificate";
 
