@@ -116,11 +116,11 @@ export default function Code4BharatPage() {
       if (!token) {
         router.push("/login");
         return;
-      }
+      } 
 
       let url;
       if (item.type === "letter") {
-        url = `${API_URL}/api/letters/${item._id}/download.pdf`;
+        url = `${API_URL}/api/codeletters/${item._id}/download.pdf`;
       } else {
         url = `${API_URL}/api/certificates/download/${item._id}`;
       }
