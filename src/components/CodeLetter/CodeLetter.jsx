@@ -182,21 +182,46 @@ export default function CodeLetter() {
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        "Non-Disclosure Agreement": [],
+        "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
+          "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Unauthorized Absence",
+          "Warning Regarding Punctuality and Professional Discipline",
+        ],
+        "Non-Disclosure Agreement": [
+          "Non-Disclosure Agreement",
+          "Onboarding Non-Disclosure Agreement",
+        ],
+        "RFID Appreciation Letter": [],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
+        Memo: [], // ✅ Added MEMO
       };
     } else if (category === "marketing-junction") {
       return {
         "Appreciation Letter": [],
+        "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
+          "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Unauthorized Absence from Training Sessions",
+          "Warning Regarding Punctuality and Professional Discipline",
+        ],
         "Experience Certificate": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
-        "Non-Disclosure Agreement": [],
+        "Non-Disclosure Agreement": [
+          "Non-Disclosure Agreement",
+          "Onboarding Non-Disclosure Agreement",
+        ],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
+        Memo: [], // ✅ Added MEMO
       };
     } else if (category === "FSD") {
       return {
@@ -214,10 +239,12 @@ export default function CodeLetter() {
           "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
+        Memo: [], // ✅ Added MEMO
       };
     } else if (category === "BVOC") {
       return {
@@ -238,10 +265,12 @@ export default function CodeLetter() {
           "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
           "Warning for Punctuality and Discipline",
           "Warning for Unauthorized Absence from Sessions",
         ],
+        Memo: [], // ✅ Added MEMO
       };
     } else if (category === "DM") {
       return {
@@ -258,22 +287,36 @@ export default function CodeLetter() {
           "General Warning Letter", // ← ADD THIS
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
+        Memo: [], // ✅ Added MEMO
       };
     } else if (category === "HR" || category === "Operations Department") {
       return {
         "Appreciation Letter": [],
+        "Warning Letter": [
+          "General Warning Letter", // ← ADD THIS
+          "Warning for Low Attendance",
+          "Warning for Low Attendance (Monthly)",
+          "Warning for Misconduct or Disrespectful Behavior",
+          "Warning for Unauthorized Absence from Training Sessions",
+          "Warning Regarding Punctuality and Professional Discipline",
+        ],
         "Experience Certificate": [],
-        "Non-Disclosure Agreement": [],
+        "Non-Disclosure Agreement": [
+          "Non-Disclosure Agreement",
+          "Onboarding Non-Disclosure Agreement",
+        ],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
+        Memo: [], // ✅ Added MEMO
       };
     }
     return {};
@@ -304,15 +347,41 @@ export default function CodeLetter() {
       return [
         "Cyber Security Analyst (Intern)",
         "Junior Software Developer (Intern)",
+        "Junior AI/ML (Intern)",
+        "PHP Developer (Intern)",
+        "Cyber Security Analyst",
+        "AI/ML Developer",
+        "Software Developer",
+        "PHP Developer",
+        "Project Manager",
+        "Associate Project Manager",
       ];
     } else if (category === "marketing-junction") {
-      return ["Video Editing", "Video Graphics", "Graphic Desigining"];
+      return [
+        "Video Editor",
+        "Video Graphics Artist",
+        "Graphic Designer",
+        "Content Creator",
+        "AI Video Editor",
+        "Video Editor (Intern)",
+        "Video Graphics Artist (Intern)",
+        "Graphic Designer (Intern)",
+        "Content Creator (Intern)",
+        "AI Video Editor (Intern)",
+      ];
     } else if (category === "HR") {
       // ✅ Changed
-      return ["HR Assistant"];
+      return ["HR Assistant", 
+        "HR Assistant (Intern)", "HR and Operations Head"];
     } else if (category === "Operations Department") {
       // ✅ Changed
-      return ["Operations Intern"];
+      return [
+        "Operations (Intern)",
+         "Sales and Operation",
+         "Sales and Operations (Intern)",
+          "Business Development(Intern)",
+           "Business Development", "Marketing (Intern)", "Marketing (Head)",
+     ];
     } else if (category === "FSD") {
       // ✅ Changed
       return ["Full Stack Developer"];
@@ -336,7 +405,8 @@ export default function CodeLetter() {
 
   // 2. Warning for Low Attendance
   const needsAttendancePercent = () =>
-    formData.course === "Warning for Low Attendance";
+    formData.course === "Warning for Low Attendance" ||
+    formData.course === "Warning for Low Attendance (Monthly)";
 
   // 3. Warning for Incomplete Assignment
   const needsIncompleteAssignmentInputs = () =>
@@ -361,36 +431,31 @@ export default function CodeLetter() {
   const needsAuditDate = () =>
     formData.course === "Concern Letter-Audit Interview Performance";
 
-  const needsDuration = () => formData.course === "Non-Disclosure Agreement";
+  const needsDuration = () =>
+    formData.course === "Non-Disclosure Agreement" ||
+    formData.course === "Onboarding Non-Disclosure Agreement";
 
   // 2. Update needsSubject helper function
   const needsSubject = () =>
     formData.course === "Appreciation Letter" ||
     formData.course === "General Appreciation Letter" ||
-    formData.course === "General Warning Letter"; // ← ADD THIS
+    formData.course === "General Warning Letter" || // ← ADD THIS
+    formData.course === "Memo"; // ✅ Added MEMO
 
   // 3. Update needsDescription helper function
   const needsDescription = () =>
     formData.course === "Appreciation Letter" ||
     formData.course === "General Appreciation Letter" ||
-    formData.course === "General Warning Letter"; // ← ADD THIS
-
+    formData.course === "General Warning Letter" || // ← ADD THIS
+    formData.course === "Memo"; // ✅ Added MEMO
   // 4. Update needsMonthAndYear helper function
   const needsMonthAndYear = () =>
     formData.course === "Appreciation Letter" ||
     formData.course === "General Appreciation Letter" ||
-    formData.course === "General Warning Letter"; // ← ADD THIS
+    formData.course === "General Warning Letter" || // ← ADD THIS
+    formData.course === "Memo"; // ← ADD THIS
 
   const needsGenderPronoun = () => formData.course === "Experience Certificate";
-
-  // Check if role field is needed
-  const needsRole = () => {
-    return (
-      formData.course === "Internship Joining Letter - Unpaid" ||
-      formData.course === "Internship Joining Letter - Paid" ||
-      formData.course === "Non-Disclosure Agreement"
-    );
-  };
 
   // Check if dates are needed (for Offer Letter)
   const needsDates = () => {
@@ -581,14 +646,6 @@ export default function CodeLetter() {
       toast.error("Please select letter subtype");
       return false;
     }
-    // if (needsSubject() && !formData.subject.trim()) {
-    //   toast.error("Please enter the subject");
-    //   return false;
-    // }
-    // if (needsSubject() && formData.subject.length > 50) {
-    //   toast.error("Subject cannot exceed 50 characters");
-    //   return false;
-    // }
     if (needsRole() && !formData.role) {
       toast.error("Please select a role");
       return false;
@@ -601,6 +658,7 @@ export default function CodeLetter() {
       toast.error("Description cannot exceed 1050 characters");
       return false;
     }
+
     // Timeline Letter Validation
     if (formData.letterType === "Timeline Letter") {
       if (!formData.timelineStage) {
@@ -632,6 +690,7 @@ export default function CodeLetter() {
       toast.error("Please select issue date");
       return false;
     }
+
     if (isInternshipPaid() || isInternshipUnpaid()) {
       if (!formData.trainingStartDate || !formData.trainingEndDate) {
         toast.error("Please enter training start and end date");
@@ -652,6 +711,7 @@ export default function CodeLetter() {
         return false;
       }
     }
+
     if (isInternshipPaid()) {
       if (!formData.amount) {
         toast.error("Please enter stipend amount");
@@ -663,7 +723,30 @@ export default function CodeLetter() {
       }
     }
 
+    // ✅ ONBOARDING NDA VALIDATION - ONLY ROLE AND DURATION
+    if (formData.course === "Onboarding Non-Disclosure Agreement") {
+      if (!formData.role) {
+        toast.error("Please select a role");
+        return false;
+      }
+      if (!formData.duration) {
+        toast.error("Please enter duration");
+        return false;
+      }
+      // ❌ REMOVED ADDRESS AND AADHAAR VALIDATION
+    }
+
     return true;
+  };
+
+  // 3. ✅ UPDATE needsRole to include Onboarding NDA
+  const needsRole = () => {
+    return (
+      formData.course === "Internship Joining Letter - Unpaid" ||
+      formData.course === "Internship Joining Letter - Paid" ||
+      formData.course === "Non-Disclosure Agreement" ||
+      formData.course === "Onboarding Non-Disclosure Agreement"
+    );
   };
 
   const handlePreview = () => {
@@ -795,6 +878,8 @@ export default function CodeLetter() {
     }
   };
 
+  // In CodeLetter.jsx, update the handleSubmit function:
+
   const handleSubmit = async () => {
     if (!otpVerified) {
       toast.error("Please verify OTP first");
@@ -807,10 +892,10 @@ export default function CodeLetter() {
       // ✅ Clean the payload - remove empty strings and format properly
       const payload = {
         name: formData.name,
-        category: formData.category, // Send as-is from frontend
+        category: formData.category,
         issueDate: formData.issueDate,
         letterType: formData.letterType,
-        course: formData.course || formData.letterType, // Fallback to letterType if no subtype
+        course: formData.course || formData.letterType,
       };
 
       // ✅ Only add optional fields if they have values
@@ -821,6 +906,10 @@ export default function CodeLetter() {
       if (formData.startDate) payload.startDate = formData.startDate;
       if (formData.endDate) payload.endDate = formData.endDate;
       if (formData.duration) payload.duration = formData.duration;
+
+      // ✅ ADD ONBOARDING NDA FIELDS
+      // if (formData.address) payload.address = formData.address;
+      // if (formData.aadhaarCard) payload.aadhaarCard = formData.aadhaarCard;
 
       // Committee fields
       if (formData.committeeType)
@@ -886,7 +975,19 @@ export default function CodeLetter() {
       if (formData.year) payload.year = parseInt(formData.year);
 
       console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
-
+      if (formData.course === "RFID Appreciation Letter") {
+        // Only name, category, issueDate, letterType, and course are needed
+        console.log(
+          "📤 Submitting RFID Letter payload:",
+          JSON.stringify(payload, null, 2)
+        );
+      } else {
+        // Add optional fields for other letter types
+        if (formData.batch) payload.batch = formData.batch;
+        if (formData.subject) payload.subject = formData.subject;
+        if (formData.role) payload.role = formData.role;
+        // ... rest of existing payload building
+      }
       const response = await axios.post(`${API_URL}/api/codeletters`, payload, {
         headers: {
           ...getAuthHeaders(),
@@ -911,7 +1012,6 @@ export default function CodeLetter() {
       console.error("❌ Code letter error:", error);
 
       if (error.response) {
-        // Server responded with error
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
 
@@ -922,16 +1022,13 @@ export default function CodeLetter() {
 
         toast.error(errorMessage);
 
-        // Log validation errors if present
         if (error.response.data.errors) {
           console.error("Validation errors:", error.response.data.errors);
         }
       } else if (error.request) {
-        // Request made but no response
         console.error("No response received:", error.request);
         toast.error("No response from server. Please check your connection.");
       } else {
-        // Something else went wrong
         console.error("Error:", error.message);
         toast.error("Failed to create letter: " + error.message);
       }
