@@ -45,7 +45,7 @@ export default function ClientPage() {
   const [sortBy, setSortBy] = useState("date-desc");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
-  const category = "Client";
+  const category = "client";
   const letterConfig = getLetterTypesConfig();
   const letterMainTypes = Object.keys(letterConfig);
 
@@ -58,7 +58,7 @@ export default function ClientPage() {
          return;
        }
 
-       const res = await axios.get(`${API_URL}/api/client`, {
+       const res = await axios.get(`${API_URL}/api/clientletters`, {
          headers: { Authorization: `Bearer ${token}` },
          params: { category },
        });
@@ -67,8 +67,8 @@ export default function ClientPage() {
        
 
        if (res.data.success) {
-         const clientletters = Array.isArray(res.data.clientletters)
-           ? res.data.clientletters
+         const clientletters = Array.isArray(res.data.data)
+           ? res.data.data
            : [];
          const allItems = clientletters.map((l) => ({ ...l, type: "letter" }));
 
@@ -99,7 +99,7 @@ export default function ClientPage() {
         return;
       }
 
-      const url = `${API_URL}/api/letters/${item._id}/download.pdf`;
+      const url = `${API_URL}/api/clientletters/${item._id}/download.pdf`;
 
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -158,7 +158,7 @@ export default function ClientPage() {
      }
 
      // FIXED: Changed from /api/certificates to /api/client
-     const res = await axios.delete(`${API_URL}/api/client/${id}`, {
+     const res = await axios.delete(`${API_URL}/api/clientletters/${id}`, {
        headers: { Authorization: `Bearer ${token}` },
      });
 

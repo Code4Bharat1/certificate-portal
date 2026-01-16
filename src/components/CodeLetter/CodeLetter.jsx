@@ -24,8 +24,32 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
+const calculateDateFromDays = (startDate, days) => {
+  if (!startDate || !days) return "";
+  const start = new Date(startDate);
+  const result = new Date(start);
+  result.setDate(result.getDate() + parseInt(days));
+  return result.toISOString().split("T")[0];
+};
+
+const calculateDateFromMonths = (startDate, months) => {
+  if (!startDate || !months) return "";
+  const start = new Date(startDate);
+  const result = new Date(start);
+  result.setMonth(result.getMonth() + parseInt(months));
+  return result.toISOString().split("T")[0];
+};
 const DEV_MODE = true; // ⭐ Change to false for production
 
+// ✅ Generate year options (current year + 5 future years, - 7 past years)
+const generateYearOptions = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = currentYear + 5; year >= currentYear - 7; year--) {
+    years.push(year);
+  }
+  return years;
+};
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
 export default function CodeLetter() {
@@ -65,6 +89,8 @@ export default function CodeLetter() {
     projectName: "",
     auditDate: "",
     //
+    trainingPeriod: "", // ✅ ADD THIS - in days
+
     trainingStartDate: "",
     trainingEndDate: "",
     officialStartDate: "",
@@ -173,17 +199,19 @@ export default function CodeLetter() {
   }, [adminPermissions, batches]);
 
   // Letter types and subtypes configuration
+
   const getLetterTypesConfig = (category) => {
     if (category === "IT-Nexcore") {
       return {
         "Appreciation Letter": [],
-        "Experience Certificate": [],
+        "Experience Certificate": [], // ✅ For non-interns
+        "Internship Experience Certificate": [], // ✅ For interns
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
         ],
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
@@ -197,20 +225,21 @@ export default function CodeLetter() {
         "RFID Appreciation Letter": [],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     } else if (category === "marketing-junction") {
       return {
         "Appreciation Letter": [],
+        "Experience Certificate": [], // ✅ For non-interns
+        "Internship Experience Certificate": [], // ✅ For interns
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
-        "Experience Certificate": [],
         "Internship Joining Letter": [
           "Internship Joining Letter - Paid",
           "Internship Joining Letter - Unpaid",
@@ -221,7 +250,7 @@ export default function CodeLetter() {
         ],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     } else if (category === "FSD") {
       return {
@@ -232,11 +261,11 @@ export default function CodeLetter() {
           "Appreciation for Consistent Performance",
         ],
         "Concern Letter-Audit Interview Performance": [],
-        "Internship Experience Certificate": [],
+        "Internship Experience Certificate": [], // ✅ For interns only
         "Live Project Agreement": [],
         "Offer Letter": [],
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
@@ -244,7 +273,7 @@ export default function CodeLetter() {
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     } else if (category === "BVOC") {
       return {
@@ -262,7 +291,7 @@ export default function CodeLetter() {
         ],
         "Concern Letter-Audit Interview Performance": [],
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
@@ -270,7 +299,7 @@ export default function CodeLetter() {
           "Warning for Punctuality and Discipline",
           "Warning for Unauthorized Absence from Sessions",
         ],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     } else if (category === "DM") {
       return {
@@ -281,10 +310,10 @@ export default function CodeLetter() {
           "Appreciation for Consistent Performance",
         ],
         "Concern Letter-Audit Interview Performance": [],
-        "Internship Experience Certificate": [],
+        "Internship Experience Certificate": [], // ✅ For interns only
         "Offer Letter": [],
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Incomplete Assignment/Project Submissions",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
@@ -292,20 +321,21 @@ export default function CodeLetter() {
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     } else if (category === "HR" || category === "Operations Department") {
       return {
         "Appreciation Letter": [],
+        "Experience Certificate": [], // ✅ For non-interns
+        "Internship Experience Certificate": [], // ✅ For interns
         "Warning Letter": [
-          "General Warning Letter", // ← ADD THIS
+          "General Warning Letter",
           "Warning for Low Attendance",
           "Warning for Low Attendance (Monthly)",
           "Warning for Misconduct or Disrespectful Behavior",
           "Warning for Unauthorized Absence from Training Sessions",
           "Warning Regarding Punctuality and Professional Discipline",
         ],
-        "Experience Certificate": [],
         "Non-Disclosure Agreement": [
           "Non-Disclosure Agreement",
           "Onboarding Non-Disclosure Agreement",
@@ -316,7 +346,7 @@ export default function CodeLetter() {
         ],
         "Promotion Letter": ["Non Paid to Paid", "Stipend Revision"],
         "Timeline Letter": [],
-        Memo: [], // ✅ Added MEMO
+        Memo: [],
       };
     }
     return {};
@@ -371,17 +401,22 @@ export default function CodeLetter() {
       ];
     } else if (category === "HR") {
       // ✅ Changed
-      return ["HR Assistant", 
-        "HR Assistant (Intern)", "HR and Operations Head"];
+      return [
+        "HR Assistant",
+        "HR Assistant (Intern)",
+        "HR and Operations Head",
+      ];
     } else if (category === "Operations Department") {
       // ✅ Changed
       return [
         "Operations (Intern)",
-         "Sales and Operation",
-         "Sales and Operations (Intern)",
-          "Business Development(Intern)",
-           "Business Development", "Marketing (Intern)", "Marketing (Head)",
-     ];
+        "Sales and Operation",
+        "Sales and Operations (Intern)",
+        "Business Development(Intern)",
+        "Business Development",
+        "Marketing (Intern)",
+        "Marketing (Head)",
+      ];
     } else if (category === "FSD") {
       // ✅ Changed
       return ["Full Stack Developer"];
@@ -443,11 +478,12 @@ export default function CodeLetter() {
     formData.course === "Memo"; // ✅ Added MEMO
 
   // 3. Update needsDescription helper function
-  const needsDescription = () =>
-    formData.course === "Appreciation Letter" ||
-    formData.course === "General Appreciation Letter" ||
-    formData.course === "General Warning Letter" || // ← ADD THIS
-    formData.course === "Memo"; // ✅ Added MEMO
+ const needsDescription = () =>
+   formData.course === "Appreciation Letter" ||
+   formData.course === "General Appreciation Letter" ||
+   formData.course === "General Warning Letter" ||
+   formData.course === "Memo" ||
+   formData.course === "Internship Experience Certificate"; // ✅ Added MEMO
   // 4. Update needsMonthAndYear helper function
   const needsMonthAndYear = () =>
     formData.course === "Appreciation Letter" ||
@@ -455,12 +491,19 @@ export default function CodeLetter() {
     formData.course === "General Warning Letter" || // ← ADD THIS
     formData.course === "Memo"; // ← ADD THIS
 
-  const needsGenderPronoun = () => formData.course === "Experience Certificate";
+  const needsGenderPronoun = () =>
+    
+    formData.course === "Internship Experience Certificate" ||
+    formData.course === "Experience Certificate";
+  ;
 
   // Check if dates are needed (for Offer Letter)
-  const needsDates = () => {
-    return formData.course === "Offer Letter";
-  };
+ const needsDates = () => {
+   return (
+     formData.course === "Offer Letter" || // ✅ For non-interns
+     formData.course === "Internship Experience Certificate" // ✅ For interns
+   );
+ };
 
   const needsAmount = () => {
     return formData.course === "Stipend Revision";
@@ -478,6 +521,13 @@ export default function CodeLetter() {
 
   const isInternshipPaid = () =>
     formData.course === "Internship Joining Letter - Paid";
+
+  const isExperienceCertificate = () =>
+  formData.course === "Experience Certificate";
+
+// ✅ NEW: Check if it's Internship Experience Certificate
+const isInternshipExperienceCertificate = () =>
+  formData.course === "Internship Experience Certificate";
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -589,12 +639,11 @@ export default function CodeLetter() {
       setPreviewImage(null);
       setOtpVerified(false);
     } else if (field === "letterType") {
-      // When letter type changes, reset course and check if subtypes exist
       const subtypes = getLetterSubtypes(formData.category, value);
       setFormData((prev) => ({
         ...prev,
         letterType: value,
-        course: subtypes.length === 0 ? value : "", // If no subtypes, set course same as letterType
+        course: subtypes.length === 0 ? value : "",
         subject: "",
         role: "",
         description: "",
@@ -617,6 +666,110 @@ export default function CodeLetter() {
       }));
       setPreviewImage(null);
       setOtpVerified(false);
+    }
+    // ✅ TRAINING PERIOD AUTO-CALCULATION (for Internship Joining Letters)
+    else if (field === "trainingPeriod" || field === "trainingStartDate") {
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: value };
+
+        // Auto-calculate training end date ONLY if both fields exist
+        if (newData.trainingPeriod && newData.trainingStartDate) {
+          newData.trainingEndDate = calculateDateFromDays(
+            newData.trainingStartDate,
+            newData.trainingPeriod
+          );
+
+          // Auto-calculate official start date (1 day after training end)
+          if (newData.trainingEndDate) {
+            newData.officialStartDate = calculateDateFromDays(
+              newData.trainingEndDate,
+              1
+            );
+
+            // Auto-calculate completion date (6 months after official start)
+            if (newData.officialStartDate) {
+              newData.completionDate = calculateDateFromMonths(
+                newData.officialStartDate,
+                6
+              );
+            }
+          }
+        }
+
+        return newData;
+      });
+      setPreviewImage(null);
+      setOtpVerified(false);
+    }
+    // ✅ ALLOW MANUAL EDITING OF TRAINING END DATE
+    else if (field === "trainingEndDate") {
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: value };
+
+        // Recalculate official start date (1 day after training end)
+        if (value) {
+          newData.officialStartDate = calculateDateFromDays(value, 1);
+
+          // Recalculate completion date (6 months after official start)
+          if (newData.officialStartDate) {
+            newData.completionDate = calculateDateFromMonths(
+              newData.officialStartDate,
+              6
+            );
+          }
+        }
+
+        return newData;
+      });
+      setPreviewImage(null);
+      setOtpVerified(false);
+    }
+    // ✅ ALLOW MANUAL EDITING OF OFFICIAL START DATE
+    else if (field === "officialStartDate") {
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: value };
+
+        // Recalculate completion date (6 months after official start)
+        if (value) {
+          newData.completionDate = calculateDateFromMonths(value, 6);
+        }
+
+        return newData;
+      });
+      setPreviewImage(null);
+      setOtpVerified(false);
+    }
+    // ✅ ALLOW MANUAL EDITING OF COMPLETION DATE
+    else if (field === "completionDate") {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setPreviewImage(null);
+      setOtpVerified(false);
+    }
+    // ✅ NEW: OFFER LETTER AUTO-CALCULATION (FSD & DM)
+    else if (field === "startDate") {
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: value };
+
+        // Auto-calculate end date for Offer Letters (6 months from start)
+        if (
+          value &&
+          (prev.course === "Offer Letter" ||
+            prev.course === "Experience Certificate" ||
+            prev.course === "Internship Experience Certificate")
+        ) {
+          newData.endDate = calculateDateFromMonths(value, 6);
+        }
+
+        return newData;
+      });
+      setPreviewImage(null);
+      setOtpVerified(false);
+    }
+    // ✅ ALLOW MANUAL EDITING OF END DATE
+    else if (field === "endDate") {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setPreviewImage(null);
+      setOtpVerified(false);
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
       if (field === "issueDate") {
@@ -626,126 +779,160 @@ export default function CodeLetter() {
     }
   };
 
-  const validateForm = () => {
-    if (!formData.category) {
-      toast.error("Please select a category");
-      return false;
-    }
-    if (!formData.name) {
-      toast.error("Please select a name");
-      return false;
-    }
-    if (!formData.letterType) {
-      toast.error("Please select letter type");
-      return false;
-    }
-    if (
-      hasSubtypes(formData.category, formData.letterType) &&
-      !formData.course
-    ) {
-      toast.error("Please select letter subtype");
-      return false;
-    }
-    if (needsRole() && !formData.role) {
-      toast.error("Please select a role");
-      return false;
-    }
-    if (needsDates() && (!formData.startDate || !formData.endDate)) {
-      toast.error("Please select start and end dates for Offer Letter");
-      return false;
-    }
-    if (formData.description && formData.description.length > 1050) {
-      toast.error("Description cannot exceed 1050 characters");
-      return false;
-    }
+ const validateForm = () => {
+   if (!formData.category) {
+     toast.error("Please select a category");
+     return false;
+   }
+   if (!formData.name) {
+     toast.error("Please select a name");
+     return false;
+   }
+   if (!formData.letterType) {
+     toast.error("Please select letter type");
+     return false;
+   }
+   if (
+     hasSubtypes(formData.category, formData.letterType) &&
+     !formData.course
+   ) {
+     toast.error("Please select letter subtype");
+     return false;
+   }
+   if (needsRole() && !formData.role) {
+     toast.error("Please select a role");
+     return false;
+   }
 
-    // Timeline Letter Validation
-    if (formData.letterType === "Timeline Letter") {
-      if (!formData.timelineStage) {
-        toast.error("Please select timeline stage");
-        return false;
-      }
-      if (!formData.timelineProjectName.trim()) {
-        toast.error("Please enter project name");
-        return false;
-      }
-      if (!formData.timelineDueDate) {
-        toast.error("Please enter due deadline date");
-        return false;
-      }
-      if (!formData.timelineNewDate) {
-        toast.error("Please enter new deadline date");
-        return false;
-      }
-    }
+   // ✅ Experience Certificate (Non-Intern) Validation
+   if (formData.course === "Experience Certificate") {
+     if (!formData.genderPronoun) {
+       toast.error("Please select His/Her pronoun");
+       return false;
+     }
+     if (!formData.startDate || !formData.endDate) {
+       toast.error("Please select start and end dates");
+       return false;
+     }
+     if (!formData.description || !formData.description.trim()) {
+       toast.error("Please enter description");
+       return false;
+     }
+     if (formData.description.length > 1050) {
+       toast.error("Description cannot exceed 1050 characters");
+       return false;
+     }
+   }
 
-    if (formData.course === "Experience Certificate") {
-      if (!formData.genderPronoun) {
-        toast.error("Please select His/Her");
-        return false;
-      }
-    }
+   // ✅ Internship Experience Certificate Validation
+   if (formData.course === "Internship Experience Certificate") {
+    if (!formData.genderPronoun) {
+       toast.error("Please select His/Her pronoun");
+       return false;
+     }
 
-    if (!formData.issueDate) {
-      toast.error("Please select issue date");
-      return false;
-    }
+     if (!formData.startDate || !formData.endDate) {
+       toast.error("Please select start and end dates for internship");
+       return false;
+     }
+     if (!formData.description || !formData.description.trim()) {
+       toast.error("Please enter description of internship work");
+       return false;
+     }
+     if (formData.description.length > 1050) {
+       toast.error("Description cannot exceed 1050 characters");
+       return false;
+     }
+   }
 
-    if (isInternshipPaid() || isInternshipUnpaid()) {
-      if (!formData.trainingStartDate || !formData.trainingEndDate) {
-        toast.error("Please enter training start and end date");
-        return false;
-      }
-      if (!formData.officialStartDate || !formData.completionDate) {
-        toast.error(
-          "Please enter official internship start & completion dates"
-        );
-        return false;
-      }
-      if (!formData.responsibilities.trim()) {
-        toast.error("Please enter responsibilities");
-        return false;
-      }
-      if (formData.responsibilities.length > 550) {
-        toast.error("Responsibilities cannot exceed 550 characters");
-        return false;
-      }
-    }
+   if (needsDates() && (!formData.startDate || !formData.endDate)) {
+     toast.error("Please select start and end dates");
+     return false;
+   }
 
-    if (isInternshipPaid()) {
-      if (!formData.amount) {
-        toast.error("Please enter stipend amount");
-        return false;
-      }
-      if (!formData.effectiveFrom) {
-        toast.error("Please enter effective from date");
-        return false;
-      }
-    }
+   // Timeline Letter Validation
+   if (formData.letterType === "Timeline Letter") {
+     if (!formData.timelineStage) {
+       toast.error("Please select timeline stage");
+       return false;
+     }
+     if (!formData.timelineProjectName.trim()) {
+       toast.error("Please enter project name");
+       return false;
+     }
+     if (!formData.timelineDueDate) {
+       toast.error("Please enter due deadline date");
+       return false;
+     }
+     if (!formData.timelineNewDate) {
+       toast.error("Please enter new deadline date");
+       return false;
+     }
+   }
 
-    // ✅ ONBOARDING NDA VALIDATION - ONLY ROLE AND DURATION
-    if (formData.course === "Onboarding Non-Disclosure Agreement") {
-      if (!formData.role) {
-        toast.error("Please select a role");
-        return false;
-      }
-      if (!formData.duration) {
-        toast.error("Please enter duration");
-        return false;
-      }
-      // ❌ REMOVED ADDRESS AND AADHAAR VALIDATION
-    }
+   if (!formData.issueDate) {
+     toast.error("Please select issue date");
+     return false;
+   }
 
-    return true;
-  };
+   if (isInternshipPaid() || isInternshipUnpaid()) {
+     if (!formData.trainingPeriod) {
+       toast.error("Please enter training period in days");
+       return false;
+     }
+     if (!formData.trainingStartDate || !formData.trainingEndDate) {
+       toast.error("Please enter training start date");
+       return false;
+     }
+     if (!formData.officialStartDate || !formData.completionDate) {
+       toast.error(
+         "Dates not calculated properly. Please re-enter training period."
+       );
+       return false;
+     }
+     if (!formData.responsibilities.trim()) {
+       toast.error("Please enter responsibilities");
+       return false;
+     }
+     if (formData.responsibilities.length > 550) {
+       toast.error("Responsibilities cannot exceed 550 characters");
+       return false;
+     }
+   }
 
-  // 3. ✅ UPDATE needsRole to include Onboarding NDA
+   if (isInternshipPaid()) {
+     if (!formData.amount) {
+       toast.error("Please enter stipend amount");
+       return false;
+     }
+     if (!formData.effectiveFrom) {
+       toast.error("Please enter effective from date");
+       return false;
+     }
+   }
+
+   if (formData.course === "Onboarding Non-Disclosure Agreement") {
+     if (!formData.role) {
+       toast.error("Please select a role");
+       return false;
+     }
+     if (!formData.duration) {
+       toast.error("Please enter duration");
+       return false;
+     }
+   }
+
+   return true;
+ };
+
   const needsRole = () => {
     return (
       formData.course === "Internship Joining Letter - Unpaid" ||
       formData.course === "Internship Joining Letter - Paid" ||
       formData.course === "Non-Disclosure Agreement" ||
-      formData.course === "Onboarding Non-Disclosure Agreement"
+      formData.course === "Onboarding Non-Disclosure Agreement" ||
+     // ✅ For non-interns
+      formData.course === "Internship Experience Certificate" // ✅ For interns
     );
   };
 
@@ -922,13 +1109,13 @@ export default function CodeLetter() {
       if (formData.attendanceMonth)
         payload.attendanceMonth = formData.attendanceMonth;
       if (formData.attendanceYear)
-        payload.attendanceYear = formData.attendanceYear;
+        payload.attendanceYear = parseInt(formData.attendanceYear);
 
       // Performance fields
       if (formData.performanceMonth)
         payload.performanceMonth = formData.performanceMonth;
       if (formData.performanceYear)
-        payload.performanceYear = formData.performanceYear;
+        payload.performanceYear = parseInt(formData.performanceYear);
 
       // Warning/Assignment fields
       if (formData.subjectName) payload.subjectName = formData.subjectName;
@@ -942,6 +1129,8 @@ export default function CodeLetter() {
       if (formData.auditDate) payload.auditDate = formData.auditDate;
 
       // Training/Internship fields
+      if (formData.trainingPeriod)
+        payload.trainingPeriod = parseInt(formData.trainingPeriod);
       if (formData.trainingStartDate)
         payload.trainingStartDate = formData.trainingStartDate;
       if (formData.trainingEndDate)
@@ -1284,7 +1473,7 @@ export default function CodeLetter() {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Calendar className="w-4 h-4 inline mr-2" />
-                          End Date *
+                          End Date * (6 months from start)
                         </label>
                         <input
                           type="date"
@@ -1292,9 +1481,13 @@ export default function CodeLetter() {
                           onChange={(e) =>
                             handleInputChange("endDate", e.target.value)
                           }
-                          min={formData.startDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         />
+                        <p className="text-xs text-blue-600 mt-1">
+                          {formData.startDate
+                            ? "✓ Auto-calculated (editable)"
+                            : "⚠️ Fill start date first"}
+                        </p>
                       </div>
                     </div>
                   </>
@@ -1454,15 +1647,22 @@ export default function CodeLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Year *
                       </label>
-                      <input
-                        type="number"
+                      <select
                         value={formData.attendanceYear || ""}
                         onChange={(e) =>
                           handleInputChange("attendanceYear", e.target.value)
                         }
-                        placeholder="e.g. 2025"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      />
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white"
+                      >
+                        <option value="" disabled>
+                          Select Year
+                        </option>
+                        {generateYearOptions().map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -1488,15 +1688,22 @@ export default function CodeLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Year *
                       </label>
-                      <input
-                        type="number"
+                      <select
                         value={formData.performanceYear || ""}
                         onChange={(e) =>
                           handleInputChange("performanceYear", e.target.value)
                         }
-                        placeholder="e.g. 2025"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      />
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white"
+                      >
+                        <option value="" disabled>
+                          Select Year
+                        </option>
+                        {generateYearOptions().map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -1625,6 +1832,29 @@ export default function CodeLetter() {
                 {/* Marketing Junction Internship Paid / Unpaid Fields */}
                 {(isInternshipPaid() || isInternshipUnpaid()) && (
                   <>
+                    {/* ✅ Training Period Input */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Calendar className="w-4 h-4 inline mr-2" />
+                        Training Period (in days) *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.trainingPeriod}
+                        onChange={(e) =>
+                          handleInputChange("trainingPeriod", e.target.value)
+                        }
+                        min="1"
+                        placeholder="e.g., 14 or 45"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+        outline-none transition-all"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Enter number of days for training period
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       {/* Training Start Date */}
                       <div>
@@ -1642,12 +1872,12 @@ export default function CodeLetter() {
                             )
                           }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
-        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-        outline-none transition-all"
+          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+          outline-none transition-all"
                         />
                       </div>
 
-                      {/* Training End Date */}
+                      {/* ✅ Training End Date - NOW EDITABLE */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Calendar className="w-4 h-4 inline mr-2" />
@@ -1659,16 +1889,20 @@ export default function CodeLetter() {
                           onChange={(e) =>
                             handleInputChange("trainingEndDate", e.target.value)
                           }
-                          min={formData.trainingStartDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
-        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-        outline-none transition-all"
+          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+          outline-none transition-all"
                         />
+                        <p className="text-xs text-blue-600 mt-1">
+                          {formData.trainingPeriod && formData.trainingStartDate
+                            ? "✓ Auto-calculated (editable)"
+                            : "⚠️ Fill training period & start date first"}
+                        </p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Official Internship Start Date */}
+                      {/* ✅ Official Internship Start Date - NOW EDITABLE */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Calendar className="w-4 h-4 inline mr-2" />
@@ -1684,11 +1918,17 @@ export default function CodeLetter() {
                             )
                           }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
-        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-        outline-none transition-all"
+          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+          outline-none transition-all"
                         />
+                        <p className="text-xs text-blue-600 mt-1">
+                          {formData.trainingEndDate
+                            ? "✓ Auto-calculated (editable)"
+                            : "⚠️ Fill training end date first"}
+                        </p>
                       </div>
-                      {/* Internship Completion Date */}
+
+                      {/* ✅ Internship Completion Date - NOW EDITABLE */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Calendar className="w-4 h-4 inline mr-2" />
@@ -1700,13 +1940,16 @@ export default function CodeLetter() {
                           onChange={(e) =>
                             handleInputChange("completionDate", e.target.value)
                           }
-                          min={formData.officialStartDate}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl 
-        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-        outline-none transition-all"
+          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+          outline-none transition-all"
                         />
+                        <p className="text-xs text-blue-600 mt-1">
+                          {formData.officialStartDate
+                            ? "✓ Auto-calculated (editable)"
+                            : "⚠️ Fill official start date first"}
+                        </p>
                       </div>
-                      <div></div>
                     </div>
 
                     {/* Roles & Responsibilities */}
@@ -1868,16 +2111,22 @@ export default function CodeLetter() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Year *
                       </label>
-                      <input
-                        type="number"
+                      <select
                         value={formData.year || ""}
                         onChange={(e) =>
                           handleInputChange("year", e.target.value)
                         }
-                        placeholder="e.g. 2025"
-                        min={new Date().getFullYear() - 1}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                      />
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white"
+                      >
+                        <option value="" disabled>
+                          Select Year
+                        </option>
+                        {generateYearOptions().map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}

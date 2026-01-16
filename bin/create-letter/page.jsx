@@ -1,5 +1,5 @@
 "use client";
-import CreateLetter from '@/components/CreateLetter/CreateLetter'
+import CreateLetter from '../../../bin/CreateLetter/CreateLetter'
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react'
 
