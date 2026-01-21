@@ -79,7 +79,7 @@ const StatCard = ({
     if (adminData) {
       try {
         const data = JSON.parse(adminData);
-        console.log("📋 User Permissions:", data.permissions);
+        // console.log("📋 User Permissions:", data.permissions);
         setUserPermissions(data.permissions || []);
       } catch (error) {
         console.error("Error parsing admin data:", error);
@@ -535,12 +535,12 @@ export default function StatsCards() {
 
       const data = response.data.data;
 
-      console.log("📊 Stats data received:", data); // ✅ Debug log
-      console.log("🔍 Client data check:");
-      console.log("  - Last 7 Days client:", data.last7Days?.client);
-      console.log("  - Last Month client:", data.lastMonth?.client);
-      console.log("  - Downloaded client:", data.downloaded?.client);
-      console.log("  - Pending client:", data.pending?.client);
+      // console.log("📊 Stats data received:", data); // ✅ Debug log
+      // console.log("🔍 Client data check:");
+      // console.log("  - Last 7 Days client:", data.last7Days?.client);
+      // console.log("  - Last Month client:", data.lastMonth?.client);
+      // console.log("  - Downloaded client:", data.downloaded?.client);
+      // console.log("  - Pending client:", data.pending?.client);
 
       setStats([
         {

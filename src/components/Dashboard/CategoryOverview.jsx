@@ -250,12 +250,12 @@ export default function CategoryOverview() {
   // Filter categories using the new permission system
   const categories = allCategories.filter((category) => {
     const hasAccess = canAccessCategory(userPermissions, category.permission);
-    console.log(`📦 ${category.title}:`, {
-      permission: category.permission,
-      hasAccess: hasAccess,
-      userPerms: userPermissions,
-      accessible: getAccessiblePermissions(userPermissions),
-    });
+    // console.log(`📦 ${category.title}:`, {
+    //   permission: category.permission,
+    //   hasAccess: hasAccess,
+    //   userPerms: userPermissions,
+    //   accessible: getAccessiblePermissions(userPermissions),
+    // });
     return hasAccess;
   });
 

@@ -103,36 +103,29 @@ export default function CreateCertificate() {
   }, []);
 
   useEffect(() => {
-    console.log("🔍 Environment Check:");
-    console.log("API_URL:", API_URL);
-    console.log("Auth Token exists:", !!sessionStorage.getItem("authToken"));
-    console.log(
-      "Full API URL will be:",
-      `${API_URL}/api/certificates/otp/send`
-    );
+    // console.log("🔍 Environment Check:");
+    // console.log("API_URL:", API_URL);
+    // console.log("Auth Token exists:", !!sessionStorage.getItem("authToken"));
+    // console.log(
+    //   "Full API URL will be:",
+    //   `${API_URL}/api/certificates/otp/send`
+    // );
   }, []);
 
   // ✅ FIXED: categoryConfig with proper batch handling
   const categoryConfig = useMemo(() => {
-    console.log("🔍 Batches in memo:", batches);
+    // console.log("🔍 Batches in memo:", batches);
 
     return {
-      "it-nexcore": {
-        label: "IT-NexCore",
-        batches: [],
-        dbCategory: "IT-Nexcore",
-      },
-
       fsd: {
         label: "Full Stack Development",
         batches: batches.fsd || [],
         dbCategory: "FSD",
       },
-
-      "marketing-junction": {
-        label: "Marketing Junction",
-        batches: [],
-        dbCategory: "marketing-junction",
+      dm: {
+        label: "Digital Marketing",
+        batches: batches.fsd || [],
+        dbCategory: "DM",
       },
     };
   }, [batches]);
@@ -147,7 +140,7 @@ export default function CreateCertificate() {
       try {
         const response = await axios.get(`${API_URL}/api/batches`);
         if (response.data.success) {
-          console.log("📦 Batches from backend:", response.data.batches);
+          // console.log("📦 Batches from backend:", response.data.batches);
 
           // ✅ Backend returns { FSD: [...], BVOC: [...] }
           // Convert to lowercase for consistency
@@ -157,10 +150,10 @@ export default function CreateCertificate() {
             bvoc: backendBatches.BVOC || [],
           });
 
-          console.log("✅ Batches set:", {
-            fsd: backendBatches.FSD || [],
-            bvoc: backendBatches.BVOC || [],
-          });
+          // console.log("✅ Batches set:", {
+          //   fsd: backendBatches.FSD || [],
+          //   bvoc: backendBatches.BVOC || [],
+          // });
         }
       } catch (error) {
         console.error("Error fetching batches:", error);
@@ -172,12 +165,12 @@ export default function CreateCertificate() {
 
   // ✅ Debug category selection
   useEffect(() => {
-    console.log("🔍 Category changed to:", formData.category);
+    // console.log("🔍 Category changed to:", formData.category);
     if (formData.category) {
       const config = categoryConfig[formData.category];
-      console.log("🔍 Category config:", config);
-      console.log("🔍 Batches count:", config?.batches?.length);
-      console.log("🔍 Batches array:", config?.batches);
+      // console.log("🔍 Category config:", config);
+      // console.log("🔍 Batches count:", config?.batches?.length);
+      // console.log("🔍 Batches array:", config?.batches);
     }
   }, [formData.category, categoryConfig]);
 
@@ -238,8 +231,8 @@ export default function CreateCertificate() {
   const fetchNames = async () => {
     setLoadingNames(true);
     try {
-      console.log("🔍 Fetching names for category:", formData.category);
-      console.log("🔍 Batch:", formData.batch);
+      // console.log("🔍 Fetching names for category:", formData.category);
+      // console.log("🔍 Batch:", formData.batch);
 
       const categoryData = categoryConfig[formData.category];
 
@@ -259,14 +252,14 @@ export default function CreateCertificate() {
         },
       });
 
-      console.log("📦 API Response:", response.data);
+      // console.log("📦 API Response:", response.data);
 
       if (response.data.success && Array.isArray(response.data.names)) {
         const enabled = response.data.names
           .filter((person) => !person.disabled)
           .sort((a, b) => a.name.localeCompare(b.name));
 
-        console.log("✅ Sorted names:", enabled);
+        // console.log("✅ Sorted names:", enabled);
         setNamesList(enabled);
 
         if (enabled.length > 0) {
@@ -275,7 +268,7 @@ export default function CreateCertificate() {
           toast.error(`No active people found in ${categoryData.label}`);
         }
       } else {
-        console.log("⚠️ No names found");
+        // console.log("⚠️ No names found");
         setNamesList([]);
         toast.error(`No active people found in ${categoryData.label}`);
       }
@@ -440,11 +433,11 @@ export default function CreateCertificate() {
     }
   };
 
+  // Update only the OTP-related functions in CreateCertificate.jsx
+
   const sendOTP = async () => {
     try {
-      console.log("🔍 API_URL:", API_URL);
-      console.log("🔍 Sending OTP to:", `${API_URL}/api/certificates/otp/send`);
-
+      // console.log("🔍 Sending OTP...");
       const loadingToast = toast.loading("Sending OTP...");
 
       const response = await axios.post(
@@ -464,17 +457,22 @@ export default function CreateCertificate() {
       toast.dismiss(loadingToast);
 
       if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
-        setOtpSent(true);
-        setResendTimer(60);
+        // ✅ Check if dev mode
+        if (response.data.dev_mode) {
+          toast.success("⚠️ DEV MODE: OTP bypassed");
+          setOtpSent(true);
+          setResendTimer(60);
+        } else {
+          toast.success("OTP sent to your WhatsApp! 📱");
+          setOtpSent(true);
+          setResendTimer(60);
+        }
       } else {
         toast.error(response.data.message || "Failed to send OTP");
       }
     } catch (error) {
       toast.dismiss();
       console.error("❌ Failed to send OTP:", error);
-      console.error("❌ Error response:", error.response?.data);
-      console.error("❌ Error status:", error.response?.status);
       toast.error(
         error.response?.data?.message || "Failed to send OTP. Please try again."
       );
@@ -484,12 +482,14 @@ export default function CreateCertificate() {
   const verifyOTP = async () => {
     try {
       const otpCode = otp.join("");
+
+      // ✅ In dev mode, allow any 6-digit code
       if (otpCode.length !== 6) {
         toast.error("Please enter complete OTP");
         return;
       }
 
-      console.log("🔍 Verifying OTP:", otpCode);
+      // console.log("🔍 Verifying OTP:", otpCode);
       const loadingToast = toast.loading("Verifying OTP...");
 
       const response = await axios.post(
@@ -509,7 +509,13 @@ export default function CreateCertificate() {
       toast.dismiss(loadingToast);
 
       if (response.data.success) {
-        toast.success("✅ OTP Verified Successfully!");
+        // ✅ Check if dev mode
+        if (response.data.dev_mode) {
+          toast.success("✅ OTP Verified (Dev Mode)!");
+        } else {
+          toast.success("✅ OTP Verified Successfully!");
+        }
+
         setOtpVerified(true);
         setShowOtpModal(false);
         setShowPreview(true);
@@ -520,22 +526,32 @@ export default function CreateCertificate() {
     } catch (error) {
       toast.dismiss();
       console.error("❌ Verify OTP error:", error);
-      console.error("❌ Error response:", error.response?.data);
       toast.error(error.response?.data?.message || "OTP verification failed");
       setOtp(["", "", "", "", "", ""]);
     }
   };
 
+  // ==================== STEP 1: Fix Frontend Preview Generation ====================
+
+  // ==================== STEP 1: Fix Frontend Preview Generation ====================
+
   const generatePreview = async () => {
     setLoadingPreview(true);
     try {
+      // ✅ Include ALL required fields including description
       const payload = {
-        ...formData,
+        name: formData.name,
+        category: formData.category,
+        batch: formData.batch || null,
+        issueDate: formData.issueDate,
         course:
           formData.course === "custom"
             ? formData.customCourse
             : formData.course,
+        description: formData.description || "", // ✅ CRITICAL: Include description
       };
+
+      // console.log("🔍 Preview payload:", payload);
 
       const response = await axios.post(
         `${API_URL}/api/certificates/preview`,
@@ -548,45 +564,149 @@ export default function CreateCertificate() {
 
       const imageUrl = URL.createObjectURL(response.data);
       setPreviewImage(imageUrl);
+      toast.success("Preview generated successfully!");
     } catch (error) {
-      console.error("Preview error:", error);
-      toast.error("Failed to generate preview");
+      console.error("❌ Preview error:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error(
+        error.response?.data?.message || "Failed to generate preview"
+      );
     } finally {
       setLoadingPreview(false);
     }
   };
-
   const handleSubmit = async () => {
+    // ✅ STEP 1: Verify OTP
     if (!otpVerified) {
       toast.error("Please verify OTP first");
       return;
     }
 
     setIsCreating(true);
+    const loadingToast = toast.loading("Creating certificate...");
+
     try {
+      // ✅ STEP 2: Build payload EXACTLY like generatePreview does
       const payload = {
-        ...formData,
+        name: formData.name,
+        category: formData.category, // ✅ Keep it as-is: "fsd" or "dm"
+        batch: formData.batch || null,
+        issueDate: formData.issueDate,
         course:
           formData.course === "custom"
             ? formData.customCourse
             : formData.course,
+        description: formData.description || "", // ✅ Include description
       };
 
+      // console.log("🔍 Submitting payload:", payload);
+
+      // ✅ STEP 3: Make API call (same as preview)
       const response = await axios.post(
         `${API_URL}/api/certificates/`,
         payload,
-        { headers: getAuthHeaders() }
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+        }
       );
 
+      toast.dismiss(loadingToast);
+
+      // ✅ STEP 4: Handle success response
       if (response.data.success) {
+        // console.log("✅ Certificate created:", response.data);
+
+        toast.success(
+          `Certificate created successfully! 🎉\nID: ${response.data.certificate?.certificateId}`,
+          { duration: 4000 }
+        );
+
         setShowSuccess(true);
+
+        // Reset form after delay
         setTimeout(() => {
           setShowSuccess(false);
-          // router.push('/certificates');
+          setShowPreview(false);
+          setOtpVerified(false);
+          setPreviewImage(null);
+          setOtp(["", "", "", "", "", ""]);
+
+          // Reset form data
+          setFormData({
+            name: "",
+            category: "",
+            issueDate: "",
+            course: "",
+            batch: "",
+            description: "",
+            templateId: "",
+            customCourse: "",
+          });
+
+          toast.success("Form reset. You can create another certificate!", {
+            duration: 2000,
+          });
+
+          // Optionally redirect after another delay
+          // setTimeout(() => {
+          //   router.push('/certificates');
+          // }, 1000);
         }, 2000);
+      } else {
+        toast.error(response.data.message || "Failed to create certificate");
       }
     } catch (error) {
-      toast.error("Failed to create certificate");
+      toast.dismiss(loadingToast);
+
+      // ✅ STEP 5: Enhanced error logging
+      console.group("🔴 Certificate Creation Error");
+      console.error("Error object:", error);
+      console.error("Response data:", error.response?.data);
+      console.error("Response status:", error.response?.status);
+      console.error("Request payload was:", {
+        name: formData.name,
+        category: formData.category,
+        batch: formData.batch,
+        course:
+          formData.course === "custom"
+            ? formData.customCourse
+            : formData.course,
+        issueDate: formData.issueDate,
+        description: formData.description,
+      });
+      console.groupEnd();
+
+      // ✅ STEP 6: User-friendly error message
+      let errorMessage = "Failed to create certificate";
+
+      if (error.response?.data) {
+        const data = error.response.data;
+        errorMessage = data.message || data.error || errorMessage;
+
+        // Handle validation errors
+        if (data.errors && Array.isArray(data.errors)) {
+          errorMessage = data.errors.map((e) => e.msg).join(", ");
+        }
+
+        // Handle missing fields
+        if (data.missing) {
+          const missingFields = Object.keys(data.missing).filter(
+            (k) => data.missing[k]
+          );
+          if (missingFields.length > 0) {
+            errorMessage = `Missing required fields: ${missingFields.join(
+              ", "
+            )}`;
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setIsCreating(false);
     }

@@ -40,14 +40,14 @@ export default function PdfPreviewPage() {
         const verifyRes = await axios.post(`${API_URL}/api/certificates/verify`, {
           certificateId: certId,
         });
-        console.log("Verification response:", verifyRes.data);
+        // console.log("Verification response:", verifyRes.data);
 
         if (!verifyRes.data?.valid) {
           toast.error("Invalid or unauthorized certificate ID");
           return;
         }4
 
-        console.log(certId);
+        // console.log(certId);
         
 
         const pdfResponse = await axios.get(

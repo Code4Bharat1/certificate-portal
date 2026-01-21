@@ -44,13 +44,13 @@ export default function TemplateManagement() {
       setLoading(true);
       setAuthError(false);
       
-      console.log('🔄 Fetching templates from:', `${API_URL}/api/templates`);
+      // console.log('🔄 Fetching templates from:', `${API_URL}/api/templates`);
       
       const response = await axios.get(`${API_URL}/api/templates`, {
         headers: getHeaders()
       });
       
-      console.log('✅ Templates fetched:', response.data);
+      // console.log('✅ Templates fetched:', response.data);
       
       if (response.data.success) {
         setTemplates(response.data.data || []);
@@ -81,13 +81,13 @@ export default function TemplateManagement() {
   const reloadTemplates = async () => {
     try {
       setReloading(true);
-      console.log('🔄 Reloading templates from backend folder...');
+      // console.log('🔄 Reloading templates from backend folder...');
       
       const response = await axios.get(`${API_URL}/api/templates/reload/all`, {
         headers: getHeaders()
       });
       
-      console.log('✅ Templates reloaded:', response.data);
+      // console.log('✅ Templates reloaded:', response.data);
       
       if (response.data.success) {
         setTemplates(response.data.data || []);
@@ -134,7 +134,7 @@ export default function TemplateManagement() {
       formData.append('name', selectedFile.name);
       formData.append('description', editData.description || '');
 
-      console.log('📤 Uploading file:', selectedFile.name);
+      // console.log('📤 Uploading file:', selectedFile.name);
 
       const response = await axios.post(`${API_URL}/api/templates/upload`, formData, {
         headers: {
@@ -144,11 +144,11 @@ export default function TemplateManagement() {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
-          console.log(`Upload progress: ${percentCompleted}%`);
+          // console.log(`Upload progress: ${percentCompleted}%`);
         }
       });
 
-      console.log('✅ Upload successful:', response.data);
+      // console.log('✅ Upload successful:', response.data);
 
       if (response.data.success) {
         showMessage('success', 'Template uploaded successfully!');
@@ -175,13 +175,13 @@ export default function TemplateManagement() {
   // Delete template
   const handleDelete = async (id) => {
     try {
-      console.log('🗑️ Deleting template:', id);
+      // console.log('🗑️ Deleting template:', id);
       
       const response = await axios.delete(`${API_URL}/api/templates/${id}`, {
         headers: getHeaders()
       });
 
-      console.log('✅ Delete successful:', response.data);
+      // console.log('✅ Delete successful:', response.data);
 
       if (response.data.success) {
         showMessage('success', 'Template deleted successfully!');
@@ -197,7 +197,7 @@ export default function TemplateManagement() {
   // Update template
   const handleUpdate = async () => {
     try {
-      console.log('✏️ Updating template:', selectedTemplate.id);
+      // console.log('✏️ Updating template:', selectedTemplate.id);
       
       const response = await axios.put(
         `${API_URL}/api/templates/${selectedTemplate.id}`,
@@ -210,7 +210,7 @@ export default function TemplateManagement() {
         }
       );
 
-      console.log('✅ Update successful:', response.data);
+      // console.log('✅ Update successful:', response.data);
 
       if (response.data.success) {
         showMessage('success', 'Template updated successfully!');
@@ -226,7 +226,7 @@ export default function TemplateManagement() {
   // Download template
   const handleDownload = async (template) => {
     try {
-      console.log('💾 Downloading template:', template.name);
+      // console.log('💾 Downloading template:', template.name);
       
       const response = await axios.get(
         `${API_URL}/api/templates/${template.id}/download`,

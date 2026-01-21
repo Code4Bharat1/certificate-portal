@@ -124,11 +124,11 @@ export default function LoginPage() {
         sessionStorage.setItem("userType", "admin");
 
         // ✅ Debug log
-        console.log("✅ Admin Login Success:", {
-          role: user.role,
-          permissions: user.permissions,
-          savedTo: "adminData",
-        });
+        // console.log("✅ Admin Login Success:", {
+        //   role: user.role,
+        //   permissions: user.permissions,
+        //   savedTo: "adminData",
+        // });
 
         toast.success(`Welcome back, ${user.name}!`);
         setTimeout(() => router.push("/dashboard"), 500);

@@ -113,7 +113,7 @@ useEffect(() => {
 
       if (response.data.success) {
         setUserData(response.data.user);
-        console.log("✅ User data loaded:", response.data.user);
+        // console.log("✅ User data loaded:", response.data.user);
       } else {
         throw new Error(response.data.message || "Failed to load user data");
       }
@@ -137,7 +137,7 @@ useEffect(() => {
 
       if (response.data.success) {
         setStatistics(response.data.statistics);
-        console.log("✅ Statistics loaded:", response.data.statistics);
+        // console.log("✅ Statistics loaded:", response.data.statistics);
       }
     } catch (error) {
       console.error("❌ Error fetching statistics:", error);
@@ -159,11 +159,11 @@ useEffect(() => {
 
       if (response.data.success) {
         setRecentLetters(response.data.letters);
-        console.log(
-          "✅ Recent letters loaded:",
-          response.data.letters.length,
-          "letters"
-        );
+        // console.log(
+        //   "✅ Recent letters loaded:",
+        //   response.data.letters.length,
+        //   "letters"
+        // );
       }
     } catch (error) {
       console.error("❌ Error fetching recent letters:", error);
@@ -188,7 +188,7 @@ useEffect(() => {
   };
 
   const verifyAndLoadPDF = async (letter) => {
-    console.log("🔍 Loading preview for letter:", letter);
+    // console.log("🔍 Loading preview for letter:", letter);
     setPreviewLetter(letter);
     setShowPreviewModal(true);
     setPreviewLoading(true);
@@ -197,7 +197,7 @@ useEffect(() => {
       const verifyRes = await axios.post(`${API_URL}/api/certificates/verify`, {
         certificateId: letter.credentialId || letter.id,
       });
-      console.log("✅ Verification response:", verifyRes.data);
+      // console.log("✅ Verification response:", verifyRes.data);
 
       if (!verifyRes.data?.valid) {
         toast.error("Invalid or unauthorized certificate ID");
@@ -217,7 +217,7 @@ useEffect(() => {
       const blob = new Blob([pdfResponse.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
-      console.log("✅ PDF loaded successfully");
+      // console.log("✅ PDF loaded successfully");
     } catch (error) {
       console.error("❌ PDF load error:", error);
       toast.error("Failed to load PDF preview");
@@ -228,7 +228,7 @@ useEffect(() => {
   };
 
   const handleDownloadLetter = async (letter) => {
-    console.log("⬇️ Downloading letter:", letter);
+    // console.log("⬇️ Downloading letter:", letter);
     const downloadToast = toast.loading("Preparing download...");
 
     try {
@@ -236,7 +236,7 @@ useEffect(() => {
         window.open(letter.downloadLink, "_blank");
         toast.success("Download started!", { id: downloadToast });
       } else {
-        console.log("📥 Using API fallback download for ID:", letter.id);
+        // console.log("📥 Using API fallback download for ID:", letter.id);
 
         const token = sessionStorage.getItem("authToken");
         const response = await axios.get(

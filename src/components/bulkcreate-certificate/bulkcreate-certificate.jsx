@@ -225,7 +225,7 @@ export default function BulkCreateCertificate() {
         }
       );
 
-      console.log('✅ Backend Response:', response.data);
+      // console.log('✅ Backend Response:', response.data);
 
       if (response.data.success) {
         // ✅ FIXED: Extract data matching actual backend response structure

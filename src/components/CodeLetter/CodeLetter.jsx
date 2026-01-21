@@ -39,8 +39,7 @@ const calculateDateFromMonths = (startDate, months) => {
   result.setMonth(result.getMonth() + parseInt(months));
   return result.toISOString().split("T")[0];
 };
-const DEV_MODE = true; // ⭐ Change to false for production
-
+const isDevelopment = process.env.NODE_ENV === "development";
 // ✅ Generate year options (current year + 5 future years, - 7 past years)
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -942,35 +941,78 @@ const isInternshipExperienceCertificate = () =>
     }
   };
 
-  const sendOTP = async () => {
-    try {
-      if (DEV_MODE) {
-        // ⭐ Skip actual OTP sending in dev
-        toast.success("OTP sent (DEV MODE)");
-        setOtpSent(true);
-        setResendTimer(60);
-        return;
-      }
-
-      // Production: Real OTP sending
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/send`,
-        { phone: "919892398976", name: "hr-NEXCORE ALLIANCE" },
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        toast.success("OTP sent to your WhatsApp! 📱");
-        setOtpSent(true);
-        setResendTimer(60);
-      } else {
-        toast.error(response.data.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      console.error("sendOTP error:", error);
-      toast.error("Failed to send OTP");
+const sendOTP = async () => {
+  try {
+    if (isDevelopment) {
+      // ⭐ Development: Skip actual OTP sending
+      toast.success("🔧 DEV MODE: Use any 6-digit code");
+      setOtpSent(true);
+      setResendTimer(60);
+      return;
     }
-  };
+
+    // Production: Real OTP sending to hardcoded number
+    const response = await axios.post(
+      `${API_URL}/api/certificates/otp/send`,
+      { phone: "919892398976", name: "hr-NEXCORE ALLIANCE" },
+      { headers: getAuthHeaders() }
+    );
+
+    if (response.data.success) {
+      toast.success("OTP sent to your WhatsApp! 📱");
+      setOtpSent(true);
+      setResendTimer(60);
+    } else {
+      toast.error(response.data.message || "Failed to send OTP");
+    }
+  } catch (error) {
+    console.error("sendOTP error:", error);
+    toast.error("Failed to send OTP");
+  }
+};
+
+// Update the verifyOTP function:
+const verifyOTP = async () => {
+  try {
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      toast.error("Please enter complete OTP");
+      return;
+    }
+
+    if (isDevelopment) {
+      // ⭐ Development: Accept any 6 digits
+      toast.success("✅ OTP Verified (DEV MODE)");
+      setOtpVerified(true);
+      setShowOtpModal(false);
+      setShowPreview(true);
+      generatePreview();
+      return;
+    }
+
+    // Production: Real OTP verification
+    const response = await axios.post(
+      `${API_URL}/api/certificates/otp/verify`,
+      { phone: "919892398976", otp: otpCode },
+      { headers: getAuthHeaders() }
+    );
+
+    if (response.data.success) {
+      toast.success("OTP Verified Successfully!");
+      setOtpVerified(true);
+      setShowOtpModal(false);
+      setShowPreview(true);
+      generatePreview();
+    } else {
+      toast.error("Invalid OTP");
+      setOtp(["", "", "", "", "", ""]);
+    }
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    toast.error("OTP verification failed");
+    setOtp(["", "", "", "", "", ""]);
+  }
+};
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
@@ -989,53 +1031,13 @@ const isInternshipExperienceCertificate = () =>
   };
 
   // Replace verifyOTP function:
-  const verifyOTP = async () => {
-    try {
-      const otpCode = otp.join("");
-      if (otpCode.length !== 6) {
-        toast.error("Please enter complete OTP");
-        return;
-      }
 
-      if (DEV_MODE) {
-        // ⭐ Skip verification in dev - accept any 6 digits
-        toast.success("OTP Verified Successfully! (DEV MODE)");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        generatePreview();
-        return;
-      }
-
-      // Production: Real OTP verification
-      const response = await axios.post(
-        `${API_URL}/api/certificates/otp/verify`,
-        { phone: "919892398976", otp: otpCode },
-        { headers: getAuthHeaders() }
-      );
-
-      if (response.data.success) {
-        toast.success("OTP Verified Successfully!");
-        setOtpVerified(true);
-        setShowOtpModal(false);
-        setShowPreview(true);
-        generatePreview();
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", "", ""]);
-      }
-    } catch (error) {
-      console.error("Verify OTP error:", error);
-      toast.error("OTP verification failed");
-      setOtp(["", "", "", "", "", ""]);
-    }
-  };
 
   const generatePreview = async () => {
     setLoadingPreview(true);
     try {
       const payload = { ...formData };
-      console.log(payload);
+      // console.log(payload);
 
       const response = await axios.post(
         `${API_URL}/api/codeletters/preview`,
@@ -1163,13 +1165,13 @@ const isInternshipExperienceCertificate = () =>
       if (formData.month) payload.month = formData.month;
       if (formData.year) payload.year = parseInt(formData.year);
 
-      console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
+      // console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
       if (formData.course === "RFID Appreciation Letter") {
         // Only name, category, issueDate, letterType, and course are needed
-        console.log(
-          "📤 Submitting RFID Letter payload:",
-          JSON.stringify(payload, null, 2)
-        );
+        // console.log(
+        //   "📤 Submitting RFID Letter payload:",
+        //   JSON.stringify(payload, null, 2)
+        // );
       } else {
         // Add optional fields for other letter types
         if (formData.batch) payload.batch = formData.batch;
@@ -1184,7 +1186,7 @@ const isInternshipExperienceCertificate = () =>
         },
       });
 
-      console.log("✅ Response:", response.data);
+      // console.log("✅ Response:", response.data);
 
       if (response.data.success) {
         toast.success("Letter created successfully!");

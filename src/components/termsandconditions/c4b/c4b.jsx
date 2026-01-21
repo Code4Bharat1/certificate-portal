@@ -66,7 +66,7 @@ export default function Verify() {
       const res = await axios.post(`${API_URL}/api/certificates/verify`, {
         certificateId: idToVerify,
       });
-      console.log("Verification response:", res);
+      // console.log("Verification response:", res);
 
       const { valid, data } = res.data;
       const result = {

@@ -40,7 +40,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
       });
 
       const data = await res.json();
-      console.log("Request Submitted:", data);
+      // console.log("Request Submitted:", data);
     } catch (error) {
       console.error("Error sending onboarding request:", error);
     }

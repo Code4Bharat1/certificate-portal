@@ -755,7 +755,7 @@ const fetchNames = async () => {
     setLoadingPreview(true);
     try {
       const payload = { ...formData };
-      console.log(payload);
+      // console.log(payload);
 
       const response = await axios.post(
         `${API_URL}/api/letters/preview`,
@@ -871,7 +871,7 @@ const handleSubmit = async () => {
     if (formData.month) payload.month = formData.month;
     if (formData.year) payload.year = parseInt(formData.year);
 
-    console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
+    // console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
 
     const response = await axios.post(`${API_URL}/api/letters`, payload, {
       headers: {
@@ -880,7 +880,7 @@ const handleSubmit = async () => {
       },
     });
 
-    console.log("✅ Response:", response.data);
+    // console.log("✅ Response:", response.data);
 
     if (response.data.success) {
       toast.success("Letter created successfully!");

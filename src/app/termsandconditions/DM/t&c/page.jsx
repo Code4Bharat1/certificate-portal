@@ -75,7 +75,7 @@ export default function TermsAndConditions() {
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      console.log('Form Data Submitted to Admin:', submitData);
+      // console.log('Form Data Submitted to Admin:', submitData);
       
       setSubmitStatus('success');
       alert('✅ Terms & Conditions submitted successfully! Admin will review your application.');

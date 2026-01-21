@@ -119,7 +119,7 @@ const fetchNames = async () => {
   setLoadingNames(true);
 
   try {
-    console.log("🔍 Fetching names for category:", formData.category);
+    // console.log("🔍 Fetching names for category:", formData.category);
 
     const response = await axios.get(`${API_URL}/api/people`, {
       headers: getAuthHeaders(),
@@ -129,7 +129,7 @@ const fetchNames = async () => {
       },
     });
 
-    console.log("📦 API Response:", response.data);
+    // console.log("📦 API Response:", response.data);
 
     let names = [];
 
@@ -146,14 +146,14 @@ const fetchNames = async () => {
       names = response.data;
     }
 
-    console.log("📋 Processed names:", names);
+    // console.log("📋 Processed names:", names);
 
     // FINAL CLEANUP - filter disabled people (double-check)
     const enabled = names
       .filter((p) => !p.disabled)
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    console.log("✅ Final enabled names:", enabled);
+    // console.log("✅ Final enabled names:", enabled);
 
     setNamesList(enabled);
 
@@ -353,8 +353,8 @@ const generatePreview = async () => {
     // ✅ FIXED: Use correct endpoint
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
-    console.log("🔍 Generating preview for client letter");
-    console.log("📤 Preview data:", formData);
+    // console.log("🔍 Generating preview for client letter");
+    // console.log("📤 Preview data:", formData);
 
     const payload = {
       name: formData.name,
@@ -378,7 +378,7 @@ const generatePreview = async () => {
       }
     );
 
-    console.log("✅ Preview response received");
+    // console.log("✅ Preview response received");
 
     const fileType = response.data.type || response.headers["content-type"];
     const fileUrl = URL.createObjectURL(response.data);
@@ -386,11 +386,11 @@ const generatePreview = async () => {
     if (fileType.includes("pdf")) {
       setPreviewImage(null);
       setPdfPreview(fileUrl);
-      console.log("📄 PDF preview set");
+      // console.log("📄 PDF preview set");
     } else {
       setPdfPreview(null);
       setPreviewImage(fileUrl);
-      console.log("🖼️ Image preview set");
+      // console.log("🖼️ Image preview set");
     }
 
     toast.success("Preview generated successfully!");
@@ -444,7 +444,7 @@ const handleSubmit = async () => {
       description: formData.description,
     };
 
-    console.log("📤 Creating client letter with payload:", payload);
+    // console.log("📤 Creating client letter with payload:", payload);
 
     // ✅ FIXED: Changed from /api/client to /api/clientletters
     const response = await axios.post(`${apiUrl}/api/clientletters`, payload, {
@@ -455,13 +455,13 @@ const handleSubmit = async () => {
       responseType: "blob",
     });
 
-    console.log("✅ Letter creation response received");
+    // console.log("✅ Letter creation response received");
 
     // Get letterId from response headers
     const letterId = response.headers["x-letter-id"];
     setCreatedLetterId(letterId);
 
-    console.log("📋 Letter ID:", letterId);
+    // console.log("📋 Letter ID:", letterId);
 
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
@@ -476,7 +476,7 @@ const handleSubmit = async () => {
     link.click();
     document.body.removeChild(link);
 
-    console.log("✅ PDF downloaded");
+    // console.log("✅ PDF downloaded");
 
     setPdfPreview(url);
     setShowSuccess(true);

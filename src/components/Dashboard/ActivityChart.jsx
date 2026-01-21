@@ -105,7 +105,7 @@ export default function ActivityChart() {
           : null;
 
     
-      console.log("🌐 API URL:", API_URL);
+      // console.log("🌐 API URL:", API_URL);
 
       setLoading(true);
       setError(null);
@@ -140,7 +140,7 @@ export default function ActivityChart() {
         const data = statsResponse.data.data;
         const categories = data.categories;
 
-        console.log("📦 Categories:", categories);
+        // console.log("📦 Categories:", categories);
 
         // ✅ Calculate total from ALL categories
         const totalCerts =
@@ -166,10 +166,10 @@ export default function ActivityChart() {
             operations: totalBulkOps,
             certificates: totalBulkCerts,
           });
-          console.log("📦 Bulk Stats:", {
-            operations: totalBulkOps,
-            certificates: totalBulkCerts,
-          });
+          // console.log("📦 Bulk Stats:", {
+          //   operations: totalBulkOps,
+          //   certificates: totalBulkCerts,
+          // });
         }
       }
     } catch (err) {
