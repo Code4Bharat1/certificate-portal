@@ -130,7 +130,7 @@ export default function MarketingJunctionPage() {
 
       // Handle different endpoint for letters if needed
       if (cert.type === 'letter') {
-        url = `${API_URL}/api/letters/${cert._id}/download.pdf`;
+        url = `${API_URL}/api/codeletters/${cert._id}/download.pdf`;
       }
 
       const response = await axios.get(url, {
@@ -217,7 +217,7 @@ export default function MarketingJunctionPage() {
 
       let endpoint = '';
       if (type === 'letter') {
-        endpoint = `${API_URL}/api/letters/${id}/status`;
+        endpoint = `${API_URL}/api/codeletters/${id}/status`;
       } else {
         endpoint = `${API_URL}/api/certificates/${id}/status`;
       }
@@ -249,7 +249,7 @@ export default function MarketingJunctionPage() {
 
       let endpoint = '';
       if (cert.type === 'letter') {
-        endpoint = `${API_URL}/api/letters/${id}`;
+        endpoint = `${API_URL}/api/codeletters/${id}`;
       } else {
         endpoint = `${API_URL}/api/certificates/${id}`;
       }

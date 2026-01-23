@@ -132,7 +132,7 @@ export default function ClientPage() {
   const updateItemStatus = async (id, status) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const endpoint = `${API_URL}/api/letters/${id}/status`;
+      const endpoint = `${API_URL}/api/codeletters/${id}/status`;
 
       await axios.put(
         endpoint,

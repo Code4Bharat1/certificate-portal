@@ -207,7 +207,7 @@ export default function Code4BharatPage() {
 
       let endpoint = "";
       if (type === "letter") {
-        endpoint = `${API_URL}/api/letters/${id}/status`;
+        endpoint = `${API_URL}/api/codeletters/${id}/status`;
       } else {
         endpoint = `${API_URL}/api/certificates/${id}/status`;
       }

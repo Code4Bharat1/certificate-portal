@@ -91,7 +91,7 @@ export default function OperationsPage() {
  
        let url;
        if (cert.type === 'letter') {
-         url = `${API_URL}/api/letters/${cert._id}/download.pdf  `;
+         url = `${API_URL}/api/codeletters/${cert._id}/download.pdf  `;
        } else {
          url = `${API_URL}/api/certificates/download/${cert._id}`;
        }

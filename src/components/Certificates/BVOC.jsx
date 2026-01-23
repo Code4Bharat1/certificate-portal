@@ -110,7 +110,7 @@ export default function BvocPage() {
 
       const url =
         item.type === 'letter'
-          ? `${API_URL}/api/letters/${item._id}/download.pdf`
+          ? `${API_URL}/api/codeletters/${item._id}/download.pdf`
           : `${API_URL}/api/certificates/download/${item._id}`;
 
       const response = await axios.get(url, {
