@@ -466,15 +466,15 @@ const handleSubmit = async () => {
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
 
-    // Auto-download PDF
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${formData.name.replace(/\s+/g, "_")}_${
-      letterId || "client_letter"
-    }.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // // Auto-download PDF
+    // const link = document.createElement("a");
+    // link.href = url;
+    // link.download = `${formData.name.replace(/\s+/g, "_")}_${
+    //   letterId || "client_letter"
+    // }.pdf`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
 
     // console.log("✅ PDF downloaded");
 

@@ -503,7 +503,7 @@ export default function StatsCards() {
       key: "client",
       gradient: "from-teal-500 to-emerald-600",
       buttonTextColor: "text-teal-600",
-      route: "/client", // ✅ FIXED: Changed from /certificates/client to /client
+      route: "/certificates/client", // ✅ FIXED: Changed from /certificates/client to /client
       icon: FileText,
       permission: "client",
     },

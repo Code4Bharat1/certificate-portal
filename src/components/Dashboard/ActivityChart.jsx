@@ -151,9 +151,8 @@ export default function ActivityChart() {
           (categories["fsd"]?.total || 0) +
           (categories["hr"]?.total || 0) +
           (categories["dm"]?.total || 0) +
-          (categories["operations"]?.total || 0);
-
-        
+          (categories["operations"]?.total || 0) +
+          (categories["client"]?.total || 0); 
         setTotalCertificates(totalCerts);
 
         // Calculate total bulk stats
