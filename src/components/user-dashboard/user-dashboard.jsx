@@ -195,7 +195,7 @@ useEffect(() => {
 
     try {
       const verifyRes = await axios.post(`${API_URL}/api/certificates/verify`, {
-        certificateId: letter.credentialId || letter.id,
+        certificateId: letter.credentialId || letter.credentialId,
       });
       // console.log("✅ Verification response:", verifyRes.data);
 
@@ -207,7 +207,7 @@ useEffect(() => {
 
       const token = sessionStorage.getItem("authToken");
       const pdfResponse = await axios.get(
-        `${API_URL}/api/letters/${letter.id}/download.pdf`,
+        `${API_URL}/api/codeletters/${letter.credentialId}/download.pdf`,
         {
           responseType: "blob",
           headers: { Authorization: `Bearer ${token}` },
@@ -240,7 +240,7 @@ useEffect(() => {
 
         const token = sessionStorage.getItem("authToken");
         const response = await axios.get(
-          `${API_URL}/api/letters/${letter.id}/download.pdf`,
+          `${API_URL}/api/codeletters/${letter.credentialId}/download.pdf`,
           {
             headers: { Authorization: `Bearer ${token}` },
             responseType: "blob",
@@ -251,7 +251,7 @@ useEffect(() => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${letter.credentialId || letter.id}.pdf`;
+        link.download = `${letter.credentialId || letter.credentialId}.pdf`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -300,7 +300,7 @@ useEffect(() => {
     try {
       const token = sessionStorage.getItem("authToken");
       const response = await axios.post(
-        `${API_URL}/api/student/student/upload-signed?letterId=${selectedLetter.credentialId}`,
+        `${API_URL}/api/student/upload-signed?letterId=${selectedLetter.credentialId}`,
         formData,
         {
           headers: {
@@ -782,7 +782,7 @@ useEffect(() => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredLetters.map((letter, index) => (
-                <LetterCard key={letter.id || index} letter={letter} />
+                <LetterCard key={letter.credentialId || index} letter={letter} />
               ))}
             </div>
           )}
@@ -959,7 +959,7 @@ useEffect(() => {
                 Cancel
               </button>
               <button
-                onClick={() => handleUploadSigned(selectedLetter.letterId)}
+                onClick={() => handleUploadSigned(selectedLetter.credentialId)}
                 // onClick={() => handleUploadSigned(selectedLetter?.id)}
                 disabled={!uploadFile || uploading}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
