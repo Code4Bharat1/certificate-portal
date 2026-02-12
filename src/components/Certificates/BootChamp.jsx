@@ -53,7 +53,7 @@ export default function BootcampPage() {
             `${API_URL}/api/certificates`,
             {
               headers: { Authorization: `Bearer ${token}` },
-              params: { category: 'bootcamp' },
+              params: { categories: 'bootcamp' },
             }
           );
 

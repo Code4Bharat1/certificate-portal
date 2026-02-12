@@ -48,7 +48,7 @@ export default function OperationsPage() {
                `${API_URL}/api/certificates`,
                {
                  headers: { Authorization: `Bearer ${token}` },
-                 params: { category: 'OD' },
+                 params: { categories: 'OD' },
                }
              );
    
@@ -413,12 +413,12 @@ export default function OperationsPage() {
                       })}
                     </span>
                   </div>
-                  {it.type === 'letter' && it.letterType && (
+                  {cert.type === 'letter' && cert.letterType && (
                     <div className="flex justify-between items-start">
                       <span className="text-gray-600 dark:text-gray-400">Type:</span>
                       <span className="font-semibold text-gray-800 dark:text-gray-200 text-right">
-                        {it.letterType}
-                        {it.letterSubType && (
+                        {cert.letterType}
+                        {cert.letterSubType && (
                           <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal">
                             {it.letterSubType}
                           </span>
@@ -428,11 +428,11 @@ export default function OperationsPage() {
                   )}
 
                   {/* Signature Status (only for letters) */}
-                  {it.type === 'letter' && (
+                  {cert.type === 'letter' && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">Signature:</span>
 
-                      {it.signedUploaded ? (
+                      {cert.signedUploaded ? (
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold">
                           <CheckCircle className="w-3 h-3" />
                           Uploaded

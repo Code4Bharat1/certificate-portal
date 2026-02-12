@@ -60,7 +60,7 @@ export default function ClientPage() {
 
        const res = await axios.get(`${API_URL}/api/clientletters`, {
          headers: { Authorization: `Bearer ${token}` },
-         params: { category },
+         params: { categories },
        });
 
       //  console.log(res);

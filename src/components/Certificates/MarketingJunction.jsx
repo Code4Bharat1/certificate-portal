@@ -48,7 +48,7 @@ export default function MarketingJunctionPage() {
             `${API_URL}/api/certificates`,
             {
               headers: { Authorization: `Bearer ${token}` },
-              params: { category: 'marketing-junction' },
+              params: { categories: 'marketing-junction' },
             }
           );
 

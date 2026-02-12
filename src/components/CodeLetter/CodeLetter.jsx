@@ -1228,6 +1228,12 @@ const verifyOTP = async () => {
     }
   };
 
+  const handleBackToForm = () => {
+    setShowPreview(false);
+    setPdfPreview(null);
+    setPreviewImage(null);
+  }
+
   return (
     <div className="min-h-screen text-black bg-gradient-to-br from-gray-50 via-white to-blue-50 p-6">
       <Toaster position="top-center" />
@@ -2508,7 +2514,8 @@ const verifyOTP = async () => {
             <div className="space-y-4">
               <motion.button
                 whileHover={{ x: -5 }}
-                onClick={() => setShowPreview(false)}
+                // onClick={() => setShowPreview(false)}
+                onClick={handleBackToForm}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="w-5 h-5" />
