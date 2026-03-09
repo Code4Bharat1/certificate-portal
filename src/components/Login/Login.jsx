@@ -464,6 +464,7 @@ export default function LoginPage() {
       setUploadingDocument(false);
     }
   };
+  
   const removeSelectedDocument = (documentType) => {
     setDocuments((prev) => ({
       ...prev,

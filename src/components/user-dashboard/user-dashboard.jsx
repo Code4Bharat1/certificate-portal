@@ -52,14 +52,14 @@ export default function UserDashboard() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewLetter, setPreviewLetter] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-const [isAccepted, setIsAccepted] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
 
-useEffect(() => {
-  const accepted = localStorage.getItem("tcAccepted");
-  if (accepted === "true") {
-    setIsAccepted(true);
-  }
-}, []);
+  useEffect(() => {
+    const accepted = localStorage.getItem("tcAccepted");
+    if (accepted === "true") {
+      setIsAccepted(true);
+    }
+  }, []);
 
   const router = useRouter();
 
@@ -113,7 +113,7 @@ useEffect(() => {
 
       if (response.data.success) {
         setUserData(response.data.user);
-        // console.log("✅ User data loaded:", response.data.user);
+        // console.log("✅ User data loaded:", response.data);
       } else {
         throw new Error(response.data.message || "Failed to load user data");
       }
@@ -368,6 +368,11 @@ useEffect(() => {
       console.error("Error downloading certificates:", error);
       toast.error("Failed to download certificates", { id: downloadToast });
     }
+  };
+
+
+  const handleViewDocuments = () => {
+    router.push("/user/document");
   };
 
   const handleLogout = () => {
@@ -672,7 +677,7 @@ useEffect(() => {
         </div>
 
         {/* Quick Actions */}
-        {/* <motion.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mb-8 border-2 border-blue-200 dark:border-gray-700"
@@ -682,6 +687,22 @@ useEffect(() => {
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button
+              onClick={handleViewDocuments}
+              className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-950 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900 transition border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-700"
+            >
+              <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+
+              <div className="text-left">
+                <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
+                  View Documents
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Get all your certificates
+                </p>
+              </div>
+            </button>
+
             <button
               onClick={handleDownloadAll}
               className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-950 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900 transition border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-700"
@@ -696,6 +717,7 @@ useEffect(() => {
                 </p>
               </div>
             </button>
+
             <button
               onClick={() => setShowUploadModal(true)}
               className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-950 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900 transition border-2 border-transparent hover:border-indigo-300 dark:hover:border-indigo-700"
@@ -725,7 +747,7 @@ useEffect(() => {
               </div>
             </button>
           </div>
-        </motion.div> */}
+        </motion.div>
 
         {/* Recent Letters */}
         <motion.div
@@ -789,7 +811,7 @@ useEffect(() => {
         </motion.div>
 
         {/* Progress Overview */}
-      <motion.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg mt-8 border-2 border-blue-200 dark:border-gray-700"
@@ -807,9 +829,9 @@ useEffect(() => {
                 <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                   {statistics.totalLetters > 0
                     ? Math.round(
-                        (statistics.signedUploaded / statistics.totalLetters) *
-                          100
-                      )
+                      (statistics.signedUploaded / statistics.totalLetters) *
+                      100
+                    )
                     : 0}
                   %
                 </span>
@@ -818,13 +840,12 @@ useEffect(() => {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${
-                      statistics.totalLetters > 0
-                        ? (statistics.signedUploaded /
-                            statistics.totalLetters) *
-                          100
-                        : 0
-                    }%`,
+                    width: `${statistics.totalLetters > 0
+                      ? (statistics.signedUploaded /
+                        statistics.totalLetters) *
+                      100
+                      : 0
+                      }%`,
                   }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 h-3 rounded-full"
@@ -840,8 +861,8 @@ useEffect(() => {
                 <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                   {statistics.totalLetters > 0
                     ? Math.round(
-                        (statistics.approved / statistics.totalLetters) * 100
-                      )
+                      (statistics.approved / statistics.totalLetters) * 100
+                    )
                     : 0}
                   %
                 </span>
@@ -850,11 +871,10 @@ useEffect(() => {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${
-                      statistics.totalLetters > 0
-                        ? (statistics.approved / statistics.totalLetters) * 100
-                        : 0
-                    }%`,
+                    width: `${statistics.totalLetters > 0
+                      ? (statistics.approved / statistics.totalLetters) * 100
+                      : 0
+                      }%`,
                   }}
                   transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
                   className="bg-gradient-to-r from-green-600 to-emerald-600 h-3 rounded-full"
@@ -864,32 +884,32 @@ useEffect(() => {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-<div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
 
-  {/* If NOT accepted → show button */}
-  {!isAccepted && (
-    <button
-      onClick={() => {
-        localStorage.setItem("tcAccepted", "true");
-        window.location.href = '/termsandconditions/C4B/t&c';
-      }}
-      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
+              {/* If NOT accepted → show button */}
+              {!isAccepted && (
+                <button
+                  onClick={() => {
+                    localStorage.setItem("tcAccepted", "true");
+                    window.location.href = '/termsandconditions/C4B/t&c';
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
                  dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 
                  text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 
                  flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-    >
-      <span>Accept Terms and Conditions</span>
-    </button>
-  )}
+                >
+                  <span>Accept Terms and Conditions</span>
+                </button>
+              )}
 
-  {/* If already accepted → show success message */}
-  {isAccepted && (
-    <div className="text-center py-3 px-4 mt-2 bg-green-100 border border-green-300 text-green-700 rounded-lg">
-      ✅ You already accepted the Terms & Conditions
-    </div>
-  )}
+              {/* If already accepted → show success message */}
+              {isAccepted && (
+                <div className="text-center py-3 px-4 mt-2 bg-green-100 border border-green-300 text-green-700 rounded-lg">
+                  ✅ You already accepted the Terms & Conditions
+                </div>
+              )}
 
-</div>
+            </div>
 
 
           </div>
@@ -930,9 +950,8 @@ useEffect(() => {
               />
               <label
                 htmlFor="file-upload"
-                className={`cursor-pointer ${
-                  uploading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`cursor-pointer ${uploading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 <Upload className="w-12 h-12 text-blue-400 dark:text-blue-500 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">

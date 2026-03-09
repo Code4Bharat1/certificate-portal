@@ -38,49 +38,49 @@ export default function ViewDocuments() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5235";
 
- useEffect(() => {
-   return () => {
-     if (previewDocument?.isBlob && previewDocument?.url) {
-       URL.revokeObjectURL(previewDocument.url);
-     }
-   };
- }, [previewDocument]);
-
-const normalizeDoc = (doc, statusObj = {}) => {
-  if (!doc) return null;
-
-  if (typeof doc === "string") {
-    // ✅ FIX: Check if it's actually a Cloudinary URL (must start with http/https and contain cloudinary.com)
-    const isCloudinary =
-      doc.startsWith("http") && doc.includes("cloudinary.com");
-
-    return {
-      filename: doc.split("/").pop(),
-      path: doc,
-      status: statusObj?.status || "pending",
-      rejectionReason: statusObj?.rejectionReason || null,
-      isCloudinary: isCloudinary,
+  useEffect(() => {
+    return () => {
+      if (previewDocument?.isBlob && previewDocument?.url) {
+        URL.revokeObjectURL(previewDocument.url);
+      }
     };
-  }
+  }, [previewDocument]);
 
-  if (typeof doc === "object") {
-    const path = doc.path || doc.url;
-    // ✅ FIX: Check if it's actually a Cloudinary URL
-    const isCloudinary =
-      path && path.startsWith("http") && path.includes("cloudinary.com");
+  const normalizeDoc = (doc, statusObj = {}) => {
+    if (!doc) return null;
 
-    return {
-      filename: path ? path.split("/").pop() : "unknown",
-      path,
-      status: doc.status || statusObj?.status || "pending",
-      rejectionReason:
-        doc.rejectionReason || statusObj?.rejectionReason || null,
-      isCloudinary: isCloudinary,
-    };
-  }
+    if (typeof doc === "string") {
+      // ✅ FIX: Check if it's actually a Cloudinary URL (must start with http/https and contain wasabisys.com)
+      const isCloudinary =
+        doc.startsWith("http") && doc.includes("wasabisys.com" || "cloudinary.com");
 
-  return null;
-};
+      return {
+        filename: doc.split("/").pop(),
+        path: doc,
+        status: statusObj?.status || "pending",
+        rejectionReason: statusObj?.rejectionReason || null,
+        isCloudinary: isCloudinary,
+      };
+    }
+
+    if (typeof doc === "object") {
+      const path = doc.path || doc.url;
+      // ✅ FIX: Check if it's actually a Cloudinary URL
+      const isCloudinary =
+        path && path.startsWith("http") && path.includes("wasabisys.com" || "cloudinary.com");
+
+      return {
+        filename: path ? path.split("/").pop() : "unknown",
+        path,
+        status: doc.status || statusObj?.status || "pending",
+        rejectionReason:
+          doc.rejectionReason || statusObj?.rejectionReason || null,
+        isCloudinary: isCloudinary,
+      };
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     fetchStudentsWithDocuments();
@@ -219,85 +219,104 @@ const normalizeDoc = (doc, statusObj = {}) => {
       toast.error("Failed to download document");
     }
   };
-const handlePreview = async (studentId, docType, filename) => {
-  try {
-    // Get the document data from the student object
-    const student = students.find((s) => s.id === studentId);
-    const docData = student?.documents?.[docType];
 
-    if (!docData || !docData.path) {
-      toast.error("Document not found");
-      return;
-    }
+  const handlePreview = async (studentId, docType, filename) => {
+    try {
+      // Get the document data from the student object
+      const student = students.find((s) => s.id === studentId);
+      const docData = student?.documents?.[docType];
 
-    const documentPath = docData.path;
-    // ✅ Proper Cloudinary detection
-    const isCloudinary =
-      documentPath.startsWith("http") &&
-      documentPath.includes("cloudinary.com");
-
-    // For Cloudinary documents, open directly in new tab
-    if (isCloudinary) {
-      const newWindow = window.open(
-        documentPath,
-        "_blank",
-        "noopener,noreferrer"
-      );
-      if (newWindow) {
-        toast.success("Opening document in new tab...");
-      } else {
-        toast.error("Popup blocked! Please allow popups for this site.");
+      if (!docData || !docData.path) {
+        toast.error("Document not found");
+        return;
       }
-    } else {
-      // For local documents, fetch through API
-      const token = sessionStorage.getItem("authToken");
 
-      try {
-        const response = await axios.get(
-          `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
-          { headers: { Authorization: `Bearer ${token}` } }
+      const documentPath = docData.path;
+      // ✅ Proper Cloudinary detection
+      const isCloudinary =
+        documentPath.startsWith("http") && (
+          documentPath.includes("cloudinary.com")
+        )
+
+      // For Cloudinary documents, open directly in new tab
+      if (isCloudinary) {
+        const newWindow = window.open(
+          documentPath,
+          "_blank",
+          "noopener,noreferrer"
         );
-
-        if (response.data.success && response.data.url) {
-          const documentUrl = response.data.url;
-          const previewUrl = documentUrl.startsWith("http")
-            ? documentUrl
-            : `${API_URL}/${documentUrl}`;
-
-          setPreviewDocument({
-            studentId,
-            docType,
-            filename,
-            url: previewUrl,
-            isCloudinary: false,
-          });
+        if (newWindow) {
+          toast.success("Opening document in new tab...");
+        } else {
+          toast.error("Popup blocked! Please allow popups for this site.");
         }
-      } catch (apiError) {
-        console.error("API Error:", apiError);
-        toast.error("Failed to load document from server");
+      } else {
+        // For local documents, fetch through API
+        const token = sessionStorage.getItem("authToken");
+
+        try {
+          const response = await axios.get(
+            `${API_URL}/api/documents/students/${studentId}/documents/${docType}/view`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          console.log("API Response for preview:", response.data);
+
+          if (response.data.success && response.data.url) {
+            window.open(response.data.url, "_blank", "noopener,noreferrer");
+            const documentUrl = response.data.url;
+            const previewUrl = documentUrl.startsWith("http")
+              ? documentUrl
+              : `${API_URL}/${documentUrl}`;
+
+            // setPreviewDocument({
+            //   studentId,
+            //   docType,
+            //   filename,
+            //   url: previewUrl,
+            //   isCloudinary: false,
+            // });
+          }
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          toast.error("Failed to load document from server");
+        }
       }
+    } catch (error) {
+      console.error("Error previewing document:", error);
+      toast.error("Failed to preview document");
     }
-  } catch (error) {
-    console.error("Error previewing document:", error);
-    toast.error("Failed to preview document");
-  }
-};
+  };
 
   const handleVerifyDocuments = async (studentId, verified) => {
     try {
-      setVerifyingStudent(studentId);
-      const token = sessionStorage.getItem("authToken");
-      const response = await axios.put(
-        `${API_URL}/api/documents/students/${studentId}/documents/verify`,
-        { verified },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // check all documents are approved before verifying the student
+      const student = students.find((student) => student.id === studentId);
+      const requiredDocuments = ["aadhaarFront", "aadhaarBack", "panCard", "bankPassbook"];
 
-      if (response.data.success) {
-        toast.success(
-          verified ? "Documents verified!" : "Documents marked as unverified"
+      const isAllDocumentsApproved = requiredDocuments.every((doc) => {
+        return student?.documentStatus?.[doc]?.status === "approved";
+      });
+      console.log("All documents approved:", isAllDocumentsApproved);
+      if (isAllDocumentsApproved) {
+        setVerifyingStudent(studentId);
+        const token = sessionStorage.getItem("authToken");
+        const response = await axios.put(
+          `${API_URL}/api/documents/students/${studentId}/documents/verify`,
+          { verified },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        fetchStudentsWithDocuments();
+
+        if (response.data.success) {
+          toast.success(
+            verified ? "Documents verified!" : "Documents marked as unverified"
+          );
+          fetchStudentsWithDocuments();
+        } else {
+          toast.error("Failed to verify documents");
+        }
+      } else {
+        toast.error("All documents must be approved ");
+        return;
       }
     } catch (error) {
       console.error("Error verifying documents:", error);
@@ -461,39 +480,39 @@ const handlePreview = async (studentId, docType, filename) => {
           {(selectedUser !== "all" ||
             verificationFilter !== "all" ||
             searchTerm) && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Active Filters:
-              </span>
-              {searchTerm && (
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
-                  Search: {searchTerm}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSearchTerm("")}
-                  />
+              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Active Filters:
                 </span>
-              )}
-              {selectedUser !== "all" && (
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
-                  Student: {selectedUser}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSelectedUser("all")}
-                  />
-                </span>
-              )}
-              {verificationFilter !== "all" && (
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
-                  Status: {verificationFilter}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setVerificationFilter("all")}
-                  />
-                </span>
-              )}
-            </div>
-          )}
+                {searchTerm && (
+                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
+                    Search: {searchTerm}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => setSearchTerm("")}
+                    />
+                  </span>
+                )}
+                {selectedUser !== "all" && (
+                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
+                    Student: {selectedUser}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => setSelectedUser("all")}
+                    />
+                  </span>
+                )}
+                {verificationFilter !== "all" && (
+                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1">
+                    Status: {verificationFilter}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => setVerificationFilter("all")}
+                    />
+                  </span>
+                )}
+              </div>
+            )}
         </motion.div>
 
         {loading ? (
@@ -576,13 +595,12 @@ const handlePreview = async (studentId, docType, filename) => {
 
                               {docData.status && (
                                 <span
-                                  className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                                    docData.status === "approved"
-                                      ? "bg-green-200 text-green-700"
-                                      : docData.status === "rejected"
+                                  className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${docData.status === "approved"
+                                    ? "bg-green-200 text-green-700"
+                                    : docData.status === "rejected"
                                       ? "bg-red-200 text-red-700"
                                       : "bg-yellow-200 text-yellow-700"
-                                  }`}
+                                    }`}
                                 >
                                   {docData.status === "approved" && (
                                     <CheckCircle className="w-3 h-3" />
@@ -642,12 +660,11 @@ const handlePreview = async (studentId, docType, filename) => {
                               onClick={() =>
                                 handleApproveDocument(student.id, docType)
                               }
-                              disabled={docData.status === "approved"}
-                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
-                                docData.status === "approved"
-                                  ? "bg-green-400 text-white cursor-not-allowed"
-                                  : "bg-green-600 hover:bg-green-700 text-white"
-                              }`}
+                              disabled={docData.status === "approved" || docData.status === "rejected"}
+                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${docData.status === "approved"
+                                ? "bg-green-400 text-white cursor-not-allowed"
+                                : "bg-green-600 hover:bg-green-700 text-white cursor-not-allowed"
+                                }`}
                             >
                               <CheckCircle className="w-3 h-3" />
                               {docData.status === "approved"
@@ -659,12 +676,11 @@ const handlePreview = async (studentId, docType, filename) => {
                               onClick={() =>
                                 openRejectModal(student.id, docType)
                               }
-                              disabled={docData.status === "rejected"}
-                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
-                                docData.status === "rejected"
-                                  ? "bg-red-400 text-white cursor-not-allowed"
-                                  : "bg-red-600 hover:bg-red-700 text-white"
-                              }`}
+                              disabled={docData.status === "rejected" || docData.status === "approved"}
+                              className={`flex-1 px-2 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${docData.status === "rejected"
+                                ? "bg-red-400 text-white cursor-not-allowed"
+                                : "bg-red-600 hover:bg-red-700 text-white cursor-not-allowed"
+                                }`}
                             >
                               <XCircle className="w-3 h-3" />
                               {docData.status === "rejected"
@@ -821,6 +837,7 @@ const handlePreview = async (studentId, docType, filename) => {
                           "Failed to load image. Opening in new tab..."
                         );
                         window.open(previewDocument.url, "_blank");
+                        // window.open(previewDocument.url, "_blank");
                       }}
                     />
                   ) : (
